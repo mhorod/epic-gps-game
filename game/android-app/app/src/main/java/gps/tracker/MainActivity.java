@@ -120,11 +120,17 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void doProcessLocation(Location location) throws IOException {
-        URL url = new URL("https://localhost:8080/v1/push-list");
+        Log.e("main_activity", "doProcessLocation()");
+        double lat = location.getLatitude();
+        double lng = location.getLongitude();
+        String loc = lat + "," + lng;
+        URL url = new URL("http://52.158.44.176:8080/v1/push-list?str="+loc);
         HttpURLConnection urlConnection = (HttpURLConnection) url.openConnection();
-//        urlConnection.setRequestMethod("POST");
+        urlConnection.setRequestMethod("POST");
+        urlConnection.setRequestProperty( "Content-Type", "application/x-www-form-urlencoded");
         urlConnection.setRequestProperty("str", "xdfromandroid");
         urlConnection.connect();
+        Log.e("main_activity", "ret code is " + urlConnection.getResponseCode());
     }
 
     @Override
