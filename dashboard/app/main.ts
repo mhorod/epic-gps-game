@@ -1,5 +1,5 @@
 import app from "./src/app.ts";
 
-const port = 8000;
+const port = parseInt(Deno.env.get('PORT'));
 app.set("port", port);
-app.listen(port, () => console.log("App is running :)"));
+app.listen(port, () => console.log("App is running on port: " + port));

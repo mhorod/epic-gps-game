@@ -126,6 +126,6 @@ public class WebSocketController extends TextWebSocketHandler implements WebSock
 
     @Override
     public void registerWebSocketHandlers(WebSocketHandlerRegistry registry) {
-        registry.addHandler(this, "/game");
+        registry.addHandler(this, "/game").setAllowedOrigins("*");
     }
 }
