@@ -41,8 +41,10 @@ public class MainActivity extends AppCompatActivity {
     private ActivityMainBinding binding;
     private LocationListener locationListener;
     private LocationManager locationManager;
+
     private FragmentManager fragmentManager;
     private final List<LocationListener> sublisteners = new ArrayList<>();
+    private WebSocketClient webSocketClient = new WebSocketClient();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {

@@ -5,7 +5,6 @@ plugins {
     id "io.freefair.lombok" version "8.6"
 }
 
-group = "com.example"
 version = "0.0.1-SNAPSHOT"
 
 java {
@@ -19,6 +18,7 @@ repositories {
 dependencies {
     implementation "org.springframework.boot:spring-boot-starter"
     implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.boot:spring-boot-starter-websocket'
     compileOnly "org.projectlombok:lombok";
     annotationProcessor "org.projectlombok:lombok"
     testImplementation "org.springframework.boot:spring-boot-starter-test"
