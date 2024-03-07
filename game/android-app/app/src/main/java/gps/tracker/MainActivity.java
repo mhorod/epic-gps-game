@@ -1,5 +1,6 @@
 package gps.tracker;
 
+import android.content.Context;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.location.LocationListener;
@@ -16,6 +17,7 @@ import android.util.Log;
 import android.view.View;
 
 import androidx.core.app.ActivityCompat;
+import androidx.fragment.app.FragmentManager;
 import androidx.navigation.NavController;
 import androidx.navigation.Navigation;
 import androidx.navigation.ui.AppBarConfiguration;
@@ -31,10 +33,13 @@ import model.messages_to_client.MessageToClientHandler;
 
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.ImageView;
 
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -79,6 +84,8 @@ public class MainActivity extends AppCompatActivity {
 
         }
     });
+    private FragmentManager fragmentManager;
+    private final List<LocationListener> sublisteners = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -103,6 +110,7 @@ public class MainActivity extends AppCompatActivity {
         });
 
         requestPermissions();
+
     }
 
     private void requestPermissions() {
@@ -150,6 +158,10 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void processLocationUnchecked(Location location) {
+        for (LocationListener sublistener : sublisteners) {
+            sublistener.onLocationChanged(location);
+        }
+
         Log.e("main_activity", location.toString());
         new Thread(() -> doProcessLocationUnchecked(location)).start();
     }
@@ -160,6 +172,10 @@ public class MainActivity extends AppCompatActivity {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    public void registerLocationListener(LocationListener listener) {
+        sublisteners.add(listener);
     }
 
     private void doProcessLocation(Location location) throws IOException {

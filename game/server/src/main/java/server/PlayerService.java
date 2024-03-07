@@ -47,7 +47,7 @@ public class PlayerService {
         Position position = playerLocations.get(playerName);
 
         for (String name : getAllLoggedIn()) if (!name.equals(playerName))
-            sendTo(playerName).playerUpdate(player, position);
+            sendTo(name).playerUpdate(player, position);
         sendTo(playerName).meUpdate(player);
     }
     void updatePosition(String player, Position position) {
