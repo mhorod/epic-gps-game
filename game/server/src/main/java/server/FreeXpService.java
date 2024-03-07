@@ -22,7 +22,7 @@ public class FreeXpService {
             log.info("free xp for {} players", playerService.getAllLoggedIn().size());
             for (String player : playerService.getAllLoggedIn())
                 playerService.gainXp(player, 3);
-            Thread.sleep(Duration.ofSeconds(10));
+            Thread.sleep(1000 * 10);
         }
     }
 }

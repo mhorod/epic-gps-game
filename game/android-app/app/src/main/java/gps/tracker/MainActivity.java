@@ -22,6 +22,12 @@ import androidx.navigation.ui.AppBarConfiguration;
 import androidx.navigation.ui.NavigationUI;
 
 import gps.tracker.databinding.ActivityMainBinding;
+import model.Enemy;
+import model.EnemyId;
+import model.Player;
+import model.Position;
+import model.messages_to_client.FightResult;
+import model.messages_to_client.MessageToClientHandler;
 
 import android.view.Menu;
 import android.view.MenuItem;
@@ -36,7 +42,43 @@ public class MainActivity extends AppCompatActivity {
     private ActivityMainBinding binding;
     private LocationListener locationListener;
     private LocationManager locationManager;
-    private WebSocketClient webSocketClient = new WebSocketClient();
+
+    private WebSocketClient webSocketClient = new WebSocketClient(new MessageToClientHandler() {
+        @Override
+        public void enemyAppears(Enemy enemy) {
+            System.out.println(enemy.toString());
+        }
+
+        @Override
+        public void enemyDisappears(EnemyId enemyId) {
+
+        }
+
+        @Override
+        public void error(String error) {
+            System.err.println(error);
+        }
+
+        @Override
+        public void fightResult(FightResult.Result result, EnemyId enemyId) {
+
+        }
+
+        @Override
+        public void meUpdate(Player me) {
+
+        }
+
+        @Override
+        public void playerDisappears(String playerName) {
+
+        }
+
+        @Override
+        public void playerUpdate(Player player, Position position) {
+
+        }
+    });
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {

@@ -87,8 +87,8 @@ public class WebSocketController extends TextWebSocketHandler implements WebSock
                     reply.error("incorrect password");
                     return;
                 }
-                playerService.login(name, reply);
                 sessionIdToPlayerName.put(session.getId(), name);
+                playerService.login(name, reply);
             }
 
             @Override
