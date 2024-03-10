@@ -1,1 +1,1 @@
-rootProject.name = "epic-gps-game"
+rootProject.name = "soturi"

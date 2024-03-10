@@ -11,10 +11,7 @@ import model.Player;
 import model.PlayerWithPosition;
 import model.Position;
 import model.Result;
-import model.messages_to_client.MessageToClientFactory;
 import model.messages_to_client.MessageToClientHandler;
-import model.messages_to_server.LoginInfo;
-import model.messages_to_server.MessageToServer;
 import model.messages_to_server.MessageToServerHandler;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -39,7 +36,7 @@ public final class GameService {
 
     @Scheduled(fixedDelayString = "${give-free-xp.delay-in-milliseconds}")
     void giveFreeXp() {
-        log.info("giveFreeXp()");
+        log.debug("giveFreeXp()");
         if (gameUtility.giveFreeXpAmount == 0)
             return;
         for (String player : sessions.keySet()) {
@@ -52,7 +49,7 @@ public final class GameService {
 
     @Scheduled(fixedDelayString = "${spawn-enemy.delay-in-milliseconds}")
     void spawnEnemy() {
-        log.info("spawnEnemy()");
+        log.debug("spawnEnemy()");
         List<Enemy> enemyList = enemies.values().stream().toList();
         Stream<Optional<PlayerWithPosition>> playerStream = sessions.entrySet().stream().map(kv -> {
             Position position = kv.getValue().getPosition();
@@ -140,11 +137,6 @@ public final class GameService {
             }
 
             @Override
-            public void loginInfo(String name, String password) {
-                sender.error("attempting to log in twice");
-            }
-
-            @Override
             public void unequipItem(Item item) {
                 sender.error("not supported");
             }
@@ -162,34 +154,25 @@ public final class GameService {
         };
     }
 
-    Optional<String> login(String name, String hashedPassword, @NonNull MessageToClientFactory sender) {
+    boolean login(String name, String hashedPassword, @NonNull MessageToClientHandler sender) {
         if (name == null || name.isEmpty() || hashedPassword == null) {
             sender.error("null data passed");
-            return Optional.empty();
+            return false;
         }
         PlayerEntity entity = repository.findByName(name).orElseGet(
             () -> repository.save(new PlayerEntity(name, hashedPassword))
         );
         if (!hashedPassword.equals(entity.getHashedPassword())) {
             sender.error("incorrect password passed");
-            return Optional.empty();
+            return false;
         }
         if (sessions.containsKey(name)) {
             sender.error("this player is already logged in");
-            return Optional.empty();
+            return false;
         }
         sessions.put(name, new PlayerSession(sender));
         sendUpdatesFor(name);
-        return Optional.of(name);
-    }
-
-    Optional<String> login(MessageToServer message, @NonNull MessageToClientFactory sender) {
-        if (message instanceof LoginInfo loginInfo) // TODO hash password
-            return login(loginInfo.name(), loginInfo.password(), sender);
-        else {
-            sender.error("log in first");
-            return Optional.empty();
-        }
+        return true;
     }
 
     void logout(@NonNull String playerName) {

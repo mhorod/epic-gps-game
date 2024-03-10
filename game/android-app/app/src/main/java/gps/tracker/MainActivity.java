@@ -29,6 +29,7 @@ import model.Enemy;
 import model.EnemyId;
 import model.Player;
 import model.Position;
+import model.Result;
 import model.messages_to_client.FightResult;
 import model.messages_to_client.MessageToClientHandler;
 
@@ -66,7 +67,7 @@ public class MainActivity extends AppCompatActivity {
         }
 
         @Override
-        public void fightResult(FightResult.Result result, EnemyId enemyId) {
+        public void fightResult(Result result, EnemyId enemyId) {
 
         }
 
@@ -176,7 +177,6 @@ public class MainActivity extends AppCompatActivity {
         Log.e("main_activity", "doProcessLocation()");
         double lat = location.getLatitude();
         double lng = location.getLongitude();
-        webSocketClient.send().loginInfo("apka", "mudd");
         webSocketClient.send().updateRealPosition(new Position(lat, lng));
     }
 
