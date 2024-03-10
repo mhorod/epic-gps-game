@@ -32,7 +32,8 @@ public class WebSocketClient extends WebSocketListener {
                 .build();
 
         Request request = new Request.Builder()
-                .url("ws://52.158.44.176:8080/game")
+                .header("param", "value")
+                .url("ws://52.158.44.176:8080/ws/game")
                 .build();
 
         webSocket = client.newWebSocket(request, this);
@@ -40,7 +41,7 @@ public class WebSocketClient extends WebSocketListener {
 
     @Override
     public void onOpen(WebSocket webSocket, Response response) {
-        send().loginInfo("apka", "mud");
+        send().loginInfo("apka", "mudd");
     }
 
     @Override
