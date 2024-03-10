@@ -1,9 +1,7 @@
 package gps.tracker;
 
-import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.annotation.PropertyAccessor;
-import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.module.androidrecord.AndroidRecordModule;
 
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
@@ -23,7 +21,7 @@ import okio.ByteString;
 public class WebSocketClient extends WebSocketListener {
     private final WebSocket webSocket;
     private final ObjectMapper objectMapper = new ObjectMapper()
-            .setVisibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
+            .registerModule(new AndroidRecordModule());
     private final MessageToClientHandler handler;
 
     public WebSocketClient(MessageToClientHandler handler) {

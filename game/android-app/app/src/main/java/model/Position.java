@@ -1,10 +1,5 @@
 package model;
 
-import lombok.Builder;
-import lombok.extern.jackson.Jacksonized;
-
-@Jacksonized
-@Builder
 public record Position(double latitude, double longitude) {
     /** Returns distance between points in meters */
     public double distance(Position other) {
