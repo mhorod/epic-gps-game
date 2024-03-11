@@ -9,7 +9,7 @@ L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
 }).addTo(map);
 
-const websocket = new WebSocket(`${protocol}://${host}:${port}/game`);
+const websocket = new WebSocket(`${protocol}://${host}:${port}/ws/dashboard`);
 websocket.onopen = (e) => {
     console.log("OPEN", e);
     websocket.send(
