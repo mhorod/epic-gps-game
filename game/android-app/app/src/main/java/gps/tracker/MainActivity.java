@@ -24,10 +24,12 @@ import androidx.navigation.ui.AppBarConfiguration;
 import androidx.navigation.ui.NavigationUI;
 
 import gps.tracker.databinding.ActivityMainBinding;
+import lombok.SneakyThrows;
 import model.Enemy;
 import model.EnemyId;
 import model.Player;
 import model.Position;
+import model.Result;
 import model.messages_to_client.FightResult;
 import model.messages_to_client.MessageToClientHandler;
 
@@ -65,7 +67,7 @@ public class MainActivity extends AppCompatActivity {
         }
 
         @Override
-        public void fightResult(FightResult.Result result, EnemyId enemyId) {
+        public void fightResult(Result result, EnemyId enemyId) {
 
         }
 
@@ -142,7 +144,7 @@ public class MainActivity extends AppCompatActivity {
 
         Log.e("main_activity", "hello world?");
 
-        locationListener = this::processLocationUnchecked;
+        locationListener = this::processLocation;
         locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
 
         Log.e("main_activity", "providers: " + locationManager.getAllProviders().toString());
@@ -157,39 +159,25 @@ public class MainActivity extends AppCompatActivity {
         Log.e("main_activity", "hello world!!");
     }
 
-    private void processLocationUnchecked(Location location) {
+    private void processLocation(Location location) {
         for (LocationListener sublistener : sublisteners) {
             sublistener.onLocationChanged(location);
         }
 
         Log.e("main_activity", location.toString());
-        new Thread(() -> doProcessLocationUnchecked(location)).start();
-    }
-
-    private void doProcessLocationUnchecked(Location location) {
-        try {
-            doProcessLocation(location);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+        new Thread(() -> doProcessLocation(location)).start();
     }
 
     public void registerLocationListener(LocationListener listener) {
         sublisteners.add(listener);
     }
 
-    private void doProcessLocation(Location location) throws IOException {
+    @SneakyThrows
+    private void doProcessLocation(Location location) {
         Log.e("main_activity", "doProcessLocation()");
         double lat = location.getLatitude();
         double lng = location.getLongitude();
-        String loc = lat + "," + lng;
-        URL url = new URL("http://52.158.44.176:8080/v1/push-list?str="+loc);
-        HttpURLConnection urlConnection = (HttpURLConnection) url.openConnection();
-        urlConnection.setRequestMethod("POST");
-        urlConnection.setRequestProperty( "Content-Type", "application/x-www-form-urlencoded");
-        urlConnection.setRequestProperty("str", "xdfromandroid");
-        urlConnection.connect();
-        Log.e("main_activity", "ret code is " + urlConnection.getResponseCode());
+        webSocketClient.send().updateRealPosition(new Position(lat, lng));
     }
 
     @Override

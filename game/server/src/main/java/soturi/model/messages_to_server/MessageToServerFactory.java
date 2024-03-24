@@ -22,11 +22,6 @@ public final class MessageToServerFactory implements MessageToServerHandler {
     }
 
     @Override
-    public void loginInfo(String name, String password) {
-        consumer.accept(new LoginInfo(name, password));
-    }
-
-    @Override
     public void unequipItem(Item item) {
         consumer.accept(new UnequipItem(item));
     }

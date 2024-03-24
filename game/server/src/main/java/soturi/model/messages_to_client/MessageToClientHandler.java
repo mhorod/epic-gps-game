@@ -4,7 +4,7 @@ import soturi.model.Enemy;
 import soturi.model.EnemyId;
 import soturi.model.Player;
 import soturi.model.Position;
-import soturi.model.messages_to_client.FightResult.Result;
+import soturi.model.Result;
 
 public interface MessageToClientHandler {
     void enemyAppears(Enemy enemy);

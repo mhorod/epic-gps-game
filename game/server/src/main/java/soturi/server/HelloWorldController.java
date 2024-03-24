@@ -11,7 +11,7 @@ import java.util.List;
 
 @Slf4j
 @RestController
-public class HelloWorldController {
+public final class HelloWorldController {
     @GetMapping("/v1/hello-world")
     HelloWorldResponse helloWorld() {
         return new HelloWorldResponse("Hello, world!");

@@ -1,3 +1,66 @@
 html {
     font-family: "Noto Sans";
 }
+
+/* CSS Reset */
+* {
+    margin: 0;
+    padding: 0;
+    border: 0;
+    font-size: 100%;
+    vertical-align: baseline;
+    background: transparent;
+    box-sizing: border-box;
+}
+
+
+body {
+    height: 100vh;
+    font-size: 14px;
+    display: flex;
+    flex-direction: column;
+}
+
+#top-nav {
+    width: 100%;
+    /* background-color: #31383f; */
+    background-color: #dd8ea4;
+    color: #eee;
+    padding: 10px;
+}
+
+.logo {
+    font-size: 20px;
+}
+
+
+main {
+    flex-grow: 1;
+}
+
+#map {
+    height: 100%;
+}
+
+#dashboard {
+    display: flex;
+    flex-direction: row;
+    height: 100%;
+}
+
+#dashboard-sidenav {
+    width: 200px;
+    background-color: #f2e9eb;
+}
+
+.sidenav-list {
+    padding: 5px;
+}
+
+.section-name {
+    font-size: 16px;
+}
+
+#map {
+    flex-grow: 1;
+}

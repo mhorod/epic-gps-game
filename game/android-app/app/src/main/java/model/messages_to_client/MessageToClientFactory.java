@@ -5,7 +5,7 @@ import model.Enemy;
 import model.EnemyId;
 import model.Player;
 import model.Position;
-import model.messages_to_client.FightResult.Result;
+import model.Result;
 
 import java.util.function.Consumer;
 
