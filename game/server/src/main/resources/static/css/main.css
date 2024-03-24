@@ -1,0 +1,94 @@
+html {
+    font-family: "Noto Sans";
+}
+
+/* CSS Reset */
+* {
+    margin: 0;
+    padding: 0;
+    border: 0;
+    font-size: 100%;
+    vertical-align: baseline;
+    background: transparent;
+    box-sizing: border-box;
+}
+
+
+body {
+    height: 100vh;
+    font-size: 14px;
+    display: flex;
+    flex-direction: column;
+}
+
+#top-nav {
+    width: 100%;
+    background-color: #dd8ea4;
+    color: #eee;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+}
+
+.nav-element {
+    height: 50px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 10px;
+}
+
+.nav-element {
+    text-decoration: none;
+    color: #eee;
+}
+
+.nav-element:hover {
+    background-color: #a45a70;
+}
+
+.logo {
+    font-size: 20px;
+    font-weight: bolder;
+}
+
+
+main {
+    flex-grow: 1;
+}
+
+#map {
+    height: 100%;
+}
+
+#dashboard {
+    display: flex;
+    flex-direction: row;
+    height: 100%;
+}
+
+#dashboard-sidenav {
+    width: 200px;
+    background-color: #f2e9eb;
+}
+
+.section-name {
+    padding: 5px;
+}
+
+.sidenav-list li {
+    padding: 5px 10px;
+}
+
+.sidenav-list li:hover {
+    cursor: pointer;
+    background-color: #dd8ea4;
+}
+
+.section-name {
+    font-size: 16px;
+}
+
+#map {
+    flex-grow: 1;
+}
