@@ -4,7 +4,7 @@ import model.Enemy;
 import model.EnemyId;
 import model.Player;
 import model.Position;
-import model.messages_to_client.FightResult.Result;
+import model.Result;
 
 public interface MessageToClientHandler {
     void enemyAppears(Enemy enemy);

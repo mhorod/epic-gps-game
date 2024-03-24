@@ -1,13 +1,13 @@
 package gps.tracker;
 
-import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.annotation.PropertyAccessor;
+import com.fasterxml.jackson.module.androidrecord.AndroidRecordModule;
 
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
 import lombok.SneakyThrows;
+import model.messages_to_client.MessageToClient;
 import model.messages_to_client.MessageToClientHandler;
 import model.messages_to_server.MessageToServer;
 import model.messages_to_server.MessageToServerFactory;
@@ -21,7 +21,7 @@ import okio.ByteString;
 public class WebSocketClient extends WebSocketListener {
     private final WebSocket webSocket;
     private final ObjectMapper objectMapper = new ObjectMapper()
-            .setVisibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
+            .registerModule(new AndroidRecordModule());
     private final MessageToClientHandler handler;
 
     public WebSocketClient(MessageToClientHandler handler) {
@@ -32,7 +32,9 @@ public class WebSocketClient extends WebSocketListener {
                 .build();
 
         Request request = new Request.Builder()
-                .url("ws://52.158.44.176:8080/game")
+                .header("epic-name", "apka")
+                .header("epic-password", "mudd")
+                .url("ws://52.158.44.176:8080/ws/game")
                 .build();
 
         webSocket = client.newWebSocket(request, this);
@@ -40,17 +42,20 @@ public class WebSocketClient extends WebSocketListener {
 
     @Override
     public void onOpen(WebSocket webSocket, Response response) {
-        send().loginInfo("apka", "mud");
     }
 
     @Override
+    @SneakyThrows
     public void onMessage(WebSocket webSocket, String text) {
-        System.out.println("MESSAGE: " + text);
+        System.out.println("[REC] " + text);
+        MessageToClient message = objectMapper.readValue(text, MessageToClient.class);
+        System.out.println("[REC] " + message);
+        message.process(handler);
     }
 
     @Override
     public void onMessage(WebSocket webSocket, ByteString bytes) {
-        System.out.println("MESSAGE: " + bytes.hex());
+        throw new RuntimeException();
     }
 
     @Override
@@ -71,8 +76,6 @@ public class WebSocketClient extends WebSocketListener {
                 System.out.println("[SND] " + message);
 
                 String asText = objectMapper.writeValueAsString(message);
-                System.out.println("[SND] " + asText);
-
                 webSocket.send(asText);
             }
         });
