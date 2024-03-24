@@ -23,14 +23,33 @@ body {
 
 #top-nav {
     width: 100%;
-    /* background-color: #31383f; */
     background-color: #dd8ea4;
     color: #eee;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+}
+
+.nav-element {
+    height: 50px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
     padding: 10px;
+}
+
+.nav-element {
+    text-decoration: none;
+    color: #eee;
+}
+
+.nav-element:hover {
+    background-color: #a45a70;
 }
 
 .logo {
     font-size: 20px;
+    font-weight: bolder;
 }
 
 
@@ -53,8 +72,17 @@ main {
     background-color: #f2e9eb;
 }
 
-.sidenav-list {
+.section-name {
     padding: 5px;
+}
+
+.sidenav-list li {
+    padding: 5px 10px;
+}
+
+.sidenav-list li:hover {
+    cursor: pointer;
+    background-color: #dd8ea4;
 }
 
 .section-name {
