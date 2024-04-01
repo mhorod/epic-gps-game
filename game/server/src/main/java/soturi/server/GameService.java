@@ -3,6 +3,8 @@ package soturi.server;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Component;
 import soturi.model.Enemy;
 import soturi.model.EnemyId;
 import soturi.model.FightResult;
@@ -13,9 +15,6 @@ import soturi.model.Position;
 import soturi.model.Result;
 import soturi.model.messages_to_client.MessageToClientHandler;
 import soturi.model.messages_to_server.MessageToServerHandler;
-import org.springframework.scheduling.annotation.EnableScheduling;
-import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.Map;
@@ -32,6 +31,20 @@ public final class GameService {
     private final Map<EnemyId, Enemy> enemies;
     private final GameUtility gameUtility;
     private final FightSimulator fightSimulator;
+
+    public List<Enemy> getEnemies() {
+        return enemies.values().stream().toList();
+    }
+
+    public List<PlayerWithPosition> getPlayers() {
+        return sessions.keySet().stream()
+                .map(repository::findByName)
+                .flatMap(Optional::stream)
+                .map(gameUtility::getPlayerFromEntity)
+                .map(p -> new PlayerWithPosition(p, sessions.get(p.name()).getPosition()))
+                .toList();
+    }
+
 
     @Scheduled(fixedDelayString = "${give-free-xp.delay-in-milliseconds}")
     void giveFreeXp() {
@@ -87,8 +100,9 @@ public final class GameService {
         PlayerSession playerSession = sessions.get(playerName);
         Position playerPosition = playerSession.getPosition();
 
-        for (var kv : sessions.entrySet()) if (!kv.getKey().equals(playerName))
-            kv.getValue().getSender().playerUpdate(playerData, playerPosition);
+        for (var kv : sessions.entrySet())
+            if (!kv.getKey().equals(playerName))
+                kv.getValue().getSender().playerUpdate(playerData, playerPosition);
         playerSession.getSender().meUpdate(playerData);
 
         for (var sender : observers.values())
@@ -159,7 +173,7 @@ public final class GameService {
             return false;
         }
         PlayerEntity entity = repository.findByName(name).orElseGet(
-            () -> repository.save(new PlayerEntity(name, hashedPassword))
+                () -> repository.save(new PlayerEntity(name, hashedPassword))
         );
         if (!hashedPassword.equals(entity.getHashedPassword())) {
             sender.error("incorrect password passed");

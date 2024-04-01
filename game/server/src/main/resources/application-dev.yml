@@ -1,4 +1,5 @@
 
+# Settings for live-reloading dashboard while developing
 spring:
   thymeleaf:
     cache: false
