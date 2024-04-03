@@ -1,5 +1,6 @@
 package gps.tracker;
 
+import android.Manifest;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.location.Location;
@@ -35,6 +36,10 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.ImageView;
 
+import org.osmdroid.config.Configuration;
+import org.osmdroid.config.IConfigurationProvider;
+
+import java.io.File;
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -47,6 +52,7 @@ public class MainActivity extends AppCompatActivity {
     private ActivityMainBinding binding;
     private LocationListener locationListener;
     private LocationManager locationManager;
+    private Location lastLocation;
 
     private WebSocketClient webSocketClient = new WebSocketClient(new MessageToClientHandler() {
         @Override
@@ -100,16 +106,19 @@ public class MainActivity extends AppCompatActivity {
         appBarConfiguration = new AppBarConfiguration.Builder(navController.getGraph()).build();
         NavigationUI.setupActionBarWithNavController(this, navController, appBarConfiguration);
 
-        binding.fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                        .setAnchorView(R.id.fab)
-                        .setAction("Action", null).show();
-            }
-        });
-
         requestPermissions();
+
+        Configuration.getInstance().setUserAgentValue("Soturi/0.1");
+
+        IConfigurationProvider mapConfig = Configuration.getInstance();
+
+
+        File basePath = new File(getCacheDir().getAbsolutePath(), "osmdroid");
+        File tileCache = new File(basePath, "tile");
+
+        mapConfig.setOsmdroidBasePath(basePath);
+        mapConfig.setOsmdroidTileCache(tileCache);
+
 
     }
 
@@ -120,8 +129,10 @@ public class MainActivity extends AppCompatActivity {
                 );
         locationPermissionRequest.launch(new String[]{
                 android.Manifest.permission.ACCESS_FINE_LOCATION,
-                android.Manifest.permission.ACCESS_COARSE_LOCATION
+                android.Manifest.permission.ACCESS_COARSE_LOCATION,
+                android.Manifest.permission.WRITE_EXTERNAL_STORAGE
         });
+
     }
 
     private void postRequestPermissions() {
@@ -179,6 +190,8 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void doProcessLocation(Location location) throws IOException {
+        lastLocation = location;
+
         Log.e("main_activity", "doProcessLocation()");
         double lat = location.getLatitude();
         double lng = location.getLongitude();
@@ -219,5 +232,9 @@ public class MainActivity extends AppCompatActivity {
         NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment_content_main);
         return NavigationUI.navigateUp(navController, appBarConfiguration)
                 || super.onSupportNavigateUp();
+    }
+
+    public Location getLastLocation() {
+        return lastLocation;
     }
 }
