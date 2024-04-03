@@ -1,4 +1,4 @@
-package model;
+package soturi.model;
 
 public record Position(double latitude, double longitude) {
     /** Returns distance between points in meters */

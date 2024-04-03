@@ -1,10 +1,10 @@
-package model.messages_to_client;
+package soturi.model.messages_to_client;
 
-import model.Enemy;
-import model.EnemyId;
-import model.Player;
-import model.Position;
-import model.Result;
+import soturi.model.Enemy;
+import soturi.model.EnemyId;
+import soturi.model.Player;
+import soturi.model.Position;
+import soturi.model.Result;
 
 public interface MessageToClientHandler {
     void enemyAppears(Enemy enemy);

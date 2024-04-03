@@ -1,9 +1,9 @@
-package model.messages_to_server;
+package soturi.model.messages_to_server;
 
 import lombok.AllArgsConstructor;
-import model.EnemyId;
-import model.Item;
-import model.Position;
+import soturi.model.EnemyId;
+import soturi.model.Item;
+import soturi.model.Position;
 
 import java.util.function.Consumer;
 

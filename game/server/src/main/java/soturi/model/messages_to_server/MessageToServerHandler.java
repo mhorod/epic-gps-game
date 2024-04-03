@@ -1,8 +1,8 @@
-package model.messages_to_server;
+package soturi.model.messages_to_server;
 
-import model.EnemyId;
-import model.Item;
-import model.Position;
+import soturi.model.EnemyId;
+import soturi.model.Item;
+import soturi.model.Position;
 
 public interface MessageToServerHandler {
     void attackEnemy(EnemyId enemyId);

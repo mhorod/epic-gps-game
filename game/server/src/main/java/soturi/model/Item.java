@@ -1,4 +1,4 @@
-package model;
+package soturi.model;
 
 public record Item(String name, ItemType type, long hp, long attack, long defense, int itemId) {
     public enum ItemType {

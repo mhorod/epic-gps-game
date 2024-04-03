@@ -1,7 +1,7 @@
-package model.messages_to_client;
+package soturi.model.messages_to_client;
 
-import model.EnemyId;
-import model.Result;
+import soturi.model.EnemyId;
+import soturi.model.Result;
 
 public record FightResult(Result result, EnemyId enemyId) implements MessageToClient {
     @Override
