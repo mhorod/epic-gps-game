@@ -12,7 +12,6 @@ public class EnemyTracker {
     private List<Enemy> enemies = new ArrayList<>();
 
     public synchronized void addEnemy(Enemy enemy) {
-        System.out.println("ADDING TO THE LIST");
         enemies.add(enemy);
     }
 

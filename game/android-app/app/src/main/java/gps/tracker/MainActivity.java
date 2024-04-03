@@ -47,9 +47,6 @@ public class MainActivity extends AppCompatActivity {
     private WebSocketClient webSocketClient = new WebSocketClient(new MessageToClientHandler() {
         @Override
         public void enemyAppears(Enemy enemy) {
-            System.out.println("ŁO CIĘ KURCZĘ BLASZKA");
-            System.out.println(enemy.toString());
-
             enemyTracker.addEnemy(enemy);
         }
 
