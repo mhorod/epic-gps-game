@@ -5,13 +5,87 @@ class Position {
     }
 }
 
+class WorldMap {
+    constructor() {
+        this.map = L.map("map").setView([50.03, 19.9], 10);
+        L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+            maxZoom: 19,
+            attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+        }).addTo(this.map);
+    }
 
-class Entity {
-    constructor(name, position) {
-        this.name = name;
-        this.position = position;
+    zoomOn(position) {
+        this.map.setView({lat: position.latitude, lng: position.longitude}, 16)
     }
 }
+
+class EntityList {
+    constructor(map) {
+        this.map = map
+        this.enemyList = document.getElementById("enemy-list");
+
+        this.playerList = document.getElementById("player-list");
+        this.playerMap = new Map();
+
+    }
+
+    addEnemy(enemy) {
+        const enemyElement = document.createElement("li");
+        enemyElement.onclick = () => this.map.zoomOn(enemy.position)
+        enemyElement.innerText = enemy.name;
+        this.enemyList.appendChild(enemyElement);
+
+        let marker = L.marker([enemy.position.latitude, enemy.position.longitude], {icon: frogIcon}).addTo(map.map);
+        marker.bindPopup(enemy.name)
+    }
+
+    addPlayer(player) {
+        const playerElement = document.createElement("li");
+        playerElement.onclick = () => this.map.zoomOn(player.position)
+        playerElement.innerText = player.player.name;
+        this.playerList.appendChild(playerElement);
+
+        let marker = L.marker([player.position.latitude, player.position.longitude], {icon: warriorIcon}).addTo(map.map);
+        marker.bindPopup(player.player.name)
+
+        this.playerList.set(player.player.name, {
+            player: player.player,
+            position: player.position,
+            marker: marker
+        })
+    }
+
+    updatePlayer(player) {
+        const name = player.player.name;
+        if  (this.playerMap.has(player.player.name)) {
+            const current = this.playerMap.get(name)
+            current.player = player;
+            current.position = player.position;
+            current.marker.setLatLng(L.LatLng(player.position.latitude, player.position.longitude))
+        }
+    }
+}
+
+class GameServer {
+    constructor(url) {
+        this.url = url
+    }
+
+    async getEnemies() {
+        return await fetch(this.url + "/v1/enemies")
+            .then(res => res.json())
+            .then(data => data)
+            .catch(err => console.log(err));
+    }
+
+    async getPlayers() {
+        return await fetch(this.url + "/v1/players")
+            .then(res => res.json())
+            .then(data => data)
+            .catch(err => console.log(err));
+    }
+}
+
 
 const frogIcon = L.icon({
     iconUrl: "/img/frog.png",
@@ -23,61 +97,20 @@ const warriorIcon = L.icon({
     iconSize: [50, 50]
 })
 
-const enemyList = document.getElementById("enemy-list");
-const playerList = document.getElementById("player-list");
 
-
-function addEnemy(enemy, map) {
-    let marker = L.marker([enemy.position.latitude, enemy.position.longitude], {icon: frogIcon}).addTo(map);
-    marker.bindPopup(enemy.name)
-    const enemyElement = document.createElement("li");
-    enemyElement.onclick = () => zoomOn(map, enemy.position)
-    enemyElement.innerText = enemy.name;
-    enemyList.appendChild(enemyElement);
-}
-
-function addPlayer(player, map) {
-    console.log(player)
-    let marker = L.marker([player.position.latitude, player.position.longitude], {icon: warriorIcon}).addTo(map);
-    marker.bindPopup(player.player.name)
-    const playerElement = document.createElement("li");
-    playerElement.onclick = () => zoomOn(map, player.position)
-    playerElement.innerText = player.player.name;
-    playerList.appendChild(playerElement);
-}
-
-function zoomOn(map, position) {
-  map.setView({lat: position.latitude, lng: position.longitude}, 16)
-}
 
 const host = window.location.hostname;
 const port = 8080;
 const protocol = globalThis.protocol == "https" ? "wss" : "ws";
 const httpUrl = "http://" +  host + ":" + port;
 
-const map = L.map("map").setView([50.03, 19.9], 10);
-L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
-    maxZoom: 19,
-    attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-}).addTo(map);
+const gameServer = new GameServer(httpUrl)
 
-fetch(httpUrl + "/v1/enemies")
-    .then(res => res.json())
-    .then(data => {
-        for (const enemy of data) {
-            addEnemy(enemy, map)
-        }
-    })
-    .catch(err => console.log(err));
+const map = new WorldMap()
+const entityList = new EntityList(map);
 
-fetch(httpUrl + "/v1/players")
-    .then(res => res.json())
-    .then(data => {
-        for (const player of data) {
-            addPlayer(player, map)
-        }
-    })
-    .catch(err => console.log(err));
+gameServer.getEnemies().then(enemies => enemies.forEach(e => entityList.addEnemy(e)));
+gameServer.getPlayers().then(players => players.forEach(p => entityList.addPlayer(p)));
 
 const websocket = new WebSocket(`${protocol}://${host}:${port}/ws/dashboard`);
 websocket.onopen = (e) => {
@@ -89,11 +122,9 @@ websocket.onmessage = (e) => {
     let obj = JSON.parse(e.data);
     console.log(obj);
     if (obj.type === ".EnemyAppears") {
-        let enemy = obj.enemy;
-        addEnemy(enemy, map);
+        entityList.addEnemy(obj.enemy);
     }
     else if (obj.type === ".PlayerUpdate") {
-        let player = obj.player;
-        addPlayer(player, map);
+        entityList.updatePlayer(obj);
     }
 };
