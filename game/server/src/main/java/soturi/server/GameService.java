@@ -15,40 +15,57 @@ import soturi.model.Position;
 import soturi.model.Result;
 import soturi.model.messages_to_client.MessageToClientHandler;
 import soturi.model.messages_to_server.MessageToServerHandler;
+import soturi.server.geo.GeoManager;
 
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Stream;
 
 @Slf4j
 @Component
 @RequiredArgsConstructor
 public final class GameService {
+    private final Map<String, PlayerSession> sessions = new LinkedHashMap<>();
+    private final Map<String, MessageToClientHandler> observers = new LinkedHashMap<>();
+    private final Map<EnemyId, Enemy> enemies = new LinkedHashMap<>();
     private final PlayerRepository repository;
-    private final Map<String, PlayerSession> sessions;
-    private final Map<String, MessageToClientHandler> observers;
-    private final Map<EnemyId, Enemy> enemies;
     private final GameUtility gameUtility;
+    private final GeoManager geoManager;
     private final FightSimulator fightSimulator;
 
-    public List<Enemy> getEnemies() {
+    public void stopAndDisconnectAll() {
+        while (!sessions.isEmpty())
+            logout(sessions.entrySet().iterator().next().getKey());
+        while (!observers.isEmpty())
+            remObserver(observers.entrySet().iterator().next().getKey());
+        while (!enemies.isEmpty())
+            unregisterEnemy(enemies.entrySet().iterator().next().getKey());
+    }
+
+    public synchronized List<Enemy> getEnemies() {
         return enemies.values().stream().toList();
     }
 
-    public List<PlayerWithPosition> getPlayers() {
+    public synchronized List<PlayerWithPosition> getAllPlayers() {
         return sessions.keySet().stream()
-                .map(repository::findByName)
-                .flatMap(Optional::stream)
-                .map(gameUtility::getPlayerFromEntity)
-                .map(p -> new PlayerWithPosition(p, sessions.get(p.name()).getPosition()))
-                .toList();
+            .map(repository::findByName)
+            .flatMap(Optional::stream)
+            .map(gameUtility::getPlayerFromEntity)
+            .map(p -> new PlayerWithPosition(p, sessions.get(p.name()).getPosition()))
+            .toList();
     }
 
+    public synchronized List<PlayerWithPosition> getPlayers() { // only those with position
+        return getAllPlayers().stream()
+            .filter(playerWithPosition -> playerWithPosition.position() != null)
+            .toList();
+    }
 
     @Scheduled(fixedDelayString = "${give-free-xp.delay-in-milliseconds}")
-    void giveFreeXp() {
-        log.debug("giveFreeXp()");
+    private synchronized void giveFreeXp() {
+        log.info("giveFreeXp() started");
+
         if (gameUtility.giveFreeXpAmount == 0)
             return;
         for (String player : sessions.keySet()) {
@@ -57,26 +74,21 @@ public final class GameService {
             repository.save(entity);
             sendUpdatesFor(player);
         }
+
+        log.info("giveFreeXp() exited");
     }
 
     @Scheduled(fixedDelayString = "${spawn-enemy.delay-in-milliseconds}")
-    void spawnEnemy() {
-        log.debug("spawnEnemy()");
-        List<Enemy> enemyList = enemies.values().stream().toList();
-        Stream<Optional<PlayerWithPosition>> playerStream = sessions.entrySet().stream().map(kv -> {
-            Position position = kv.getValue().getPosition();
-            if (position == null)
-                return Optional.empty();
-            PlayerEntity entity = repository.findByName(kv.getKey()).orElseThrow();
-            Player player = gameUtility.getPlayerFromEntity(entity);
-            return Optional.of(new PlayerWithPosition(player, position));
-        });
-        List<PlayerWithPosition> players = playerStream.flatMap(Optional::stream).toList();
+    private synchronized void spawnEnemy() {
+        log.info("spawnEnemy() started");
 
-        gameUtility.generateOrdinaryEnemy(enemyList, players).ifPresent(this::registerEnemy);
+        List<Enemy> enemyList = enemies.values().stream().toList();
+        gameUtility.generateOrdinaryEnemy(enemyList, getPlayers()).ifPresent(this::registerEnemy);
+
+        log.info("spawnEnemy() exited");
     }
 
-    void registerEnemy(Enemy enemy) {
+    private synchronized void registerEnemy(Enemy enemy) {
         if (enemies.put(enemy.enemyId(), enemy) != null)
             throw new RuntimeException();
         for (var session : sessions.values())
@@ -85,7 +97,7 @@ public final class GameService {
             sender.enemyAppears(enemy);
     }
 
-    void unregisterEnemy(EnemyId enemyId) {
+    private synchronized void unregisterEnemy(EnemyId enemyId) {
         if (enemies.remove(enemyId) == null)
             throw new RuntimeException();
         for (var session : sessions.values())
@@ -94,7 +106,7 @@ public final class GameService {
             sender.enemyDisappears(enemyId);
     }
 
-    void sendUpdatesFor(@NonNull String playerName) {
+    private synchronized void sendUpdatesFor(@NonNull String playerName) {
         PlayerEntity playerEntity = repository.findByName(playerName).orElseThrow();
         Player playerData = gameUtility.getPlayerFromEntity(playerEntity);
         PlayerSession playerSession = sessions.get(playerName);
@@ -109,7 +121,7 @@ public final class GameService {
             sender.playerUpdate(playerData, playerPosition);
     }
 
-    private void processAttack(String playerName, EnemyId enemyId) {
+    private synchronized void processAttackEnemy(String playerName, EnemyId enemyId) {
         PlayerEntity playerEntity = repository.findByName(playerName).orElseThrow();
         Player playerData = gameUtility.getPlayerFromEntity(playerEntity);
         PlayerSession playerSession = sessions.get(playerName);
@@ -134,40 +146,64 @@ public final class GameService {
             unregisterEnemy(enemyId);
     }
 
-    MessageToServerHandler sendTo(@NonNull String playerName) {
+    public synchronized MessageToServerHandler receiveFrom(@NonNull String playerName) {
         @NonNull PlayerSession session = sessions.get(playerName);
         MessageToClientHandler sender = session.getSender();
 
         return new MessageToServerHandler() {
             @Override
             public void attackEnemy(EnemyId enemyId) {
-                processAttack(playerName, enemyId);
+                synchronized (GameService.this) {
+                    processAttackEnemy(playerName, enemyId);
+                }
             }
 
             @Override
             public void equipItem(Item item) {
-                sender.error("not supported");
+                synchronized (GameService.this) {
+                    sender.error("not supported");
+                }
             }
 
             @Override
             public void unequipItem(Item item) {
-                sender.error("not supported");
+                synchronized (GameService.this) {
+                    sender.error("not supported");
+                }
             }
 
             @Override
             public void updateLookingPosition(Position position) {
-                session.setLooking(position);
+                synchronized (GameService.this) {
+                    session.setLooking(position);
+                }
             }
 
             @Override
             public void updateRealPosition(Position position) {
-                session.setPosition(position);
-                sendUpdatesFor(playerName);
+                synchronized (GameService.this) {
+                    session.setPosition(position);
+                    sendUpdatesFor(playerName);
+                }
             }
         };
     }
 
-    boolean login(String name, String hashedPassword, @NonNull MessageToClientHandler sender) {
+    private synchronized void doLogin(String name, String hashedPassword, MessageToClientHandler sender) {
+        log.info("doLogin({})", name);
+        sessions.put(name, new PlayerSession(sender));
+        sendUpdatesFor(name);
+
+        for (var kv : sessions.entrySet()) if (!kv.getKey().equals(name))
+            sender.playerUpdate(
+                gameUtility.getPlayerFromEntity(repository.findByName(kv.getKey()).orElseThrow()),
+                kv.getValue().getPosition()
+            );
+        for (Enemy enemy : enemies.values())
+            sender.enemyAppears(enemy);
+    }
+
+    public synchronized boolean login(String name, String hashedPassword, @NonNull MessageToClientHandler sender) {
         if (name == null || name.isEmpty() || hashedPassword == null) {
             sender.error("null data passed");
             return false;
@@ -183,22 +219,35 @@ public final class GameService {
             sender.error("this player is already logged in");
             return false;
         }
-        sessions.put(name, new PlayerSession(sender));
-        sendUpdatesFor(name);
+
+        doLogin(name, hashedPassword, sender);
         return true;
     }
 
-    void logout(@NonNull String playerName) {
+    public synchronized void logout(@NonNull String playerName) {
+        log.info("logout({})", playerName);
         if (sessions.remove(playerName) == null)
             throw new RuntimeException();
+        for (var session : sessions.values())
+            session.getSender().playerDisappears(playerName);
+        for (var observer : observers.values())
+            observer.playerDisappears(playerName);
     }
 
-    void addObserver(String id, MessageToClientHandler observer) {
+    public synchronized void addObserver(String id, MessageToClientHandler observer) {
         if (observers.put(id, observer) != null)
             throw new RuntimeException();
+
+        for (var kv : sessions.entrySet())
+            observer.playerUpdate(
+                gameUtility.getPlayerFromEntity(repository.findByName(kv.getKey()).orElseThrow()),
+                kv.getValue().getPosition()
+            );
+        for (Enemy enemy : enemies.values())
+            observer.enemyAppears(enemy);
     }
 
-    void remObserver(String id) {
+    public synchronized void remObserver(String id) {
         if (observers.remove(id) == null)
             throw new RuntimeException();
     }

@@ -1,12 +1,13 @@
 package soturi.server;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.env.Environment;
 import soturi.model.Enemy;
 import soturi.model.EnemyId;
 import soturi.model.Player;
 import soturi.model.PlayerWithPosition;
 import soturi.model.Position;
-import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
 
 import java.util.List;

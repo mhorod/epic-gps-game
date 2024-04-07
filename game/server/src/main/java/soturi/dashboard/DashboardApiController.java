@@ -3,19 +3,21 @@ package soturi.dashboard;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
+import soturi.model.Area;
 import soturi.model.Enemy;
 import soturi.model.EnemyId;
 import soturi.model.Player;
 import soturi.model.PlayerWithPosition;
 import soturi.model.Position;
 import soturi.server.GameService;
+import soturi.server.geo.GeoManager;
 
 import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
 public class DashboardApiController {
-
+    private final GeoManager geoManager;
     private final GameService gameService;
 
     @GetMapping("/v1/enemies")
@@ -45,5 +47,10 @@ public class DashboardApiController {
            return List.of(new PlayerWithPosition(player, new Position(49, 27)));
        else
            return players;
+    }
+
+    @GetMapping("/v1/areas")
+    public List<Area> getAreas() {
+        return geoManager.getAreas();
     }
 }

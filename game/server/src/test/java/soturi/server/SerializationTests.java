@@ -1,6 +1,7 @@
 package soturi.server;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.test.context.TestPropertySource;
 import soturi.model.EnemyId;
 import soturi.model.messages_to_server.AttackEnemy;
 import soturi.model.messages_to_server.MessageToServer;
@@ -10,8 +11,9 @@ import org.springframework.boot.test.context.SpringBootTest;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+@TestPropertySource(locations = "classpath:application.properties", properties="spring.datasource.url=jdbc:h2:mem:")
 @SpringBootTest
-class ServerApplicationTests {
+class SerializationTests {
     @Autowired
     ObjectMapper objectMapper;
 
