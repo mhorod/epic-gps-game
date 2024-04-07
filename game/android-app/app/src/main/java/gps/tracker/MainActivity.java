@@ -1,27 +1,30 @@
 package gps.tracker;
 
-import android.content.Context;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Bundle;
-
-import com.google.android.material.snackbar.Snackbar;
+import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
-
-import android.util.Log;
-import android.view.View;
-
 import androidx.core.app.ActivityCompat;
 import androidx.fragment.app.FragmentManager;
 import androidx.navigation.NavController;
 import androidx.navigation.Navigation;
 import androidx.navigation.ui.AppBarConfiguration;
 import androidx.navigation.ui.NavigationUI;
+
+import org.osmdroid.config.Configuration;
+import org.osmdroid.config.IConfigurationProvider;
+
+import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 
 import gps.tracker.databinding.ActivityMainBinding;
 import lombok.SneakyThrows;
@@ -30,30 +33,21 @@ import model.EnemyId;
 import model.Player;
 import model.Position;
 import model.Result;
-import model.messages_to_client.FightResult;
 import model.messages_to_client.MessageToClientHandler;
-
-import android.view.Menu;
-import android.view.MenuItem;
-import android.widget.ImageView;
-
-import java.io.IOException;
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
 
+    private final List<LocationListener> sublisteners = new ArrayList<>();
     private AppBarConfiguration appBarConfiguration;
     private ActivityMainBinding binding;
     private LocationListener locationListener;
     private LocationManager locationManager;
-
+    private Location lastLocation;
+    private EnemyTracker enemyTracker = new EnemyTracker();
     private WebSocketClient webSocketClient = new WebSocketClient(new MessageToClientHandler() {
         @Override
         public void enemyAppears(Enemy enemy) {
-            System.out.println(enemy.toString());
+            enemyTracker.addEnemy(enemy);
         }
 
         @Override
@@ -87,7 +81,6 @@ public class MainActivity extends AppCompatActivity {
         }
     });
     private FragmentManager fragmentManager;
-    private final List<LocationListener> sublisteners = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -102,28 +95,33 @@ public class MainActivity extends AppCompatActivity {
         appBarConfiguration = new AppBarConfiguration.Builder(navController.getGraph()).build();
         NavigationUI.setupActionBarWithNavController(this, navController, appBarConfiguration);
 
-        binding.fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                        .setAnchorView(R.id.fab)
-                        .setAction("Action", null).show();
-            }
-        });
-
         requestPermissions();
+
+        Configuration.getInstance().setUserAgentValue("Soturi/0.1");
+
+        IConfigurationProvider mapConfig = Configuration.getInstance();
+
+
+        File basePath = new File(getCacheDir().getAbsolutePath(), "osmdroid");
+        File tileCache = new File(basePath, "tile");
+
+        mapConfig.setOsmdroidBasePath(basePath);
+        mapConfig.setOsmdroidTileCache(tileCache);
+
 
     }
 
     private void requestPermissions() {
         ActivityResultLauncher<String[]> locationPermissionRequest =
                 registerForActivityResult(new ActivityResultContracts
-                                .RequestMultiplePermissions(), result -> postRequestPermissions()
+                        .RequestMultiplePermissions(), result -> postRequestPermissions()
                 );
         locationPermissionRequest.launch(new String[]{
                 android.Manifest.permission.ACCESS_FINE_LOCATION,
-                android.Manifest.permission.ACCESS_COARSE_LOCATION
+                android.Manifest.permission.ACCESS_COARSE_LOCATION,
+                android.Manifest.permission.WRITE_EXTERNAL_STORAGE
         });
+
     }
 
     private void postRequestPermissions() {
@@ -174,6 +172,7 @@ public class MainActivity extends AppCompatActivity {
 
     @SneakyThrows
     private void doProcessLocation(Location location) {
+        lastLocation = location;
         Log.e("main_activity", "doProcessLocation()");
         double lat = location.getLatitude();
         double lng = location.getLongitude();
@@ -207,5 +206,13 @@ public class MainActivity extends AppCompatActivity {
         NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment_content_main);
         return NavigationUI.navigateUp(navController, appBarConfiguration)
                 || super.onSupportNavigateUp();
+    }
+
+    public Location getLastLocation() {
+        return lastLocation;
+    }
+
+    public EnemyTracker getEnemyTracker() {
+        return enemyTracker;
     }
 }

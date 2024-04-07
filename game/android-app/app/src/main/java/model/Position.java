@@ -16,4 +16,13 @@ public record Position(double latitude, double longitude) {
 
         return 2 * earthRadius * Math.asin(Math.sqrt(t1 * t1 + t2 * t3 * t4 * t4));
     }
+
+    @Override
+    public boolean equals(Object other) {
+        if (other instanceof Position otherPosition) {
+            return latitude == otherPosition.latitude && longitude == otherPosition.longitude;
+        }
+        return false;
+    }
+
 }
