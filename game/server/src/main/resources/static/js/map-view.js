@@ -48,7 +48,7 @@ class EntityList {
         let marker = L.marker([player.position.latitude, player.position.longitude], {icon: warriorIcon}).addTo(map.map);
         marker.bindPopup(player.player.name)
 
-        this.playerList.set(player.player.name, {
+        this.playerMap.set(player.player.name, {
             player: player.player,
             position: player.position,
             marker: marker
@@ -57,12 +57,14 @@ class EntityList {
 
     updatePlayer(player) {
         const name = player.player.name;
-        if  (this.playerMap.has(player.player.name)) {
-            const current = this.playerMap.get(name)
-            current.player = player;
-            current.position = player.position;
-            current.marker.setLatLng(L.LatLng(player.position.latitude, player.position.longitude))
+        if  (!this.playerMap.has(player.player.name)) {
+            this.addPlayer(player);
         }
+
+        const current = this.playerMap.get(name)
+        current.player = player;
+        current.position = player.position;
+        current.marker.setLatLng([player.position.latitude, player.position.longitude]).update()
     }
 }
 
