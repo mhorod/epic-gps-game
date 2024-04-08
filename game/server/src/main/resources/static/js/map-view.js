@@ -102,9 +102,10 @@ const warriorIcon = L.icon({
 
 
 const host = window.location.hostname;
-const port = 8080;
-const protocol = globalThis.protocol == "https" ? "wss" : "ws";
-const httpUrl = "http://" +  host + ":" + port;
+const port = window.location.port;
+const protocol = window.location.protocol === "https:" ? "wss" : "ws";
+
+const httpUrl = window.location.protocol + "//" +  host + ":" + port;
 
 const gameServer = new GameServer(httpUrl)
 
