@@ -19,6 +19,10 @@ public class DashboardWebController {
         return "index";
     }
 
+    @GetMapping("/sign-in")
+    public String signIn() {
+        return "sign-in";
+    }
 
     @GetMapping("/map-view")
     public String mapView() {

@@ -22,9 +22,7 @@ class WorldMap {
 class EntityList {
     constructor(map) {
         this.map = map
-        this.enemyList = document.getElementById("enemy-list");
-
-        this.playerList = document.getElementById("player-list");
+        this.enemyMap = new Map();
         this.playerMap = new Map();
 
     }
@@ -33,17 +31,17 @@ class EntityList {
         const enemyElement = document.createElement("li");
         enemyElement.onclick = () => this.map.zoomOn(enemy.position)
         enemyElement.innerText = enemy.name;
-        this.enemyList.appendChild(enemyElement);
 
         let marker = L.marker([enemy.position.latitude, enemy.position.longitude], {icon: frogIcon}).addTo(map.map);
         marker.bindPopup(enemy.name)
+
+        this.enemyMap.set(enemy.enemyId.id, enemy)
     }
 
     addPlayer(player) {
         const playerElement = document.createElement("li");
         playerElement.onclick = () => this.map.zoomOn(player.position)
         playerElement.innerText = player.player.name;
-        this.playerList.appendChild(playerElement);
 
         let marker = L.marker([player.position.latitude, player.position.longitude], {icon: warriorIcon}).addTo(map.map);
         marker.bindPopup(player.player.name)
@@ -57,7 +55,7 @@ class EntityList {
 
     updatePlayer(player) {
         const name = player.player.name;
-        if  (!this.playerMap.has(player.player.name)) {
+        if (!this.playerMap.has(player.player.name)) {
             this.addPlayer(player);
         }
 
@@ -88,6 +86,92 @@ class GameServer {
     }
 }
 
+class SearchModal {
+    constructor(map, entityList) {
+        this.map = map
+        this.entityList = entityList
+
+        this.active = false;
+        this.searchBar = document.getElementById("search-bar");
+        this.searchModal = document.getElementById("search-modal");
+        this.searchModalCloseButton = document.getElementById("search-modal-close-icon");
+        this.searchResults = document.getElementById("search-results")
+
+        this.searchBar.addEventListener("click", () => this.beginSearch());
+        this.searchModalCloseButton.addEventListener("click", () => this.endSearch());
+        document.addEventListener("click", e => {
+            console.log(e.target)
+            if (!this.searchBar.contains(e.target) && !this.searchModal.contains(e.target)) {
+                this.endSearch();
+            }
+        })
+    }
+
+    beginSearch() {
+        this.searchBar.classList.add("active")
+        this.searchModal.classList.add("active")
+        this.active = true
+        this.refreshResults()
+    }
+
+    refreshResults() {
+        if (!this.active) return;
+
+        this.searchResults.innerHTML = ""
+        for (let enemy of this.entityList.enemyMap.values()) {
+            const element = this.createSearchResultElement(
+                "skull",
+                enemy.name,
+                "Enemy lvl " + enemy.lvl,
+                () => this.map.zoomOn(enemy.position)
+            )
+            this.searchResults.appendChild(element);
+        }
+
+        for (let player of this.entityList.playerMap.values()) {
+            const p = player.player
+            const element = this.createSearchResultElement(
+                "person",
+                p.name,
+                "Player lvl " + p.lvl,
+                () => this.map.zoomOn(player.position)
+            )
+            this.searchResults.appendChild(element);
+        }
+    }
+
+    createSearchResultElement(resultIcon, resultName, resultType, onclick) {
+        const wrapper = document.createElement("div")
+        wrapper.classList.add("search-result")
+
+        const name = document.createElement("div")
+        name.classList.add("search-result-name")
+
+        const iconWrapper = document.createElement("div")
+        iconWrapper.classList.add("search-result-icon")
+        iconWrapper.innerHTML = `<ion-icon name=${resultIcon}></ion-icon>`
+
+        const nameTextWrapper = document.createElement("span")
+        nameTextWrapper.innerText = resultName
+
+
+        const typeWrapper = document.createElement("div")
+        typeWrapper.classList.add("search-result-type")
+        typeWrapper.innerText = resultType
+
+        name.append(iconWrapper, nameTextWrapper)
+        wrapper.append(name, typeWrapper)
+        wrapper.addEventListener("click", onclick)
+        return wrapper
+    }
+
+    endSearch() {
+        this.searchBar.classList.remove("active")
+        this.searchModal.classList.remove("active")
+        this.active = false
+    }
+}
+
 
 const frogIcon = L.icon({
     iconUrl: "/img/frog.png",
@@ -100,17 +184,18 @@ const warriorIcon = L.icon({
 })
 
 
-
 const host = window.location.hostname;
 const port = window.location.port;
 const protocol = window.location.protocol === "https:" ? "wss" : "ws";
 
-const httpUrl = window.location.protocol + "//" +  host + ":" + port;
+const httpUrl = window.location.protocol + "//" + host + ":" + port;
 
 const gameServer = new GameServer(httpUrl)
 
 const map = new WorldMap()
 const entityList = new EntityList(map);
+
+const searchModal = new SearchModal(map, entityList);
 
 gameServer.getEnemies().then(enemies => enemies.forEach(e => entityList.addEnemy(e)));
 gameServer.getPlayers().then(players => players.forEach(p => entityList.addPlayer(p)));
@@ -126,8 +211,9 @@ websocket.onmessage = (e) => {
     console.log(obj);
     if (obj.type === ".EnemyAppears") {
         entityList.addEnemy(obj.enemy);
-    }
-    else if (obj.type === ".PlayerUpdate") {
+        searchModal.refreshResults()
+    } else if (obj.type === ".PlayerUpdate") {
         entityList.updatePlayer(obj);
+        searchModal.refreshResults()
     }
 };
