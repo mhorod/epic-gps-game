@@ -1,10 +1,12 @@
 package gps.tracker;
 
+import android.annotation.SuppressLint;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Bundle;
+import android.os.Looper;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -157,13 +159,38 @@ public class MainActivity extends AppCompatActivity {
         Log.e("main_activity", "hello world!!");
     }
 
+    @SuppressLint("MissingPermission")
     private void processLocation(Location location) {
+        System.out.println("PROCESS LOCATION" + location.toString());
+
         for (LocationListener sublistener : sublisteners) {
             sublistener.onLocationChanged(location);
         }
 
         Log.e("main_activity", location.toString());
         new Thread(() -> doProcessLocation(location)).start();
+
+        // Haha
+        locationManager.removeUpdates(locationListener);
+
+        new Thread(
+                () -> {
+                    try {
+                        Thread.sleep(3000);
+                    } catch (InterruptedException e) {
+                        throw new RuntimeException(e);
+                    }
+                    runOnUiThread( () -> {
+                        locationManager.requestLocationUpdates(
+                                "fused",
+                                1L,
+                                0.1f,
+                                locationListener);
+                            }
+                    );
+                }
+        ).start();
+
     }
 
     public void registerLocationListener(LocationListener listener) {
