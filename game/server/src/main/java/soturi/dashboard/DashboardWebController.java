@@ -24,6 +24,11 @@ public class DashboardWebController {
         return "sign-in";
     }
 
+    @GetMapping("/spawn-areas")
+    public String spawnAreas() {
+        return "spawn-areas";
+    }
+
     @GetMapping("/map-view")
     public String mapView() {
         return "map-view";
