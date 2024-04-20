@@ -85,7 +85,6 @@ public final class MonsterManager {
         for (int i = 0; i < maxSplit; ++i)
             splits.add(fullArea.kSplit(1 << i));
 
-        log.info("{}", splits);
         int n = 1 << (maxSplit-1);
         int[][] marks = new int[n][n];
         for (int[] row : marks)

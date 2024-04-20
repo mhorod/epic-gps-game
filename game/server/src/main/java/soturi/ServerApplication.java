@@ -8,6 +8,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @EnableScheduling
 public class ServerApplication {
     public static void main(String[] args) {
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> Runtime.getRuntime().halt(0)));
         SpringApplication.run(ServerApplication.class, args);
     }
 }

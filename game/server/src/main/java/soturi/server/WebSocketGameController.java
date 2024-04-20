@@ -37,34 +37,32 @@ public final class WebSocketGameController extends TextWebSocketHandler {
     }
 
     private MessageToClientHandler sendToSession(WebSocketSession session) {
-        return new MessageToClientFactory(message -> {
-            Thread.ofPlatform().daemon().start(() -> {
-                synchronized (session) {
-                    String wsName = (String) session.getAttributes().get("ws-name");
-                    log.info("[ TO ] {} [MSG] {}", wsName, message);
+        return new MessageToClientFactory(message -> Thread.ofVirtual().start(() -> {
+            synchronized (session) {
+                String wsName = (String) session.getAttributes().get("ws-name");
+                log.info("[ TO ] {} [MSG] {}", wsName, message);
 
-                    if (wsName == null) {
-                        log.error("this should never happen (wsName == null)");
-                        close(session);
-                        return;
-                    }
-
-                    try {
-                        String asText = mapper.writeValueAsString(message);
-                        session.sendMessage(new TextMessage(asText));
-                    } catch (JacksonException exception) {
-                        log.error("jackson exception", exception);
-                        close(session);
-                    } catch (IOException ignored) {
-                        log.info("exception thrown while sending to {}", wsName);
-                        close(session);
-                    }
-
-                    if (message instanceof Disconnect)
-                        close(session);
+                if (wsName == null) {
+                    log.error("this should never happen (wsName == null)");
+                    close(session);
+                    return;
                 }
-            }).start();
-        });
+
+                try {
+                    String asText = mapper.writeValueAsString(message);
+                    session.sendMessage(new TextMessage(asText));
+                } catch (JacksonException exception) {
+                    log.error("jackson exception", exception);
+                    close(session);
+                } catch (IOException ignored) {
+                    log.info("exception thrown while sending to {}", wsName);
+                    close(session);
+                }
+
+                if (message instanceof Disconnect)
+                    close(session);
+            }
+        }));
     }
 
     @Override
