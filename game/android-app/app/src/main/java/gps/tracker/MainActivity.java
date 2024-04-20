@@ -27,6 +27,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import gps.tracker.databinding.ActivityMainBinding;
+import gps.tracker.simple_listeners.Notifier;
 import lombok.SneakyThrows;
 import model.Enemy;
 import model.EnemyId;
@@ -37,6 +38,7 @@ import model.messages_to_client.MessageToClientHandler;
 
 public class MainActivity extends AppCompatActivity {
 
+    public final Notifier locationChangeRequestNotifier = new Notifier();
     private final List<LocationListener> sublisteners = new ArrayList<>();
     private AppBarConfiguration appBarConfiguration;
     private ActivityMainBinding binding;
@@ -44,6 +46,7 @@ public class MainActivity extends AppCompatActivity {
     private LocationManager locationManager;
     private Location lastLocation;
     private EnemyTracker enemyTracker = new EnemyTracker();
+
     private WebSocketClient webSocketClient = new WebSocketClient(new MessageToClientHandler() {
         @Override
         public void enemyAppears(Enemy enemy) {
@@ -109,6 +112,9 @@ public class MainActivity extends AppCompatActivity {
         mapConfig.setOsmdroidTileCache(tileCache);
 
 
+        binding.findMeButton.setOnClickListener(view -> {
+            locationChangeRequestNotifier.notifyListeners();
+        });
     }
 
     private void requestPermissions() {
@@ -215,4 +221,5 @@ public class MainActivity extends AppCompatActivity {
     public EnemyTracker getEnemyTracker() {
         return enemyTracker;
     }
+
 }

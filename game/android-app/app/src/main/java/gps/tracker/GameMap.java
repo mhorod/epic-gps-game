@@ -82,9 +82,7 @@ public class GameMap extends Fragment {
                 if (location != null) {
                     GeoPoint geoLocation = new GeoPoint(location.getLatitude(), location.getLongitude());
 
-                    mainActivity.runOnUiThread(() -> {
-                        controller.setCenter(geoLocation);
-                    });
+                    mainActivity.runOnUiThread(() -> controller.setCenter(geoLocation));
 
                     timer.cancel();
                 }
@@ -92,8 +90,18 @@ public class GameMap extends Fragment {
             }
         };
 
-        // Proof of concept for updating positions of enemies
+        mainActivity.locationChangeRequestNotifier.registerListener(() -> {
+                    Location location = mainActivity.getLastLocation();
 
+                    if (location != null) {
+                        GeoPoint geoLocation = new GeoPoint(location.getLatitude(), location.getLongitude());
+                        mainActivity.runOnUiThread(() -> controller.setCenter(geoLocation));
+                    }
+
+                }
+        );
+
+        // Proof of concept for updating positions of enemies
         timer.scheduleAtFixedRate(updater, 0, 1000);
 
         TimerTask updateEnemies = new TimerTask() {
