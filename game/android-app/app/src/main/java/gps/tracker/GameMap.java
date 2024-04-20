@@ -35,7 +35,6 @@ public class GameMap extends Fragment {
     private MainActivity mainActivity;
     private Timer timer;
     private Timer enemyUpdater;
-    private MyLocationNewOverlay myLocation;
 
     // From https://stackoverflow.com/questions/50077917/android-graphics-drawable-adaptiveicondrawable-cannot-be-cast-to-android-graphic
     // by Shashank Holla; CC BY-SA 4.0
@@ -133,8 +132,7 @@ public class GameMap extends Fragment {
 
                 }
 
-                // My location overlay
-                myLocation = new MyLocationNewOverlay(new IMyLocationProvider() {
+                MyLocationNewOverlay myLocation = new MyLocationNewOverlay(new IMyLocationProvider() {
                     @Override
                     public boolean startLocationProvider(IMyLocationConsumer myLocationConsumer) {
                         return true;
