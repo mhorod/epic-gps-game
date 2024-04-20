@@ -7,6 +7,7 @@ import soturi.model.Position;
 import soturi.model.Result;
 
 public interface MessageToClientHandler {
+    void disconnect();
     void enemyAppears(Enemy enemy);
     void enemyDisappears(EnemyId enemyId);
     void error(String error);

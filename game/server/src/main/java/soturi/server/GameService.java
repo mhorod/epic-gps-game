@@ -15,7 +15,7 @@ import soturi.model.Position;
 import soturi.model.Result;
 import soturi.model.messages_to_client.MessageToClientHandler;
 import soturi.model.messages_to_server.MessageToServerHandler;
-import soturi.server.geo.GeoManager;
+import soturi.server.geo.MonsterManager;
 
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -28,23 +28,26 @@ import java.util.Optional;
 public final class GameService {
     private final Map<String, PlayerSession> sessions = new LinkedHashMap<>();
     private final Map<String, MessageToClientHandler> observers = new LinkedHashMap<>();
-    private final Map<EnemyId, Enemy> enemies = new LinkedHashMap<>();
     private final PlayerRepository repository;
     private final GameUtility gameUtility;
-    private final GeoManager geoManager;
+    private final MonsterManager monsterManager;
     private final FightSimulator fightSimulator;
 
-    public void stopAndDisconnectAll() {
+    public synchronized void stopAndDisconnectAll() {
         while (!sessions.isEmpty())
             logout(sessions.entrySet().iterator().next().getKey());
         while (!observers.isEmpty())
             remObserver(observers.entrySet().iterator().next().getKey());
-        while (!enemies.isEmpty())
-            unregisterEnemy(enemies.entrySet().iterator().next().getKey());
+        unregisterAllEnemies();
+    }
+
+    public synchronized void unregisterAllEnemies() {
+        for (Enemy enemy : getEnemies())
+            unregisterEnemy(enemy.enemyId());
     }
 
     public synchronized List<Enemy> getEnemies() {
-        return enemies.values().stream().toList();
+        return monsterManager.getAllEnemies();
     }
 
     public synchronized List<PlayerWithPosition> getAllPlayers() {
@@ -62,9 +65,25 @@ public final class GameService {
             .toList();
     }
 
-    @Scheduled(fixedDelayString = "${give-free-xp.delay-in-milliseconds}")
+    private long secondCount = 0;
+    private synchronized void doTickEverySecond() {
+        secondCount++;
+
+        if (gameUtility.giveFreeXpDelayInSeconds > 0 && secondCount % gameUtility.giveFreeXpDelayInSeconds == 0)
+            giveFreeXp();
+        if (gameUtility.spawnEnemyDelayInSeconds > 0 && secondCount % gameUtility.spawnEnemyDelayInSeconds == 0)
+            spawnEnemies();
+    }
+
+    @Scheduled(fixedDelay = 1000)
+    private synchronized void tickEverySecond() {
+        log.info("tickEverySecond() called");
+        doTickEverySecond();
+        log.info("tickEverySecond() exited");
+    }
+
     private synchronized void giveFreeXp() {
-        log.info("giveFreeXp() started");
+        log.info("giveFreeXp() called");
 
         if (gameUtility.giveFreeXpAmount == 0)
             return;
@@ -74,23 +93,18 @@ public final class GameService {
             repository.save(entity);
             sendUpdatesFor(player);
         }
-
-        log.info("giveFreeXp() exited");
     }
 
-    @Scheduled(fixedDelayString = "${spawn-enemy.delay-in-milliseconds}")
-    private synchronized void spawnEnemy() {
-        log.info("spawnEnemy() started");
+    private synchronized void spawnEnemies() {
+        log.info("spawnEnemies() called");
 
-        List<Enemy> enemyList = enemies.values().stream().toList();
-        gameUtility.generateOrdinaryEnemy(enemyList, getPlayers()).ifPresent(this::registerEnemy);
-
-        log.info("spawnEnemy() exited");
+        for (Enemy enemy : monsterManager.generateEnemies())
+            registerEnemy(enemy);
     }
 
     private synchronized void registerEnemy(Enemy enemy) {
-        if (enemies.put(enemy.enemyId(), enemy) != null)
-            throw new RuntimeException();
+        monsterManager.registerEnemy(enemy);
+
         for (var session : sessions.values())
             session.getSender().enemyAppears(enemy);
         for (var sender : observers.values())
@@ -98,8 +112,8 @@ public final class GameService {
     }
 
     private synchronized void unregisterEnemy(EnemyId enemyId) {
-        if (enemies.remove(enemyId) == null)
-            throw new RuntimeException();
+        monsterManager.unregisterEnemy(enemyId);
+
         for (var session : sessions.values())
             session.getSender().enemyDisappears(enemyId);
         for (var sender : observers.values())
@@ -127,7 +141,7 @@ public final class GameService {
         PlayerSession playerSession = sessions.get(playerName);
         Position playerPosition = playerSession.getPosition();
 
-        Enemy enemy = enemies.get(enemyId);
+        Enemy enemy = monsterManager.getEnemyMap().get(enemyId);
         if (enemy == null) {
             playerSession.getSender().error("this enemy does not exist");
             return;
@@ -199,7 +213,7 @@ public final class GameService {
                 gameUtility.getPlayerFromEntity(repository.findByName(kv.getKey()).orElseThrow()),
                 kv.getValue().getPosition()
             );
-        for (Enemy enemy : enemies.values())
+        for (Enemy enemy : getEnemies())
             sender.enemyAppears(enemy);
     }
 
@@ -243,7 +257,7 @@ public final class GameService {
                 gameUtility.getPlayerFromEntity(repository.findByName(kv.getKey()).orElseThrow()),
                 kv.getValue().getPosition()
             );
-        for (Enemy enemy : enemies.values())
+        for (Enemy enemy : getEnemies())
             observer.enemyAppears(enemy);
     }
 

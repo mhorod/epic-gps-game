@@ -14,6 +14,11 @@ public final class MessageToClientFactory implements MessageToClientHandler {
     private final Consumer<MessageToClient> consumer;
 
     @Override
+    public void disconnect() {
+        consumer.accept(new Disconnect());
+    }
+
+    @Override
     public void enemyAppears(Enemy enemy) {
         consumer.accept(new EnemyAppears(enemy));
     }

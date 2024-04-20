@@ -46,7 +46,7 @@ public record RectangularArea(double lowerLatitude, double upperLatitude, double
         );
     }
 
-    private Position proportionalPosition(double pLatitude, double pLongitude) {
+    public Position proportionalPosition(double pLatitude, double pLongitude) {
         double lat = lowerLatitude + (upperLatitude - lowerLatitude) * pLatitude;
         double lon = lowerLongitude + (upperLongitude - lowerLongitude) * pLongitude;
         return new Position(lat, lon);

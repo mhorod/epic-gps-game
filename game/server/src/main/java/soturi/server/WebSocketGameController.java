@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.AllArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import soturi.model.messages_to_client.Disconnect;
 import soturi.model.messages_to_client.MessageToClient;
 import soturi.model.messages_to_client.MessageToClientFactory;
 import soturi.model.messages_to_client.MessageToClientHandler;
@@ -18,7 +19,6 @@ import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
 
 import java.io.IOException;
-import java.util.function.Consumer;
 
 @Slf4j
 @AllArgsConstructor
@@ -37,31 +37,34 @@ public final class WebSocketGameController extends TextWebSocketHandler {
     }
 
     private MessageToClientHandler sendToSession(WebSocketSession session) {
-        return new MessageToClientFactory(message -> Thread.ofPlatform().daemon().start(() -> {
-            synchronized (session) {
-                String wsName = (String) session.getAttributes().get("ws-name");
-                log.info("[ TO ] {} [MSG] {}", wsName, message);
+        return new MessageToClientFactory(message -> {
+            Thread.ofPlatform().daemon().start(() -> {
+                synchronized (session) {
+                    String wsName = (String) session.getAttributes().get("ws-name");
+                    log.info("[ TO ] {} [MSG] {}", wsName, message);
 
-                if (wsName == null) {
-                    log.error("this should never happen (wsName == null)");
-                    close(session);
-                    return;
-                }
+                    if (wsName == null) {
+                        log.error("this should never happen (wsName == null)");
+                        close(session);
+                        return;
+                    }
 
-                try {
-                    String asText = mapper.writeValueAsString(message);
-                    session.sendMessage(new TextMessage(asText));
+                    try {
+                        String asText = mapper.writeValueAsString(message);
+                        session.sendMessage(new TextMessage(asText));
+                    } catch (JacksonException exception) {
+                        log.error("jackson exception", exception);
+                        close(session);
+                    } catch (IOException ignored) {
+                        log.info("exception thrown while sending to {}", wsName);
+                        close(session);
+                    }
+
+                    if (message instanceof Disconnect)
+                        close(session);
                 }
-                catch (JacksonException exception) {
-                    log.error("jackson exception", exception);
-                    close(session);
-                }
-                catch (IOException ignored) {
-                    log.info("exception thrown while sending to {}", wsName);
-                    close(session);
-                }
-            }
-        }).start());
+            }).start();
+        });
     }
 
     @Override

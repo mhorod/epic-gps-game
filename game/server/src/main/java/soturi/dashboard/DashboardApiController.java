@@ -10,14 +10,14 @@ import soturi.model.Player;
 import soturi.model.PlayerWithPosition;
 import soturi.model.Position;
 import soturi.server.GameService;
-import soturi.server.geo.GeoManager;
+import soturi.server.geo.MonsterManager;
 
 import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
 public class DashboardApiController {
-    private final GeoManager geoManager;
+    private final MonsterManager monsterManager;
     private final GameService gameService;
 
     @GetMapping("/v1/enemies")
@@ -51,6 +51,6 @@ public class DashboardApiController {
 
     @GetMapping("/v1/areas")
     public List<Area> getAreas() {
-        return geoManager.getAreas();
+        return monsterManager.getAreas();
     }
 }

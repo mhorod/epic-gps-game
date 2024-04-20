@@ -1,4 +1,4 @@
-package soturi.server;
+package soturi.dashboard;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.AllArgsConstructor;
@@ -11,13 +11,14 @@ import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.handler.AbstractWebSocketHandler;
+import soturi.server.GameService;
 
 import java.util.function.Consumer;
 
 @Slf4j
 @AllArgsConstructor
 @Component
-public final class WebSocketDashboardController extends AbstractWebSocketHandler {
+public final class DashboardWebSocketController extends AbstractWebSocketHandler {
     private final ObjectMapper mapper;
     private final GameService gameService;
 
