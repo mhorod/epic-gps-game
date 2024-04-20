@@ -18,6 +18,9 @@ import org.osmdroid.tileprovider.MapTileProviderBasic;
 import org.osmdroid.util.GeoPoint;
 import org.osmdroid.views.MapView;
 import org.osmdroid.views.overlay.GroundOverlay;
+import org.osmdroid.views.overlay.mylocation.IMyLocationConsumer;
+import org.osmdroid.views.overlay.mylocation.IMyLocationProvider;
+import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay;
 
 import java.util.Timer;
 import java.util.TimerTask;
@@ -32,6 +35,7 @@ public class GameMap extends Fragment {
     private MainActivity mainActivity;
     private Timer timer;
     private Timer enemyUpdater;
+    private MyLocationNewOverlay myLocation;
 
     // From https://stackoverflow.com/questions/50077917/android-graphics-drawable-adaptiveicondrawable-cannot-be-cast-to-android-graphic
     // by Shashank Holla; CC BY-SA 4.0
@@ -129,14 +133,38 @@ public class GameMap extends Fragment {
 
                 }
 
+                // My location overlay
+                myLocation = new MyLocationNewOverlay(new IMyLocationProvider() {
+                    @Override
+                    public boolean startLocationProvider(IMyLocationConsumer myLocationConsumer) {
+                        return true;
+                    }
+
+                    @Override
+                    public void stopLocationProvider() {
+
+                    }
+
+                    @Override
+                    public Location getLastKnownLocation() {
+                        return mainActivity.getLastLocation();
+                    }
+
+                    @Override
+                    public void destroy() {
+
+                    }
+                }, mapView);
+                myLocation.enableMyLocation();
+                mapView.getOverlays().add(myLocation);
+
+
                 mainActivity.runOnUiThread(() -> mapView.invalidate());
             }
         };
 
         enemyUpdater = new Timer();
         enemyUpdater.scheduleAtFixedRate(updateEnemies, 0, 2000);
-
-
     }
 
     @Override
