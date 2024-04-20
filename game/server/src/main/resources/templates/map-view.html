@@ -1,57 +1,69 @@
 <!DOCTYPE HTML>
-<html>
-
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-          integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-            integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&display=swap"
-          rel="stylesheet">
-
-    <link rel="stylesheet" href="css/main.css">
     <title> Soturi - Map View </title>
     <meta property="og:title" content="Map View"/>
     <meta property="og:type" content="website"/>
     <meta property="og:url" content="https://soturi.online/map-view"/>
     <meta property="og:image" content="https://soturi.online/img/thumbnail.png"/>
     <meta property="og:description" content="Soturi Online is the best RPG game out there!"/>
+    <th:block th:replace="fragments/links"></th:block>
 </head>
 
 <body>
-
-<nav id="top-nav">
-    <a href="/" class="logo nav-element"> Soturi </a>
-    <div id="nav-links">
-        <a href="/map-view" class="nav-element"> Map View </a>
-    </div>
-</nav>
-
 <main>
-    <div id="dashboard">
-        <div id="dashboard-sidenav">
-            <div class="sidenav-list">
-                <h2 class="section-name"> Enemies </h2>
-                <ul id="enemy-list">
-
-                </ul>
-
-            </div>
-
-            <div class="sidenav-list">
-                <h2 class="section-name"> Players </h2>
-                <ul id="player-list">
-
-                </ul>
+    <div th:replace="fragments/sidenav"></div>
+    <div id="main-right">
+        <div id="top-bar">
+            <h1> Map View </h1>
+            <div id="user-info">
+                <div id="user-name-info">
+                    <span id="username"> Gigachad </span>
+                    <span id="role"> Admin </span>
+                </div>
+                <ion-icon name="person-circle" class="user-image"></ion-icon>
             </div>
         </div>
+        <div id="map-wrapper">
+            <div id="search-bar-wrapper">
+                <div id="search-bar">
+                    <ion-icon name="search"></ion-icon>
+                    <input type="text" placeholder="Search map...">
+                </div>
+            </div>
 
-        <div id="map"></div>
+            <div id="search-modal-wrapper">
+                <div id="search-modal">
+                    <div id="search-modal-header">
+                        <h1> Search on the map </h1>
+                        <span id="search-modal-close-icon">
+                            <ion-icon name="close"></ion-icon>
+                        </span>
+                    </div>
+                    <div id="search-bar-space"></div>
+                    <div id="search-results">
+                        <div class="search-result">
+                            <div class="search-result-name">
+                                <div class="search-result-icon">
+                                    <ion-icon name="skull"> </ion-icon>
+                                </div>
+                                Mrówka
+                            </div>
+                            <div class="search-result-type">
+                                Enemy lvl 1
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+
+            <div id="map"></div>
+        </div>
     </div>
 </main>
 </body>
 <script src="/js/map-view.js"></script>
-
+<script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
+<script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
 </html>

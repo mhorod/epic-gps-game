@@ -1,0 +1,26 @@
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <th:block th:replace="fragments/links"></th:block>
+    <title> Sign in </title>
+    <link rel="stylesheet" type="text/css" href="css/sign-in.css">
+</head>
+<body>
+    <main>
+        <div id="form-area">
+            <img src="img/logo-full.png" id="form-image"/>
+            <form id="sign-in-form" action="/map-view" method="get">
+                <h1 id="form-greeting" class="form-element"> Welcome back! </h1>
+                <div class="form-input-wrapper">
+                    <label for="username-input"> Username </label>
+                    <input type="text" id="username-input" name="username" class="form-input form-element"/>
+                </div>
+                <div class="form-input-wrapper">
+                    <label for="password-input"> Password </label>
+                    <input type="password" id="password-input" name="password" class="form-input form-element"/>
+                </div>
+                <input type="submit" value="Sign In" class="btn btn-primary form-element"/>
+            </form>
+        </div>
+    </main>
+</body>
+</html>
