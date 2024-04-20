@@ -18,6 +18,9 @@ import org.osmdroid.tileprovider.MapTileProviderBasic;
 import org.osmdroid.util.GeoPoint;
 import org.osmdroid.views.MapView;
 import org.osmdroid.views.overlay.GroundOverlay;
+import org.osmdroid.views.overlay.mylocation.IMyLocationConsumer;
+import org.osmdroid.views.overlay.mylocation.IMyLocationProvider;
+import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay;
 
 import java.util.Timer;
 import java.util.TimerTask;
@@ -82,9 +85,7 @@ public class GameMap extends Fragment {
                 if (location != null) {
                     GeoPoint geoLocation = new GeoPoint(location.getLatitude(), location.getLongitude());
 
-                    mainActivity.runOnUiThread(() -> {
-                        controller.setCenter(geoLocation);
-                    });
+                    mainActivity.runOnUiThread(() -> controller.setCenter(geoLocation));
 
                     timer.cancel();
                 }
@@ -92,8 +93,18 @@ public class GameMap extends Fragment {
             }
         };
 
-        // Proof of concept for updating positions of enemies
+        mainActivity.locationChangeRequestNotifier.registerListener(() -> {
+                    Location location = mainActivity.getLastLocation();
 
+                    if (location != null) {
+                        GeoPoint geoLocation = new GeoPoint(location.getLatitude(), location.getLongitude());
+                        mainActivity.runOnUiThread(() -> controller.setCenter(geoLocation));
+                    }
+
+                }
+        );
+
+        // Proof of concept for updating positions of enemies
         timer.scheduleAtFixedRate(updater, 0, 1000);
 
         TimerTask updateEnemies = new TimerTask() {
@@ -121,14 +132,37 @@ public class GameMap extends Fragment {
 
                 }
 
+                MyLocationNewOverlay myLocation = new MyLocationNewOverlay(new IMyLocationProvider() {
+                    @Override
+                    public boolean startLocationProvider(IMyLocationConsumer myLocationConsumer) {
+                        return true;
+                    }
+
+                    @Override
+                    public void stopLocationProvider() {
+
+                    }
+
+                    @Override
+                    public Location getLastKnownLocation() {
+                        return mainActivity.getLastLocation();
+                    }
+
+                    @Override
+                    public void destroy() {
+
+                    }
+                }, mapView);
+                myLocation.enableMyLocation();
+                mapView.getOverlays().add(myLocation);
+
+
                 mainActivity.runOnUiThread(() -> mapView.invalidate());
             }
         };
 
         enemyUpdater = new Timer();
         enemyUpdater.scheduleAtFixedRate(updateEnemies, 0, 2000);
-
-
     }
 
     @Override
