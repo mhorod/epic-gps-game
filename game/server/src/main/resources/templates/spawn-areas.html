@@ -1,7 +1,7 @@
-<!DOCTYPE HTML>
-<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<!DOCTYPE html>
+<html lang="en">
 <head>
-    <title> Soturi </title>
+    <title> Soturi - Spawn Areas </title>
     <meta property="og:title" content="Map View"/>
     <meta property="og:type" content="website"/>
     <meta property="og:url" content="https://soturi.online/map-view"/>
@@ -9,13 +9,12 @@
     <meta property="og:description" content="Soturi Online is the best RPG game out there!"/>
     <th:block th:replace="fragments/links"></th:block>
 </head>
-
 <body>
 <main>
     <div th:replace="fragments/sidenav"></div>
     <div id="main-right">
         <div id="top-bar">
-            <h1> Dashboard </h1>
+            <h1> Map View </h1>
             <div id="user-info">
                 <div id="user-name-info">
                     <span id="username"> Gigachad </span>
@@ -24,12 +23,15 @@
                 <ion-icon name="person-circle" class="user-image"></ion-icon>
             </div>
         </div>
-        <div>
-            Nothing interesting here for now, go see Map View
+        <div id="map-wrapper">
+            <div id="map"></div>
         </div>
     </div>
 </main>
 </body>
+<script src="/js/mock-area.js"></script>
+<script src="/js/spawn-areas.js"></script>
+
 <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
 <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
 </html>
