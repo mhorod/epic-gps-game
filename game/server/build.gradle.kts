@@ -23,6 +23,8 @@ dependencies {
 
     implementation("org.springframework.boot:spring-boot-starter-thymeleaf")
 
+    implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.5.0")
+
     compileOnly("org.springframework.boot:spring-boot-devtools")
 
     runtimeOnly("com.h2database:h2:2.2.224")

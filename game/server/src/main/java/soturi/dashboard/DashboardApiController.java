@@ -13,17 +13,11 @@ import soturi.model.EnemyId;
 import soturi.model.Player;
 import soturi.model.PlayerWithPosition;
 import soturi.model.Position;
-import soturi.model.messages_to_client.MessageToClient;
-import soturi.model.messages_to_client.MessageToClientFactory;
 import soturi.model.messages_to_server.MessageToServer;
 import soturi.server.GameService;
 import soturi.server.geo.MonsterManager;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 @RestController
 @RequiredArgsConstructor
@@ -51,47 +45,20 @@ public class DashboardApiController {
 
     @GetMapping("/v1/players")
     public List<PlayerWithPosition> getPlayers() {
-       List<PlayerWithPosition> players = gameService.getPlayers();
-       Player player = new Player(
-               "Student TCS", 5,
-               100, 100, 100, 3, 4, List.of(), List.of()
-       );
-       if (players.isEmpty())
-           return List.of(new PlayerWithPosition(player, new Position(49, 27)));
-       else
-           return players;
+        List<PlayerWithPosition> players = gameService.getPlayers();
+        Player player = new Player(
+                "Student TCS", 5,
+                100, 100, 100, 3, 4, List.of(), List.of()
+        );
+        if (players.isEmpty())
+            return List.of(new PlayerWithPosition(player, new Position(49, 27)));
+        else
+            return players;
     }
 
     @GetMapping("/v1/areas")
     public List<Area> getAreas() {
         return monsterManager.getAreas();
-    }
-
-    Map<String, List<MessageToClient>> queues = Collections.synchronizedMap(new HashMap<>());
-    private List<MessageToClient> queueFor(String name) {
-        if (!queues.containsKey(name))
-            queues.put(name, Collections.synchronizedList(new ArrayList<>()));
-        return queues.get(name);
-    }
-
-    @GetMapping("/v1/mock/login")
-    public boolean login(String name, String password) {
-        return gameService.login(name, password, new MessageToClientFactory(m -> queueFor(name).add(m)));
-    }
-
-    @GetMapping("/v1/mock/logout")
-    public void logout(String name) {
-        gameService.logout(name);
-    }
-
-    @GetMapping("/v1/mock/queue")
-    public List<MessageToClient> getQueue(String name) {
-        List<MessageToClient> queue = queueFor(name);
-        synchronized (queue) {
-            List<MessageToClient> ret = new ArrayList<>(queue);
-            queue.clear();
-            return ret;
-        }
     }
 
     @SneakyThrows
