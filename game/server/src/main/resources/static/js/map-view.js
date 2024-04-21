@@ -12,10 +12,28 @@ class WorldMap {
             maxZoom: 19,
             attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
         }).addTo(this.map);
+        this.markers = new Set()
+
+        this.map.on("zoomend", () => {
+            const zoom = this.map.getZoom();
+            for (const marker of this.markers) {
+                const icon = marker.options.icon;
+                icon.options.iconSize = [zoom * 3, zoom * 3]
+                marker.setIcon(icon);
+            }
+        })
     }
 
     zoomOn(position) {
         this.map.setView({lat: position.latitude, lng: position.longitude}, 16)
+    }
+
+    addMarker(marker) {
+        this.markers.add(marker)
+    }
+
+    removeMarker(marker) {
+        this.markers.remove(marker)
     }
 }
 
@@ -24,7 +42,7 @@ class EntityList {
         this.map = map
         this.enemyMap = new Map();
         this.playerMap = new Map();
-
+        this.infoElement = document.getElementById("entity-info")
     }
 
     addEnemy(enemy) {
@@ -33,7 +51,8 @@ class EntityList {
         enemyElement.innerText = enemy.name;
 
         let marker = L.marker([enemy.position.latitude, enemy.position.longitude], {icon: frogIcon}).addTo(map.map);
-        marker.bindPopup(enemy.name)
+        this.map.addMarker(marker)
+        marker.on("click", () => { this.showEnemyInfo(enemy.enemyId.id); })
 
         this.enemyMap.set(enemy.enemyId.id, enemy)
     }
@@ -44,7 +63,8 @@ class EntityList {
         playerElement.innerText = player.player.name;
 
         let marker = L.marker([player.position.latitude, player.position.longitude], {icon: warriorIcon}).addTo(map.map);
-        marker.bindPopup(player.player.name)
+        this.map.addMarker(marker)
+        marker.on("click", () => { this.showPlayerInfo(player.player.name); })
 
         this.playerMap.set(player.player.name, {
             player: player.player,
@@ -63,6 +83,64 @@ class EntityList {
         current.player = player;
         current.position = player.position;
         current.marker.setLatLng([player.position.latitude, player.position.longitude]).update()
+    }
+
+    showPlayerInfo(player) {
+        this.infoElement.innerHTML = ""
+        this.infoElement.append(this.createPlayerInfoElement(player))
+        this.infoElement.classList.add("active")
+    }
+
+    createPlayerInfoElement(playerName) {
+        const player = this.playerMap.get(playerName).player
+        const wrapper = document.createElement("div")
+        wrapper.innerHTML = `
+                    <div class="card-header">
+                        <h1> ${player.name} </h1>
+                        <span class="card-close-icon" id="entity-info-close-icon">
+                            <ion-icon name="close"></ion-icon>
+                        </span>
+                    </div>
+                    <div class="card-content">
+                        <span class="light-gray"> Player lvl ${player.lvl} </span>
+                        <ul class="entity-stats-list">
+                            <li> <ion-icon name="sparkles"> </ion-icon> XP: ${player.xp} </li>
+                            <li> <ion-icon name="heart"> </ion-icon> Health: ${player.hp} / ${player.maxHp} </li>
+                            <li> <ion-icon name="flash"> </ion-icon> Attack: ${player.attack} </li>
+                            <li> <ion-icon name="shield"> </ion-icon> Defense: ${player.defense} </li>
+                        </ul>
+                    </div>
+        `
+        wrapper.querySelector("#entity-info-close-icon").addEventListener("click", () => this.hideInfo())
+        return wrapper
+    }
+
+    showEnemyInfo(enemy) {
+        this.infoElement.innerHTML = ""
+        this.infoElement.append(this.createEnemyInfoElement(enemy))
+        this.infoElement.classList.add("active")
+    }
+
+    createEnemyInfoElement(enemyId) {
+        const enemy = this.enemyMap.get(enemyId)
+        const wrapper = document.createElement("div")
+        wrapper.innerHTML = `
+                    <div class="card-header">
+                        <h1> ${enemy.name} </h1>
+                        <span class="card-close-icon" id="entity-info-close-icon">
+                            <ion-icon name="close"></ion-icon>
+                        </span>
+                    </div>
+                    <div class="card-content">
+                        <span class="light-gray"> Enemy lvl ${enemy.lvl} </span>
+                    </div>
+        `
+        wrapper.querySelector("#entity-info-close-icon").addEventListener("click", () => this.hideInfo())
+        return wrapper
+    }
+
+    hideInfo() {
+        this.infoElement.classList.remove("active")
     }
 }
 
@@ -100,7 +178,6 @@ class SearchModal {
         this.searchBar.addEventListener("click", () => this.beginSearch());
         this.searchModalCloseButton.addEventListener("click", () => this.endSearch());
         document.addEventListener("click", e => {
-            console.log(e.target)
             if (!this.searchBar.contains(e.target) && !this.searchModal.contains(e.target)) {
                 this.endSearch();
             }
@@ -194,6 +271,7 @@ const gameServer = new GameServer(httpUrl)
 
 const map = new WorldMap()
 const entityList = new EntityList(map);
+
 
 const searchModal = new SearchModal(map, entityList);
 
