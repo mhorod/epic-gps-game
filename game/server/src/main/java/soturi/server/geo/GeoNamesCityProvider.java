@@ -4,6 +4,7 @@ import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
+import soturi.model.Config;
 
 import java.io.IOException;
 import java.net.URI;
@@ -23,21 +24,18 @@ import java.util.zip.ZipInputStream;
 @Slf4j
 @Component
 public final class GeoNamesCityProvider implements CityProvider {
-    private final List<String> geoNamesCountryCodes;
-    private final String geoNamesDownloadDir;
+    private final Config config;
     private final List<City> cities = new ArrayList<>();
 
     @SneakyThrows(IOException.class)
-    public GeoNamesCityProvider(Environment env) {
-        geoNamesCountryCodes = (List<String>) env.getRequiredProperty("geo.geonames.country-codes", List.class);
-        geoNamesDownloadDir = env.getRequiredProperty("geo.geonames.download-dir", String.class);
-
-        Files.createDirectories(Paths.get(geoNamesDownloadDir));
-        geoNamesCountryCodes.forEach(this::processCode);
+    public GeoNamesCityProvider(Config config) {
+        this.config = config;
+        Files.createDirectories(Paths.get(config.v.geoNamesDownloadDir));
+        config.v.geoNamesCountryCodes.forEach(this::processCode);
     }
 
     private Path pathForCode(String code) {
-        return Paths.get(geoNamesDownloadDir, code + ".txt");
+        return Paths.get(config.v.geoNamesDownloadDir, code + ".txt");
     }
 
     @SneakyThrows(IOException.class)

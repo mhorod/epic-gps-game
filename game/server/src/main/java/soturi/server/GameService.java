@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
+import soturi.model.Config;
 import soturi.model.Enemy;
 import soturi.model.EnemyId;
 import soturi.model.FightResult;
@@ -30,6 +31,7 @@ public final class GameService {
     private final Map<String, MessageToClientHandler> observers = new LinkedHashMap<>();
     private final PlayerRepository repository;
     private final GameUtility gameUtility;
+    private final Config config;
     private final MonsterManager monsterManager;
     private final FightSimulator fightSimulator;
 
@@ -44,6 +46,11 @@ public final class GameService {
     public synchronized void unregisterAllEnemies() {
         for (Enemy enemy : getEnemies())
             unregisterEnemy(enemy.enemyId());
+    }
+
+    public synchronized void reload() {
+        unregisterAllEnemies();
+        monsterManager.reload();
     }
 
     public synchronized List<Enemy> getEnemies() {
@@ -69,9 +76,9 @@ public final class GameService {
     private synchronized void doTickEverySecond() {
         secondCount++;
 
-        if (gameUtility.giveFreeXpDelayInSeconds > 0 && secondCount % gameUtility.giveFreeXpDelayInSeconds == 0)
+        if (config.v.giveFreeXpDelayInSeconds > 0 && secondCount % config.v.giveFreeXpDelayInSeconds == 0)
             giveFreeXp();
-        if (gameUtility.spawnEnemyDelayInSeconds > 0 && secondCount % gameUtility.spawnEnemyDelayInSeconds == 0)
+        if (config.v.spawnEnemyDelayInSeconds > 0 && secondCount % config.v.spawnEnemyDelayInSeconds == 0)
             spawnEnemies();
     }
 
@@ -85,11 +92,11 @@ public final class GameService {
     private synchronized void giveFreeXp() {
         log.info("giveFreeXp() called");
 
-        if (gameUtility.giveFreeXpAmount == 0)
+        if (config.v.giveFreeXpAmount == 0)
             return;
         for (String player : sessions.keySet()) {
             PlayerEntity entity = repository.findByName(player).orElseThrow();
-            entity.addXp(gameUtility.giveFreeXpAmount);
+            entity.addXp(config.v.giveFreeXpAmount);
             repository.save(entity);
             sendUpdatesFor(player);
         }
@@ -146,7 +153,7 @@ public final class GameService {
             playerSession.getSender().error("this enemy does not exist");
             return;
         }
-        if (enemy.position().distance(playerPosition) > gameUtility.fightingMaxDistInMeters) {
+        if (enemy.position().distance(playerPosition) > config.v.fightingMaxDistInMeters) {
             playerSession.getSender().error("this enemy is too far");
             return;
         }

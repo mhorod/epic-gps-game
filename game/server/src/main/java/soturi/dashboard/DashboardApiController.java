@@ -4,8 +4,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RestController;
 import soturi.model.Area;
+import soturi.model.Config;
 import soturi.model.Enemy;
 import soturi.model.EnemyId;
 import soturi.model.Player;
@@ -28,6 +30,7 @@ import java.util.Map;
 public class DashboardApiController {
     private final MonsterManager monsterManager;
     private final GameService gameService;
+    private final Config config;
     private final ObjectMapper mapper;
 
     @GetMapping("/v1/enemies")
@@ -96,5 +99,15 @@ public class DashboardApiController {
     public void send(String name, String msg) {
         MessageToServer message = mapper.readValue(msg, MessageToServer.class);
         message.process(gameService.receiveFrom(name));
+    }
+
+    @PostMapping("/v1/config")
+    public void changeConfig(String key, String value) {
+        config.setValue(key, value);
+    }
+
+    @PostMapping("/v1/reload")
+    public void reload() {
+        gameService.reload();
     }
 }

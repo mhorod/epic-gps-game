@@ -1,9 +1,9 @@
 package soturi.server.geo;
 
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
 import soturi.model.Area;
+import soturi.model.Config;
 import soturi.model.Enemy;
 import soturi.model.EnemyId;
 import soturi.model.Position;
@@ -23,6 +23,7 @@ import static soturi.server.geo.MonsterManagerUtility.*;
 @Component
 public final class MonsterManager {
     private final CityProvider cityProvider;
+    private final Config config;
 
     private List<RectangularArea[][]> splits;
     private int maxSplit;
@@ -68,18 +69,18 @@ public final class MonsterManager {
         return indexOf(pos, maxSplit - 1);
     }
 
-    public void restart(Environment env) {
+    public void reload() {
         log.info("GeoManager::restart()");
         if (!enemies.isEmpty())
             throw new RuntimeException("remove all enemies first");
+        maxSplit = config.v.geoMaxSplit;
 
-        maxSplit = env.getRequiredProperty("geo.max-split", int.class);
-
-        double minLatitude = env.getRequiredProperty("geo.min-latitude", double.class);
-        double maxLatitude = env.getRequiredProperty("geo.max-latitude", double.class);
-        double minLongitude = env.getRequiredProperty("geo.min-longitude", double.class);
-        double maxLongitude = env.getRequiredProperty("geo.max-longitude", double.class);
-        RectangularArea fullArea = new RectangularArea(minLatitude, maxLatitude, minLongitude, maxLongitude);
+        RectangularArea fullArea = new RectangularArea(
+            config.v.geoMinLatitude,
+            config.v.geoMaxLatitude,
+            config.v.geoMinLongitude,
+            config.v.geoMaxLongitude
+        );
 
         splits = new ArrayList<>();
         for (int i = 0; i < maxSplit; ++i)
@@ -128,9 +129,10 @@ public final class MonsterManager {
         }
     }
 
-    public MonsterManager(CityProvider cityProvider, Environment env) {
+    public MonsterManager(CityProvider cityProvider, Config config) {
         this.cityProvider = cityProvider;
-        restart(env);
+        this.config = config;
+        reload();
     }
 
     long nextEnemyIdLong = 0;
