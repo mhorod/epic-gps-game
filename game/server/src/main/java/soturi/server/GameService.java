@@ -134,7 +134,7 @@ public final class GameService {
             unregisterEnemy(enemyId);
     }
 
-    MessageToServerHandler sendTo(@NonNull String playerName) {
+    public MessageToServerHandler sendTo(@NonNull String playerName) {
         @NonNull PlayerSession session = sessions.get(playerName);
         MessageToClientHandler sender = session.getSender();
 
@@ -167,7 +167,7 @@ public final class GameService {
         };
     }
 
-    boolean login(String name, String hashedPassword, @NonNull MessageToClientHandler sender) {
+    public boolean login(String name, String hashedPassword, @NonNull MessageToClientHandler sender) {
         if (name == null || name.isEmpty() || hashedPassword == null) {
             sender.error("null data passed");
             return false;
@@ -188,7 +188,7 @@ public final class GameService {
         return true;
     }
 
-    void logout(@NonNull String playerName) {
+    public void logout(@NonNull String playerName) {
         if (sessions.remove(playerName) == null)
             throw new RuntimeException();
     }
