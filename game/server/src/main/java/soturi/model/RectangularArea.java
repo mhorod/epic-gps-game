@@ -1,8 +1,6 @@
 package soturi.model;
 
-import java.util.List;
 import java.util.Random;
-import java.util.stream.IntStream;
 
 import static java.lang.Math.*;
 import static soturi.model.Position.*;
@@ -48,7 +46,7 @@ public record RectangularArea(double lowerLatitude, double upperLatitude, double
         );
     }
 
-    private Position proportionalPosition(double pLatitude, double pLongitude) {
+    public Position proportionalPosition(double pLatitude, double pLongitude) {
         double lat = lowerLatitude + (upperLatitude - lowerLatitude) * pLatitude;
         double lon = lowerLongitude + (upperLongitude - lowerLongitude) * pLongitude;
         return new Position(lat, lon);
@@ -66,17 +64,11 @@ public record RectangularArea(double lowerLatitude, double upperLatitude, double
         return proportionalPosition(1.0 * i / gridSize, 1.0 * j / gridSize);
     }
 
-    private List<RectangularArea> kSplit(int k) { // splits into k**2 areas
-        return IntStream
-            .range(0, k * k)
-            .mapToObj(ij -> new RectangularArea(
-                gridPosition(ij / k, ij % k, k),
-                gridPosition(ij / k + 1, ij % k + 1, k)
-            ))
-            .toList();
-    }
-
-    public List<RectangularArea> quadSplit() {
-        return kSplit(2);
+    public RectangularArea[][] kSplit(int k) { // splits into k**2 areas
+        RectangularArea[][] areas = new RectangularArea[k][k];
+        for (int i = 0; i < k; ++i)
+            for (int j = 0; j < k; ++j)
+                areas[i][j] = new RectangularArea(gridPosition(i, j, k), gridPosition(i + 1, j + 1, k));
+        return areas;
     }
 }

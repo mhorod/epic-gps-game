@@ -56,13 +56,13 @@ public class DashboardMockController {
 
     @PostMapping("/v1/mock/player/{name}/updateRealPosition")
     public void updateRealPosition(@PathVariable String name, double latitude, double longitude) {
-        new UpdateRealPosition(new Position(latitude, longitude)).process(gameService.sendTo(name));
+        new UpdateRealPosition(new Position(latitude, longitude)).process(gameService.receiveFrom(name));
     }
 
     @SneakyThrows
     @PostMapping("/v1/mock/send")
     public void send(String name, String msg) {
         MessageToServer message = mapper.readValue(msg, MessageToServer.class);
-        message.process(gameService.sendTo(name));
+        message.process(gameService.receiveFrom(name));
     }
 }

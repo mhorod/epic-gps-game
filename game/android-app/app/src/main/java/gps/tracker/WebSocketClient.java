@@ -31,13 +31,19 @@ public class WebSocketClient extends WebSocketListener {
                 .readTimeout(0, TimeUnit.MILLISECONDS)
                 .build();
 
+        System.err.println("dziem dobry");
+
         Request request = new Request.Builder()
                 .header("epic-name", "apka")
                 .header("epic-password", "mudd")
                 .url("ws://52.158.44.176:8080/ws/game")
                 .build();
 
+        System.err.println("dziem dobry2");
+
         webSocket = client.newWebSocket(request, this);
+
+        System.err.println("dziem dobry3");
     }
 
     @Override

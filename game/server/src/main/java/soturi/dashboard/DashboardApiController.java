@@ -1,25 +1,31 @@
 package soturi.dashboard;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
+import lombok.SneakyThrows;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RestController;
 import soturi.model.Area;
+import soturi.model.Config;
 import soturi.model.Enemy;
 import soturi.model.EnemyId;
 import soturi.model.Player;
 import soturi.model.PlayerWithPosition;
 import soturi.model.Position;
-import soturi.model.RectangularArea;
+import soturi.model.messages_to_server.MessageToServer;
 import soturi.server.GameService;
+import soturi.server.geo.MonsterManager;
 
-import java.util.ArrayList;
 import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
 public class DashboardApiController {
-
+    private final MonsterManager monsterManager;
     private final GameService gameService;
+    private final Config config;
+    private final ObjectMapper mapper;
 
     @GetMapping("/v1/enemies")
     public List<Enemy> getEnemies() {
@@ -52,20 +58,23 @@ public class DashboardApiController {
 
     @GetMapping("/v1/areas")
     public List<Area> getAreas() {
-        RectangularArea area = new RectangularArea(Position.KRAKOW, Position.WARSZAWA);
-        var l1 = area.quadSplit();
-        var l2 = l1.get(0).quadSplit();
-        var l3 = l1.get(2).quadSplit();
-
-        List<Area> ret = new ArrayList<>();
-        ret.add(new Area(l1.get(1), 3));
-        ret.add(new Area(l1.get(3), 4));
-        for (var v : l2)
-            ret.add(new Area(v, 1));
-        for (var v : l3)
-            ret.add(new Area(v, 2));
-        return ret;
+        return monsterManager.getAreas();
     }
 
+    @SneakyThrows
+    @GetMapping("/v1/mock/send")
+    public void send(String name, String msg) {
+        MessageToServer message = mapper.readValue(msg, MessageToServer.class);
+        message.process(gameService.receiveFrom(name));
+    }
 
+    @PostMapping("/v1/config")
+    public void changeConfig(String key, String value) {
+        config.setValue(key, value);
+    }
+
+    @PostMapping("/v1/reload")
+    public void reload() {
+        gameService.reload();
+    }
 }
