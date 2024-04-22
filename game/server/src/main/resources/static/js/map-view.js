@@ -80,7 +80,7 @@ class EntityList {
         }
 
         const current = this.playerMap.get(name)
-        current.player = player;
+        current.player = player.player;
         current.position = player.position;
         current.marker.setLatLng([player.position.latitude, player.position.longitude]).update()
     }
