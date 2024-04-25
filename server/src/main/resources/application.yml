@@ -1,0 +1,10 @@
+spring:
+  datasource:
+    url: jdbc:h2:./soturi
+
+  jpa:
+    generate-ddl: true
+    hibernate:
+      ddl-auto: update
+
+config-file: config.json

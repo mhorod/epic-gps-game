@@ -26,7 +26,7 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 import gps.tracker.databinding.GameMapFragmentBinding;
-import model.Enemy;
+import soturi.model.Enemy;
 
 public class GameMap extends Fragment {
 

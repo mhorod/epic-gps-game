@@ -258,10 +258,12 @@ public final class GameService {
         return true;
     }
 
-    public synchronized void logout(@NonNull String playerName) {
+    public synchronized void logout(String playerName) {
+        if (!sessions.containsKey(playerName))
+            return;
+
         log.info("logout({})", playerName);
-        if (sessions.remove(playerName) == null)
-            throw new RuntimeException();
+        sessions.remove(playerName).getSender().disconnect();
         for (var session : sessions.values())
             session.getSender().playerDisappears(playerName);
         for (var observer : observers.values())

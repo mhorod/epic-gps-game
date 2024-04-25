@@ -15,6 +15,10 @@ repositories {
     mavenCentral()
 }
 
+tasks.test {
+    useJUnitPlatform()
+}
+
 dependencies {
     implementation("org.springframework.boot:spring-boot-starter:3.2.3")
     implementation("org.springframework.boot:spring-boot-starter-web:3.2.3")

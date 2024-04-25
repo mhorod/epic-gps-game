@@ -15,7 +15,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.mock;
 
-@TestPropertySource(locations = "classpath:application.properties", properties="spring.datasource.url=jdbc:h2:mem:")
+@TestPropertySource(locations = "classpath:application.yml", properties="spring.datasource.url=jdbc:h2:mem:")
 @SpringBootTest
 public class GameServiceTests {
     @Autowired

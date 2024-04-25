@@ -2,7 +2,9 @@ package soturi.server;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.SneakyThrows;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+import soturi.model.RectangularArea;
 
 import java.io.File;
 import java.io.IOException;
@@ -11,13 +13,15 @@ import java.util.List;
 
 @Component
 public final class Config {
+    private final File configFile;
     private final ObjectMapper objectMapper;
-    private final File cfgFile = new File("config.json");
     public ConfigValues v = new ConfigValues();
 
-    public Config(ObjectMapper objectMapper) {
+    public Config(@Value("${config-file}") File configFile, ObjectMapper objectMapper) {
+        this.configFile = configFile;
         this.objectMapper = objectMapper;
         load();
+        dump();
     }
 
     public static class ConfigValues {
@@ -36,24 +40,35 @@ public final class Config {
         public double geoMaxLongitude = 20.09;
     }
 
+    private void setGeoFromArea(RectangularArea area) {
+        v.geoMinLatitude = area.lowerLatitude();
+        v.geoMaxLatitude = area.upperLatitude();
+        v.geoMinLongitude = area.lowerLongitude();
+        v.geoMaxLongitude = area.upperLongitude();
+    }
+
     @SneakyThrows
     public void setValue(String key, String value) {
-        Field field = ConfigValues.class.getField(key);
-        Object mapped = objectMapper.readValue(value, field.getType());
-        field.set(v, mapped);
+        if (key.equals("geo"))
+            setGeoFromArea(RectangularArea.COMMON_AREAS.get(value));
+        else {
+            Field field = ConfigValues.class.getField(key);
+            Object mapped = objectMapper.readValue(value, field.getType());
+            field.set(v, mapped);
+        }
         dump();
     }
 
     private void dump() {
         try {
-            objectMapper.writeValue(cfgFile, v);
+            objectMapper.writerWithDefaultPrettyPrinter().writeValue(configFile, v);
         }
         catch (IOException ignored) {
         }
     }
     private void load() {
         try {
-            v = objectMapper.readValue(cfgFile, ConfigValues.class);
+            v = objectMapper.readValue(configFile, ConfigValues.class);
         }
         catch (IOException ignored) {
         }

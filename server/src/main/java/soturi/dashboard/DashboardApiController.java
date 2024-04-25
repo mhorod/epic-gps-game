@@ -61,13 +61,6 @@ public class DashboardApiController {
         return monsterManager.getAreas();
     }
 
-    @SneakyThrows
-    @GetMapping("/v1/mock/send")
-    public void send(String name, String msg) {
-        MessageToServer message = mapper.readValue(msg, MessageToServer.class);
-        message.process(gameService.receiveFrom(name));
-    }
-
     @PostMapping("/v1/config")
     public void changeConfig(String key, String value) {
         config.setValue(key, value);

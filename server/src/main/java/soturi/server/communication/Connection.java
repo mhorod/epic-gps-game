@@ -21,7 +21,6 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.TimeUnit;
 
 /*
  * This class is thread safe
@@ -38,7 +37,7 @@ public final class Connection {
     private volatile boolean closed = false;
     private volatile Instant lastReceived = Instant.now();
 
-    private Position positionFromStrings(String latitude, String longitude) {
+    private static Position positionFromStrings(String latitude, String longitude) {
         try {
             double latitudeAsDouble = Double.parseDouble(latitude);
             double longitudeAsDouble = Double.parseDouble(longitude);
@@ -83,6 +82,12 @@ public final class Connection {
             if (closed)
                 return;
             closed = true;
+            try {
+                session.close();
+            }
+            catch (IOException exception) {
+                log.error("WebSocketSession::close() can throw !?", exception);
+            }
             if (authorizedUser != null)
                 gameService.logout(authorizedUser);
         }
@@ -93,7 +98,7 @@ public final class Connection {
             if (closed)
                 return;
             if (authorizedUser == null) {
-                close();
+                scheduleToClose();
                 return;
             }
             lastReceived = Instant.now();
@@ -117,7 +122,9 @@ public final class Connection {
         while (!closed) {
             MessageToClient messageToClient;
             try {
-                messageToClient = queue.poll(3, TimeUnit.SECONDS);
+                messageToClient = BlockingQueuePoll.poll(queue, 4);
+                if (messageToClient == null)
+                    messageToClient = new Ping();
             }
             catch (InterruptedException interruptedException) {
                 log.error("this should not happen", interruptedException);
@@ -125,14 +132,10 @@ public final class Connection {
                 break;
             }
             synchronized (session) {
-                if (closed)
-                    break;
-                if (timeoutExceeded() || messageToClient instanceof Disconnect) {
+                if (closed || timeoutExceeded() || messageToClient instanceof Disconnect) {
                     close();
                     break;
                 }
-                if (messageToClient == null)
-                    messageToClient = new Ping();
                 log.info("[ TO ] {} [MSG] {}", authorizedUser, messageToClient);
 
                 try {
