@@ -3,7 +3,7 @@ package soturi.server.geo;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import soturi.model.Area;
-import soturi.model.Config;
+import soturi.server.Config;
 import soturi.model.Enemy;
 import soturi.model.EnemyId;
 import soturi.model.Position;
@@ -180,6 +180,7 @@ public final class MonsterManager {
             int i = ij.i(), j = ij.j();
 
             int cap = Math.max(0, 5 - area.difficulty());
+            cap = 1;
             int curr = enemiesPerRegion[i][j].size();
 
             double failProbability = 1.0 * curr / cap;

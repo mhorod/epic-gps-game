@@ -13,6 +13,8 @@ public interface MessageToClientHandler {
     void error(String error);
     void fightResult(Result result, EnemyId enemyId);
     void meUpdate(Player me);
+    void ping();
     void playerDisappears(String playerName);
     void playerUpdate(Player player, Position position);
+    void pong();
 }

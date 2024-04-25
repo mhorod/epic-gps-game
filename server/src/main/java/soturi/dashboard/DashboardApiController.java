@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RestController;
 import soturi.model.Area;
-import soturi.model.Config;
+import soturi.server.Config;
 import soturi.model.Enemy;
 import soturi.model.EnemyId;
 import soturi.model.Player;

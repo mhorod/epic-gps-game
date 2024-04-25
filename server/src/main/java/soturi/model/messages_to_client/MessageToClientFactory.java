@@ -44,6 +44,11 @@ public final class MessageToClientFactory implements MessageToClientHandler {
     }
 
     @Override
+    public void ping() {
+        consumer.accept(new Ping());
+    }
+
+    @Override
     public void playerDisappears(String playerName) {
         consumer.accept(new PlayerDisappears(playerName));
     }
@@ -51,5 +56,10 @@ public final class MessageToClientFactory implements MessageToClientHandler {
     @Override
     public void playerUpdate(Player player, Position position) {
         consumer.accept(new PlayerUpdate(player, position));
+    }
+
+    @Override
+    public void pong() {
+        consumer.accept(new Pong());
     }
 }

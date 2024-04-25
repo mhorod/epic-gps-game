@@ -17,6 +17,11 @@ public final class MessageToServerFactory implements MessageToServerHandler {
     }
 
     @Override
+    public void disconnect() {
+        consumer.accept(new Disconnect());
+    }
+
+    @Override
     public void equipItem(Item item) {
         consumer.accept(new EquipItem(item));
     }
@@ -24,6 +29,16 @@ public final class MessageToServerFactory implements MessageToServerHandler {
     @Override
     public void unequipItem(Item item) {
         consumer.accept(new UnequipItem(item));
+    }
+
+    @Override
+    public void ping() {
+        consumer.accept(new Ping());
+    }
+
+    @Override
+    public void pong() {
+        consumer.accept(new Pong());
     }
 
     @Override

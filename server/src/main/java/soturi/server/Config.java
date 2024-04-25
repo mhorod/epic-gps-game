@@ -1,4 +1,4 @@
-package soturi.model;
+package soturi.server;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.SneakyThrows;
@@ -10,7 +10,7 @@ import java.lang.reflect.Field;
 import java.util.List;
 
 @Component
-public class Config {
+public final class Config {
     private final ObjectMapper objectMapper;
     private final File cfgFile = new File("config.json");
     public ConfigValues v = new ConfigValues();
