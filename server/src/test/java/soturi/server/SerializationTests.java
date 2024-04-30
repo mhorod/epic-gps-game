@@ -11,7 +11,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@TestPropertySource(locations = "classpath:application.properties", properties="spring.datasource.url=jdbc:h2:mem:")
+@TestPropertySource(locations = "classpath:application.yml", properties="spring.datasource.url=jdbc:h2:mem:")
 @SpringBootTest
 class SerializationTests {
     @Autowired

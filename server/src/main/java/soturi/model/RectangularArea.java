@@ -1,12 +1,24 @@
 package soturi.model;
 
+import java.util.Map;
 import java.util.Random;
 
 import static java.lang.Math.*;
 import static soturi.model.Position.*;
 
 public record RectangularArea(double lowerLatitude, double upperLatitude, double lowerLongitude, double upperLongitude) {
-    public static RectangularArea EARTH = new RectangularArea(minLatitude, maxLatitude, minLongitude, maxLongitude);
+    public static RectangularArea EARTH =
+        new RectangularArea(minLatitude, maxLatitude, minLongitude, maxLongitude);
+    public static RectangularArea POLAND =
+        new RectangularArea(49.15, 55.85, 13.70, 24.30);
+    public static RectangularArea KRAKOW =
+        new RectangularArea(49.97, 50.11, 19.74, 20.09);
+
+    public static Map<String, RectangularArea> COMMON_AREAS = Map.of(
+        "EARTH", EARTH,
+        "POLAND", POLAND,
+        "KRAKOW", KRAKOW
+    );
 
     public RectangularArea {
         if (!(minLatitude <= lowerLatitude && lowerLatitude <= upperLatitude &&

@@ -10,9 +10,9 @@ import static org.junit.Assert.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.module.androidrecord.AndroidRecordModule;
 
-import model.EnemyId;
-import model.messages_to_server.AttackEnemy;
-import model.messages_to_server.MessageToServer;
+import soturi.model.EnemyId;
+import soturi.model.messages_to_server.AttackEnemy;
+import soturi.model.messages_to_server.MessageToServer;
 
 /**
  * Instrumented test, which will execute on an Android device.

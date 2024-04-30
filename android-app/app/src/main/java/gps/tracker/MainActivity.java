@@ -31,12 +31,12 @@ import java.util.List;
 import gps.tracker.databinding.ActivityMainBinding;
 import gps.tracker.simple_listeners.Notifier;
 import lombok.SneakyThrows;
-import model.Enemy;
-import model.EnemyId;
-import model.Player;
-import model.Position;
-import model.Result;
-import model.messages_to_client.MessageToClientHandler;
+import soturi.model.Enemy;
+import soturi.model.EnemyId;
+import soturi.model.Player;
+import soturi.model.Position;
+import soturi.model.Result;
+import soturi.model.messages_to_client.MessageToClientHandler;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -50,6 +50,11 @@ public class MainActivity extends AppCompatActivity {
     private EnemyTracker enemyTracker = new EnemyTracker();
 
     private WebSocketClient webSocketClient = new WebSocketClient(new MessageToClientHandler() {
+        @Override
+        public void disconnect() {
+
+        }
+
         @Override
         public void enemyAppears(Enemy enemy) {
             enemyTracker.addEnemy(enemy);
@@ -76,12 +81,22 @@ public class MainActivity extends AppCompatActivity {
         }
 
         @Override
+        public void ping() {
+            webSocketClient.send().pong();
+        }
+
+        @Override
         public void playerDisappears(String playerName) {
 
         }
 
         @Override
         public void playerUpdate(Player player, Position position) {
+
+        }
+
+        @Override
+        public void pong() {
 
         }
     });

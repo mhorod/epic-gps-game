@@ -4,8 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import model.Enemy;
-import model.Position;
+import soturi.model.Enemy;
+import soturi.model.Position;
 
 public class EnemyTracker {
 

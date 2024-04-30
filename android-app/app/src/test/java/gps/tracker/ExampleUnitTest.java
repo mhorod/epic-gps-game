@@ -6,9 +6,9 @@ import static org.junit.Assert.*;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import model.EnemyId;
-import model.messages_to_server.AttackEnemy;
-import model.messages_to_server.MessageToServer;
+import soturi.model.EnemyId;
+import soturi.model.messages_to_server.AttackEnemy;
+import soturi.model.messages_to_server.MessageToServer;
 
 /**
  * Example local unit test, which will execute on the development machine (host).

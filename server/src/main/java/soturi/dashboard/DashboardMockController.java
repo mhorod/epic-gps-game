@@ -28,8 +28,7 @@ public class DashboardMockController {
 
     @PostMapping("/v1/mock/login")
     public boolean login(String name, String password) {
-        return gameService.login(name, password,
-                                 new MessageToClientFactory(m -> queueFor(name).add(m)));
+        return gameService.login(name, password, Position.KRAKOW, new MessageToClientFactory(m -> queueFor(name).add(m)));
     }
 
     @PostMapping("/v1/mock/logout")

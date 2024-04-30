@@ -1,0 +1,77 @@
+package soturi.server;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.SneakyThrows;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
+import soturi.model.RectangularArea;
+
+import java.io.File;
+import java.io.IOException;
+import java.lang.reflect.Field;
+import java.util.List;
+
+@Component
+public final class Config {
+    private final File configFile;
+    private final ObjectMapper objectMapper;
+    public ConfigValues v = new ConfigValues();
+
+    public Config(@Value("${config-file}") File configFile, ObjectMapper objectMapper) {
+        this.configFile = configFile;
+        this.objectMapper = objectMapper;
+        load();
+        dump();
+    }
+
+    public static class ConfigValues {
+        public int giveFreeXpDelayInSeconds = 100;
+        public long giveFreeXpAmount = 10000;
+        public int spawnEnemyDelayInSeconds = 5;
+        public int fightingMaxDistInMeters = 50;
+
+        public List<String> geoNamesCountryCodes = List.of("PL");
+        public String geoNamesDownloadDir = "GeoNames";
+
+        public int geoMaxSplit = 5;
+        public double geoMinLatitude = 49.97;
+        public double geoMaxLatitude = 50.11;
+        public double geoMinLongitude = 19.74;
+        public double geoMaxLongitude = 20.09;
+    }
+
+    private void setGeoFromArea(RectangularArea area) {
+        v.geoMinLatitude = area.lowerLatitude();
+        v.geoMaxLatitude = area.upperLatitude();
+        v.geoMinLongitude = area.lowerLongitude();
+        v.geoMaxLongitude = area.upperLongitude();
+    }
+
+    @SneakyThrows
+    public void setValue(String key, String value) {
+        if (key.equals("geo"))
+            setGeoFromArea(RectangularArea.COMMON_AREAS.get(value));
+        else {
+            Field field = ConfigValues.class.getField(key);
+            Object mapped = objectMapper.readValue(value, field.getType());
+            field.set(v, mapped);
+        }
+        dump();
+    }
+
+    private void dump() {
+        try {
+            objectMapper.writerWithDefaultPrettyPrinter().writeValue(configFile, v);
+        }
+        catch (IOException ignored) {
+        }
+    }
+    private void load() {
+        try {
+            v = objectMapper.readValue(configFile, ConfigValues.class);
+        }
+        catch (IOException ignored) {
+        }
+    }
+
+}

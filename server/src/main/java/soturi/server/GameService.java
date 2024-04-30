@@ -5,7 +5,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
-import soturi.model.Config;
 import soturi.model.Enemy;
 import soturi.model.EnemyId;
 import soturi.model.FightResult;
@@ -57,18 +56,12 @@ public final class GameService {
         return monsterManager.getAllEnemies();
     }
 
-    public synchronized List<PlayerWithPosition> getAllPlayers() {
+    public synchronized List<PlayerWithPosition> getPlayers() {
         return sessions.keySet().stream()
             .map(repository::findByName)
             .flatMap(Optional::stream)
             .map(gameUtility::getPlayerFromEntity)
             .map(p -> new PlayerWithPosition(p, sessions.get(p.name()).getPosition()))
-            .toList();
-    }
-
-    public synchronized List<PlayerWithPosition> getPlayers() { // only those with position
-        return getAllPlayers().stream()
-            .filter(playerWithPosition -> playerWithPosition.position() != null)
             .toList();
     }
 
@@ -84,9 +77,9 @@ public final class GameService {
 
     @Scheduled(fixedDelay = 1000)
     private synchronized void tickEverySecond() {
-        log.info("tickEverySecond() called");
+//        log.info("tickEverySecond() called");
         doTickEverySecond();
-        log.info("tickEverySecond() exited");
+//        log.info("tickEverySecond() exited");
     }
 
     private synchronized void giveFreeXp() {
@@ -180,6 +173,13 @@ public final class GameService {
             }
 
             @Override
+            public void disconnect() {
+                synchronized (GameService.this) {
+                    sender.disconnect();
+                }
+            }
+
+            @Override
             public void equipItem(Item item) {
                 synchronized (GameService.this) {
                     sender.error("not supported");
@@ -194,14 +194,25 @@ public final class GameService {
             }
 
             @Override
-            public void updateLookingPosition(Position position) {
+            public void ping() {
+                synchronized (GameService.this) {
+                    sender.pong();
+                }
+            }
+
+            @Override
+            public void pong() {
+            }
+
+            @Override
+            public void updateLookingPosition(@NonNull Position position) {
                 synchronized (GameService.this) {
                     session.setLooking(position);
                 }
             }
 
             @Override
-            public void updateRealPosition(Position position) {
+            public void updateRealPosition(@NonNull Position position) {
                 synchronized (GameService.this) {
                     session.setPosition(position);
                     sendUpdatesFor(playerName);
@@ -210,9 +221,10 @@ public final class GameService {
         };
     }
 
-    private synchronized void doLogin(String name, String hashedPassword, MessageToClientHandler sender) {
+    private synchronized void doLogin(@NonNull String name, @NonNull String password,
+                                      @NonNull Position initialPosition, @NonNull MessageToClientHandler sender) {
         log.info("doLogin({})", name);
-        sessions.put(name, new PlayerSession(sender));
+        sessions.put(name, new PlayerSession(sender, initialPosition, initialPosition));
         sendUpdatesFor(name);
 
         for (var kv : sessions.entrySet()) if (!kv.getKey().equals(name))
@@ -224,15 +236,16 @@ public final class GameService {
             sender.enemyAppears(enemy);
     }
 
-    public synchronized boolean login(String name, String hashedPassword, @NonNull MessageToClientHandler sender) {
-        if (name == null || name.isEmpty() || hashedPassword == null) {
+    public synchronized boolean login(String name, String password,
+                                      Position initialPosition, @NonNull MessageToClientHandler sender) {
+        if (name == null || name.isEmpty() || password == null || initialPosition == null) {
             sender.error("null data passed");
             return false;
         }
         PlayerEntity entity = repository.findByName(name).orElseGet(
-                () -> repository.save(new PlayerEntity(name, hashedPassword))
+                () -> repository.save(new PlayerEntity(name, password))
         );
-        if (!hashedPassword.equals(entity.getHashedPassword())) {
+        if (!password.equals(entity.getHashedPassword())) {
             sender.error("incorrect password passed");
             return false;
         }
@@ -241,14 +254,16 @@ public final class GameService {
             return false;
         }
 
-        doLogin(name, hashedPassword, sender);
+        doLogin(name, password, initialPosition, sender);
         return true;
     }
 
-    public synchronized void logout(@NonNull String playerName) {
+    public synchronized void logout(String playerName) {
+        if (!sessions.containsKey(playerName))
+            return;
+
         log.info("logout({})", playerName);
-        if (sessions.remove(playerName) == null)
-            throw new RuntimeException();
+        sessions.remove(playerName).getSender().disconnect();
         for (var session : sessions.values())
             session.getSender().playerDisappears(playerName);
         for (var observer : observers.values())

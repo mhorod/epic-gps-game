@@ -1,6 +1,8 @@
 HELP.md
 *.db
-GeoNames
+GeoNames/
+config.json
+static/
 
 .gradle
 build/
