@@ -1,15 +1,17 @@
 package soturi.model.messages_to_server;
 
-import lombok.AllArgsConstructor;
 import soturi.model.EnemyId;
 import soturi.model.Item;
 import soturi.model.Position;
 
 import java.util.function.Consumer;
 
-@AllArgsConstructor
 public final class MessageToServerFactory implements MessageToServerHandler {
     private final Consumer<MessageToServer> consumer;
+
+    public MessageToServerFactory(Consumer<MessageToServer> consumer) {
+        this.consumer = consumer;
+    }
 
     @Override
     public void attackEnemy(EnemyId enemyId) {

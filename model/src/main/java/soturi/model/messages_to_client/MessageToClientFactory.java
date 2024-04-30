@@ -1,6 +1,5 @@
 package soturi.model.messages_to_client;
 
-import lombok.AllArgsConstructor;
 import soturi.model.Enemy;
 import soturi.model.EnemyId;
 import soturi.model.Player;
@@ -9,9 +8,12 @@ import soturi.model.Result;
 
 import java.util.function.Consumer;
 
-@AllArgsConstructor
 public final class MessageToClientFactory implements MessageToClientHandler {
     private final Consumer<MessageToClient> consumer;
+
+    public MessageToClientFactory(Consumer<MessageToClient> consumer) {
+        this.consumer = consumer;
+    }
 
     @Override
     public void disconnect() {
