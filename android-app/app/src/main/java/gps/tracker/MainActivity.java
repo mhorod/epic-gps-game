@@ -6,7 +6,6 @@ import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Bundle;
-import android.os.Looper;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -27,6 +26,7 @@ import org.osmdroid.config.IConfigurationProvider;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Consumer;
 
 import gps.tracker.databinding.ActivityMainBinding;
 import gps.tracker.simple_listeners.Notifier;
@@ -47,9 +47,11 @@ public class MainActivity extends AppCompatActivity {
     private LocationListener locationListener;
     private LocationManager locationManager;
     private Location lastLocation;
-    private EnemyTracker enemyTracker = new EnemyTracker();
-
-    private WebSocketClient webSocketClient = new WebSocketClient(new MessageToClientHandler() {
+    private Consumer<Enemy> enemyAppearsConsumer = (Enemy e) -> {
+    };
+    private Consumer<EnemyId> enemyDisappearsConsumer = (EnemyId eid) -> {
+    };
+    private FragmentManager fragmentManager;    private final WebSocketClient webSocketClient = new WebSocketClient(new MessageToClientHandler() {
         @Override
         public void disconnect() {
 
@@ -57,12 +59,12 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         public void enemyAppears(Enemy enemy) {
-            enemyTracker.addEnemy(enemy);
+            enemyAppearsConsumer.accept(enemy);
         }
 
         @Override
         public void enemyDisappears(EnemyId enemyId) {
-
+            enemyDisappearsConsumer.accept(enemyId);
         }
 
         @Override
@@ -100,7 +102,6 @@ public class MainActivity extends AppCompatActivity {
 
         }
     });
-    private FragmentManager fragmentManager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -201,12 +202,12 @@ public class MainActivity extends AppCompatActivity {
                     } catch (InterruptedException e) {
                         throw new RuntimeException(e);
                     }
-                    runOnUiThread( () -> {
-                        locationManager.requestLocationUpdates(
-                                "fused",
-                                1L,
-                                0.1f,
-                                locationListener);
+                    runOnUiThread(() -> {
+                                locationManager.requestLocationUpdates(
+                                        "fused",
+                                        1L,
+                                        0.1f,
+                                        locationListener);
                             }
                     );
                 }
@@ -260,8 +261,14 @@ public class MainActivity extends AppCompatActivity {
         return lastLocation;
     }
 
-    public EnemyTracker getEnemyTracker() {
-        return enemyTracker;
+    public void setEnemyAppearsConsumer(Consumer<Enemy> enemyAppearsConsumer) {
+        this.enemyAppearsConsumer = enemyAppearsConsumer;
     }
+
+    public void setEnemyDisappearsConsumer(Consumer<EnemyId> enemyDisappearsConsumer) {
+        this.enemyDisappearsConsumer = enemyDisappearsConsumer;
+    }
+
+
 
 }

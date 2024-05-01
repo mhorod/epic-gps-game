@@ -1,7 +1,6 @@
 package gps.tracker;
 
-import android.graphics.Bitmap;
-import android.graphics.Canvas;
+import android.app.AlertDialog;
 import android.graphics.drawable.Drawable;
 import android.location.Location;
 import android.os.Bundle;
@@ -17,18 +16,11 @@ import org.osmdroid.api.IMapController;
 import org.osmdroid.tileprovider.MapTileProviderBasic;
 import org.osmdroid.util.GeoPoint;
 import org.osmdroid.views.MapView;
-import org.osmdroid.views.overlay.GroundOverlay;
-import org.osmdroid.views.overlay.Overlay;
-import org.osmdroid.views.overlay.mylocation.IMyLocationConsumer;
-import org.osmdroid.views.overlay.mylocation.IMyLocationProvider;
-import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 
-import gps.tracker.custom_overlays.CustomOverlay;
+import gps.tracker.custom_overlays.EnemyOverlay;
 import gps.tracker.databinding.GameMapFragmentBinding;
 import soturi.model.Enemy;
 
@@ -38,7 +30,6 @@ public class GameMap extends Fragment {
     private MapView mapView;
     private MainActivity mainActivity;
     private Timer timer;
-    private Timer enemyUpdater;
 
     @Override
     public View onCreateView(
@@ -58,17 +49,7 @@ public class GameMap extends Fragment {
 
     }
 
-    public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
-        super.onViewCreated(view, savedInstanceState);
-
-
-        IMapController controller = mapView.getController();
-        controller.setZoom(19.0);
-
-        // We are going to center the map on the user's location once it is available
-        // BUT only once, because we want user to be able to actually move the map around
-        // At the same time, spawning his view in the middle of the ocean is not a good idea
-
+    private void centerMapOncePossible() {
         timer = new Timer();
         TimerTask updater = new TimerTask() {
             @Override
@@ -76,6 +57,7 @@ public class GameMap extends Fragment {
                 Location location = mainActivity.getLastLocation();
 
                 if (location != null) {
+                    IMapController controller = mapView.getController();
                     GeoPoint geoLocation = new GeoPoint(location.getLatitude(), location.getLongitude());
 
                     mainActivity.runOnUiThread(() -> controller.setCenter(geoLocation));
@@ -86,74 +68,20 @@ public class GameMap extends Fragment {
             }
         };
 
-        mainActivity.locationChangeRequestNotifier.registerListener(() -> {
-                    Location location = mainActivity.getLastLocation();
+        timer.schedule(updater, 0, 1000);
+    }
 
-                    if (location != null) {
-                        GeoPoint geoLocation = new GeoPoint(location.getLatitude(), location.getLongitude());
-                        mainActivity.runOnUiThread(() -> controller.setCenter(geoLocation));
-                    }
-
-                }
-        );
-
-        // Proof of concept for updating positions of enemies
-        timer.scheduleAtFixedRate(updater, 0, 1000);
-
-        TimerTask updateEnemies = new TimerTask() {
-            @Override
-            public void run() {
-                Drawable d = ResourcesCompat.getDrawable(getResources(), R.mipmap.ic_launcher, null);
-
-                EnemyTracker enemyTracker = mainActivity.getEnemyTracker();
-                mapView.getOverlays().clear();
-
-                List<Overlay> overlays = new ArrayList<>();
-
-                for (Enemy enemy : enemyTracker.getEnemies()) {
-                    CustomOverlay overlay = new CustomOverlay(mapView, enemy.position(), d);
-
-                    overlay.enableMyLocation();
-
-                    overlays.add(overlay);
-                }
-
-                MyLocationNewOverlay myLocation = new MyLocationNewOverlay(new IMyLocationProvider() {
-                    @Override
-                    public boolean startLocationProvider(IMyLocationConsumer myLocationConsumer) {
-                        return true;
-                    }
-
-                    @Override
-                    public void stopLocationProvider() {
-
-                    }
-
-                    @Override
-                    public Location getLastKnownLocation() {
-                        return mainActivity.getLastLocation();
-                    }
-
-                    @Override
-                    public void destroy() {
-
-                    }
-                }, mapView);
-                myLocation.enableMyLocation();
-
-                overlays.add(myLocation);
+    public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
 
 
-                mainActivity.runOnUiThread(() -> {
-                    mapView.getOverlays().clear();
-                    mapView.getOverlays().addAll(overlays);
-                    mapView.invalidate();
-                });
-            }
-        };
+        IMapController controller = mapView.getController();
+        controller.setZoom(19.0);
 
-        enemyUpdater = new Timer();
-        enemyUpdater.scheduleAtFixedRate(updateEnemies, 0, 2000);
+        centerMapOncePossible();
+
+        mainActivity.locationChangeRequestNotifier.registerListener(this::centerMapOncePossible);
+        mainActivity.setEnemyAppearsConsumer(this::enemyAppearsConsumer);
     }
 
     @Override
@@ -161,6 +89,33 @@ public class GameMap extends Fragment {
         super.onDestroyView();
         binding = null;
         timer.cancel();
+    }
+
+    private void enemyAppearsConsumer(Enemy e) {
+        Drawable d = ResourcesCompat.getDrawable(getResources(), R.mipmap.ic_launcher, null);
+        EnemyOverlay overlay = new EnemyOverlay(mapView, new DrawableEnemy(d, e));
+        overlay.enableMyLocation();
+
+        overlay.setOnSingleTapConfirmed(() -> {
+            mainActivity.runOnUiThread(() -> {
+                // New alert dialog
+                // https://developer.android.com/guide/topics/ui/dialogs
+
+                AlertDialog.Builder builder = new AlertDialog.Builder(mainActivity);
+                builder.setMessage("Enemy " + e.enemyId().id() + " appeared!");
+                builder.setPositiveButton("OK", (dialog, id) -> {
+                    dialog.dismiss();
+                });
+
+                AlertDialog dialog = builder.create();
+                dialog.show();
+            });
+        });
+
+        mainActivity.runOnUiThread(() -> {
+            mapView.getOverlays().add(overlay);
+            mapView.invalidate();
+        });
     }
 
 }

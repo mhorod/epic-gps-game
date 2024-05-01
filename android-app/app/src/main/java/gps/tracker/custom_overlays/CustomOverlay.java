@@ -4,6 +4,7 @@ import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.drawable.Drawable;
 import android.location.Location;
+import android.view.MotionEvent;
 
 import androidx.annotation.NonNull;
 
@@ -62,6 +63,5 @@ public class CustomOverlay extends MyLocationNewOverlay {
         setPersonIcon(bitmap);
         setMyLocationProvider(getTrivialLocationProvider(position));
     }
-
 
 }
