@@ -2,6 +2,7 @@ package soturi.model.messages_to_server;
 
 import soturi.model.EnemyId;
 import soturi.model.Item;
+import soturi.model.ItemId;
 import soturi.model.Position;
 
 import java.util.function.Consumer;
@@ -24,13 +25,13 @@ public final class MessageToServerFactory implements MessageToServerHandler {
     }
 
     @Override
-    public void equipItem(Item item) {
-        consumer.accept(new EquipItem(item));
+    public void equipItem(ItemId itemId) {
+        consumer.accept(new EquipItem(itemId));
     }
 
     @Override
-    public void unequipItem(Item item) {
-        consumer.accept(new UnequipItem(item));
+    public void unequipItem(ItemId itemId) {
+        consumer.accept(new UnequipItem(itemId));
     }
 
     @Override

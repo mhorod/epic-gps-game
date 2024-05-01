@@ -3,6 +3,7 @@ package soturi.server;
 import jakarta.persistence.Column;
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import lombok.Getter;
@@ -10,6 +11,7 @@ import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import soturi.model.FightResult;
 import soturi.model.Item;
+import soturi.model.ItemId;
 
 import java.util.List;
 import java.util.stream.Stream;
@@ -29,8 +31,8 @@ public final class PlayerEntity {
     @Getter @Setter
     private long xp, hp;
 
-    @Getter @Setter @ElementCollection
-    private List<Integer> equipped, inventory;
+    @Getter @Setter @ElementCollection(fetch=FetchType.EAGER)
+    private List<Long> equipped, inventory;
 
     public PlayerEntity() {
         setHp(1);
@@ -52,9 +54,9 @@ public final class PlayerEntity {
     }
 
     void applyFightResult(FightResult fightResult) {
-        List<Integer> newInventory = Stream.concat(
+        List<Long> newInventory = Stream.concat(
                 getInventory().stream(),
-                fightResult.gainItems().stream().map(Item::itemId)
+                fightResult.gainItems().stream().map(Item::itemId).map(ItemId::id)
         ).toList();
 
         addHp(-fightResult.lostHp());

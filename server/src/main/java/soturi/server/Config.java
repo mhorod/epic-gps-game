@@ -13,12 +13,11 @@ import java.util.List;
 
 @Component
 public final class Config {
-    private final File configFile;
+    private final File configFile = new File("config.json");
     private final ObjectMapper objectMapper;
     public ConfigValues v = new ConfigValues();
 
-    public Config(@Value("${config-file}") File configFile, ObjectMapper objectMapper) {
-        this.configFile = configFile;
+    public Config(ObjectMapper objectMapper) {
         this.objectMapper = objectMapper;
         load();
         dump();
@@ -28,7 +27,7 @@ public final class Config {
         public int giveFreeXpDelayInSeconds = 100;
         public long giveFreeXpAmount = 10000;
         public int spawnEnemyDelayInSeconds = 5;
-        public int fightingMaxDistInMeters = 50;
+        public int fightingMaxDistInMeters = 60;
 
         public List<String> geoNamesCountryCodes = List.of("PL");
         public String geoNamesDownloadDir = "GeoNames";

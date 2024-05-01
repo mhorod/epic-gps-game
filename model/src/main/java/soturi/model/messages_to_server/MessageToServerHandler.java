@@ -1,14 +1,14 @@
 package soturi.model.messages_to_server;
 
 import soturi.model.EnemyId;
-import soturi.model.Item;
+import soturi.model.ItemId;
 import soturi.model.Position;
 
 public interface MessageToServerHandler {
     void attackEnemy(EnemyId enemyId);
     void disconnect();
-    void equipItem(Item item);
-    void unequipItem(Item item);
+    void equipItem(ItemId itemId);
+    void unequipItem(ItemId itemId);
     void ping();
     void pong();
     void updateLookingPosition(Position position);
