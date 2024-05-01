@@ -18,13 +18,17 @@ import org.osmdroid.tileprovider.MapTileProviderBasic;
 import org.osmdroid.util.GeoPoint;
 import org.osmdroid.views.MapView;
 import org.osmdroid.views.overlay.GroundOverlay;
+import org.osmdroid.views.overlay.Overlay;
 import org.osmdroid.views.overlay.mylocation.IMyLocationConsumer;
 import org.osmdroid.views.overlay.mylocation.IMyLocationProvider;
 import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 
+import gps.tracker.custom_overlays.CustomOverlay;
 import gps.tracker.databinding.GameMapFragmentBinding;
 import soturi.model.Enemy;
 
@@ -35,17 +39,6 @@ public class GameMap extends Fragment {
     private MainActivity mainActivity;
     private Timer timer;
     private Timer enemyUpdater;
-
-    // From https://stackoverflow.com/questions/50077917/android-graphics-drawable-adaptiveicondrawable-cannot-be-cast-to-android-graphic
-    // by Shashank Holla; CC BY-SA 4.0
-    @NonNull
-    static private Bitmap getBitmapFromDrawable(@NonNull Drawable drawable) {
-        final Bitmap bmp = Bitmap.createBitmap(drawable.getIntrinsicWidth(), drawable.getIntrinsicHeight(), Bitmap.Config.ARGB_8888);
-        final Canvas canvas = new Canvas(bmp);
-        drawable.setBounds(0, 0, canvas.getWidth(), canvas.getHeight());
-        drawable.draw(canvas);
-        return bmp;
-    }
 
     @Override
     public View onCreateView(
@@ -111,25 +104,18 @@ public class GameMap extends Fragment {
             @Override
             public void run() {
                 Drawable d = ResourcesCompat.getDrawable(getResources(), R.mipmap.ic_launcher, null);
-                Bitmap icon = getBitmapFromDrawable(d);
 
                 EnemyTracker enemyTracker = mainActivity.getEnemyTracker();
                 mapView.getOverlays().clear();
 
+                List<Overlay> overlays = new ArrayList<>();
+
                 for (Enemy enemy : enemyTracker.getEnemies()) {
-                    GeoPoint enemyLocation = new GeoPoint(enemy.position().latitude(), enemy.position().longitude());
+                    CustomOverlay overlay = new CustomOverlay(mapView, enemy.position(), d);
 
-                    final double delta = 0.00003;
+                    overlay.enableMyLocation();
 
-                    GeoPoint loc1 = new GeoPoint(enemyLocation.getLatitude() + delta, enemyLocation.getLongitude() - delta);
-                    GeoPoint loc2 = new GeoPoint(enemyLocation.getLatitude() - delta, enemyLocation.getLongitude() + delta);
-
-                    GroundOverlay overlay = new GroundOverlay();
-                    overlay.setImage(icon);
-                    overlay.setPosition(loc1, loc2);
-
-                    mapView.getOverlays().add(overlay);
-
+                    overlays.add(overlay);
                 }
 
                 MyLocationNewOverlay myLocation = new MyLocationNewOverlay(new IMyLocationProvider() {
@@ -154,10 +140,15 @@ public class GameMap extends Fragment {
                     }
                 }, mapView);
                 myLocation.enableMyLocation();
-                mapView.getOverlays().add(myLocation);
+
+                overlays.add(myLocation);
 
 
-                mainActivity.runOnUiThread(() -> mapView.invalidate());
+                mainActivity.runOnUiThread(() -> {
+                    mapView.getOverlays().clear();
+                    mapView.getOverlays().addAll(overlays);
+                    mapView.invalidate();
+                });
             }
         };
 
