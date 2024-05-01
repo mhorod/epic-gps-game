@@ -4,7 +4,6 @@ import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.drawable.Drawable;
 import android.location.Location;
-import android.view.MotionEvent;
 
 import androidx.annotation.NonNull;
 
@@ -17,6 +16,13 @@ import soturi.model.Position;
 
 // Works like a human overlay, but is less annoying to deal with
 public class CustomOverlay extends MyLocationNewOverlay {
+    public CustomOverlay(MapView mapView, Position position, Drawable drawable) {
+        super(mapView);
+        Bitmap bitmap = getBitmapFromDrawable(drawable);
+        setPersonIcon(bitmap);
+        setMyLocationProvider(getTrivialLocationProvider(position));
+    }
+
     // From https://stackoverflow.com/questions/50077917/android-graphics-drawable-adaptiveicondrawable-cannot-be-cast-to-android-graphic
     // by Shashank Holla; CC BY-SA 4.0
     @NonNull
@@ -55,13 +61,6 @@ public class CustomOverlay extends MyLocationNewOverlay {
 
             }
         };
-    }
-
-    public CustomOverlay(MapView mapView, Position position, Drawable drawable) {
-        super(mapView);
-        Bitmap bitmap = getBitmapFromDrawable(drawable);
-        setPersonIcon(bitmap);
-        setMyLocationProvider(getTrivialLocationProvider(position));
     }
 
 }
