@@ -1,7 +1,6 @@
 package gps.tracker;
 
-import android.graphics.Bitmap;
-import android.graphics.Canvas;
+import android.app.AlertDialog;
 import android.graphics.drawable.Drawable;
 import android.location.Location;
 import android.os.Bundle;
@@ -14,19 +13,20 @@ import androidx.core.content.res.ResourcesCompat;
 import androidx.fragment.app.Fragment;
 
 import org.osmdroid.api.IMapController;
+import org.osmdroid.events.MapEventsReceiver;
 import org.osmdroid.tileprovider.MapTileProviderBasic;
 import org.osmdroid.util.GeoPoint;
 import org.osmdroid.views.MapView;
-import org.osmdroid.views.overlay.GroundOverlay;
-import org.osmdroid.views.overlay.mylocation.IMyLocationConsumer;
-import org.osmdroid.views.overlay.mylocation.IMyLocationProvider;
-import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay;
+import org.osmdroid.views.overlay.MapEventsOverlay;
 
 import java.util.Timer;
 import java.util.TimerTask;
 
+import gps.tracker.custom_overlays.EnemyOverlay;
 import gps.tracker.databinding.GameMapFragmentBinding;
 import soturi.model.Enemy;
+import soturi.model.EnemyId;
+import soturi.model.Position;
 
 public class GameMap extends Fragment {
 
@@ -34,18 +34,8 @@ public class GameMap extends Fragment {
     private MapView mapView;
     private MainActivity mainActivity;
     private Timer timer;
-    private Timer enemyUpdater;
-
-    // From https://stackoverflow.com/questions/50077917/android-graphics-drawable-adaptiveicondrawable-cannot-be-cast-to-android-graphic
-    // by Shashank Holla; CC BY-SA 4.0
-    @NonNull
-    static private Bitmap getBitmapFromDrawable(@NonNull Drawable drawable) {
-        final Bitmap bmp = Bitmap.createBitmap(drawable.getIntrinsicWidth(), drawable.getIntrinsicHeight(), Bitmap.Config.ARGB_8888);
-        final Canvas canvas = new Canvas(bmp);
-        drawable.setBounds(0, 0, canvas.getWidth(), canvas.getHeight());
-        drawable.draw(canvas);
-        return bmp;
-    }
+    private EnemyList enemyList;
+    private MapEventsReceiver mapEventsReceiver;
 
     @Override
     public View onCreateView(
@@ -61,21 +51,13 @@ public class GameMap extends Fragment {
 
         mainActivity = (MainActivity) getActivity();
 
+        enemyList = new EnemyList();
+
         return mapView;
 
     }
 
-    public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
-        super.onViewCreated(view, savedInstanceState);
-
-
-        IMapController controller = mapView.getController();
-        controller.setZoom(19.0);
-
-        // We are going to center the map on the user's location once it is available
-        // BUT only once, because we want user to be able to actually move the map around
-        // At the same time, spawning his view in the middle of the ocean is not a good idea
-
+    private void centerMapOncePossible() {
         timer = new Timer();
         TimerTask updater = new TimerTask() {
             @Override
@@ -83,6 +65,7 @@ public class GameMap extends Fragment {
                 Location location = mainActivity.getLastLocation();
 
                 if (location != null) {
+                    IMapController controller = mapView.getController();
                     GeoPoint geoLocation = new GeoPoint(location.getLatitude(), location.getLongitude());
 
                     mainActivity.runOnUiThread(() -> controller.setCenter(geoLocation));
@@ -93,76 +76,69 @@ public class GameMap extends Fragment {
             }
         };
 
-        mainActivity.locationChangeRequestNotifier.registerListener(() -> {
-                    Location location = mainActivity.getLastLocation();
+        timer.schedule(updater, 0, 1000);
+    }
 
-                    if (location != null) {
-                        GeoPoint geoLocation = new GeoPoint(location.getLatitude(), location.getLongitude());
-                        mainActivity.runOnUiThread(() -> controller.setCenter(geoLocation));
-                    }
+    public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
 
-                }
-        );
 
-        // Proof of concept for updating positions of enemies
-        timer.scheduleAtFixedRate(updater, 0, 1000);
+        IMapController controller = mapView.getController();
+        controller.setZoom(19.0);
 
-        TimerTask updateEnemies = new TimerTask() {
+        mapEventsReceiver = new MapEventsReceiver() {
             @Override
-            public void run() {
-                Drawable d = ResourcesCompat.getDrawable(getResources(), R.mipmap.ic_launcher, null);
-                Bitmap icon = getBitmapFromDrawable(d);
+            public boolean singleTapConfirmedHelper(GeoPoint p) {
+                System.out.println("Tapped at " + p);
+                Enemy e = enemyList.getClosestEnemy(new Position(p.getLatitude(), p.getLongitude()));
 
-                EnemyTracker enemyTracker = mainActivity.getEnemyTracker();
-                mapView.getOverlays().clear();
+                System.out.println("Closest enemy is " + e);
 
-                for (Enemy enemy : enemyTracker.getEnemies()) {
-                    GeoPoint enemyLocation = new GeoPoint(enemy.position().latitude(), enemy.position().longitude());
-
-                    final double delta = 0.00003;
-
-                    GeoPoint loc1 = new GeoPoint(enemyLocation.getLatitude() + delta, enemyLocation.getLongitude() - delta);
-                    GeoPoint loc2 = new GeoPoint(enemyLocation.getLatitude() - delta, enemyLocation.getLongitude() + delta);
-
-                    GroundOverlay overlay = new GroundOverlay();
-                    overlay.setImage(icon);
-                    overlay.setPosition(loc1, loc2);
-
-                    mapView.getOverlays().add(overlay);
-
+                if (e == null) {
+                    return false;
                 }
 
-                MyLocationNewOverlay myLocation = new MyLocationNewOverlay(new IMyLocationProvider() {
-                    @Override
-                    public boolean startLocationProvider(IMyLocationConsumer myLocationConsumer) {
-                        return true;
-                    }
+                System.out.println("XDDDDD " + mapView.getZoomLevelDouble());
+                System.out.println("XDDDDD " + 10 * Math.pow(2.0, 20 - mapView.getZoomLevelDouble()));
 
-                    @Override
-                    public void stopLocationProvider() {
+                if (e.position().distance(new Position(p.getLatitude(), p.getLongitude())) < 10 * Math.pow(2, 20 - mapView.getZoomLevelDouble())) {
 
-                    }
+                    mainActivity.runOnUiThread(() -> {
+                        // Alert
+                        AlertDialog.Builder builder = new AlertDialog.Builder(mainActivity);
+                        builder.setMessage("Attack " + e.name() + " lvl " + e.lvl() + "?");
+                        builder.setPositiveButton("OK", (dialog, id) -> {
+                            System.out.println("Attacking enemy " + e.enemyId());
+                            new Thread(() -> attackEnemy(e)).start();
+                            dialog.dismiss();
+                        });
+                        builder.setNegativeButton("Nope", (dialog, id) -> {
+                            dialog.dismiss();
+                        });
 
-                    @Override
-                    public Location getLastKnownLocation() {
-                        return mainActivity.getLastLocation();
-                    }
+                        AlertDialog dialog = builder.create();
+                        dialog.show();
+                    });
 
-                    @Override
-                    public void destroy() {
+                    return true;
+                }
 
-                    }
-                }, mapView);
-                myLocation.enableMyLocation();
-                mapView.getOverlays().add(myLocation);
+                return false;
+            }
 
-
-                mainActivity.runOnUiThread(() -> mapView.invalidate());
+            @Override
+            public boolean longPressHelper(GeoPoint p) {
+                return false;
             }
         };
 
-        enemyUpdater = new Timer();
-        enemyUpdater.scheduleAtFixedRate(updateEnemies, 0, 2000);
+        mapView.getOverlays().add(new MapEventsOverlay(mapEventsReceiver));
+
+        centerMapOncePossible();
+
+        mainActivity.locationChangeRequestNotifier.registerListener(this::centerMapOncePossible);
+        mainActivity.setEnemyAppearsConsumer(this::enemyAppearsConsumer);
+        mainActivity.setEnemyDisappearsConsumer(this::enemyDisappearsConsumer);
     }
 
     @Override
@@ -170,6 +146,35 @@ public class GameMap extends Fragment {
         super.onDestroyView();
         binding = null;
         timer.cancel();
+    }
+
+    private void enemyAppearsConsumer(Enemy e) {
+        Drawable d = ResourcesCompat.getDrawable(getResources(), R.mipmap.ic_launcher, null);
+        EnemyOverlay overlay = new EnemyOverlay(mapView, new DrawableEnemy(d, e));
+        overlay.enableMyLocation();
+
+        enemyList.addEnemy(e, overlay);
+
+        mainActivity.runOnUiThread(() -> {
+            mapView.getOverlays().add(overlay);
+            mapView.invalidate();
+        });
+    }
+
+    private void enemyDisappearsConsumer(EnemyId e) {
+        EnemyOverlay overlay = enemyList.getOverlay(e);
+        enemyList.removeEnemy(e);
+
+        mainActivity.runOnUiThread(() -> {
+            mapView.getOverlays().remove(overlay);
+            mapView.invalidate();
+        });
+    }
+
+    private void attackEnemy(Enemy e) {
+        MainActivity mainActivity = (MainActivity) getActivity();
+
+        mainActivity.getWebSocketClient().send().attackEnemy(e.enemyId());
     }
 
 }

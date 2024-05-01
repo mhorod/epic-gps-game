@@ -6,26 +6,30 @@ import com.fasterxml.jackson.module.androidrecord.AndroidRecordModule;
 import java.util.concurrent.TimeUnit;
 
 import lombok.SneakyThrows;
-import soturi.model.Position;
-import soturi.model.messages_to_client.MessageToClient;
-import soturi.model.messages_to_client.MessageToClientHandler;
-import soturi.model.messages_to_server.MessageToServer;
-import soturi.model.messages_to_server.MessageToServerFactory;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 import okhttp3.WebSocket;
 import okhttp3.WebSocketListener;
 import okio.ByteString;
+import soturi.model.Position;
+import soturi.model.messages_to_client.MessageToClient;
+import soturi.model.messages_to_client.MessageToClientHandler;
+import soturi.model.messages_to_server.MessageToServer;
+import soturi.model.messages_to_server.MessageToServerFactory;
 import soturi.model.messages_to_server.UpdateRealPosition;
 
 public class WebSocketClient extends WebSocketListener {
-    private volatile WebSocket webSocket = null;
-    private volatile Position lastPosition = null;
     private final ObjectMapper objectMapper = new ObjectMapper()
             .registerModule(new AndroidRecordModule());
     private final MessageToClientHandler handler;
-    public volatile String userName = "helloall", userPassword = "password";
+    public volatile String userName = "helloall2", userPassword = "password";
+    private volatile WebSocket webSocket = null;
+    private volatile Position lastPosition = null;
+
+    public WebSocketClient(MessageToClientHandler handler) {
+        this.handler = handler;
+    }
 
     private void ensureSocketOpened() {
         if (webSocket != null)
@@ -52,10 +56,6 @@ public class WebSocketClient extends WebSocketListener {
         webSocket = client.newWebSocket(request, this);
 
         System.err.println("dziem dobry3");
-    }
-
-    public WebSocketClient(MessageToClientHandler handler) {
-        this.handler = handler;
     }
 
     @Override
