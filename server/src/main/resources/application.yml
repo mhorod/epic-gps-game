@@ -6,5 +6,3 @@ spring:
     generate-ddl: true
     hibernate:
       ddl-auto: update
-
-config-file: config.json

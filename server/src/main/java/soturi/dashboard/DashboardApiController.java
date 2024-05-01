@@ -68,6 +68,6 @@ public class DashboardApiController {
 
     @PostMapping("/v1/reload")
     public void reload() {
-        gameService.reload();
+        gameService.reloadDynamicConfig();
     }
 }
