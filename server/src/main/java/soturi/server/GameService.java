@@ -8,7 +8,7 @@ import org.springframework.stereotype.Component;
 import soturi.model.Enemy;
 import soturi.model.EnemyId;
 import soturi.model.FightResult;
-import soturi.model.Item;
+import soturi.model.ItemId;
 import soturi.model.Player;
 import soturi.model.PlayerWithPosition;
 import soturi.model.Position;
@@ -39,7 +39,7 @@ public final class GameService {
             logout(sessions.entrySet().iterator().next().getKey());
         while (!observers.isEmpty())
             remObserver(observers.entrySet().iterator().next().getKey());
-        unregisterAllEnemies();
+        reloadDynamicConfig();
     }
 
     public synchronized void unregisterAllEnemies() {
@@ -47,7 +47,7 @@ public final class GameService {
             unregisterEnemy(enemy.enemyId());
     }
 
-    public synchronized void reload() {
+    public synchronized void reloadDynamicConfig() {
         unregisterAllEnemies();
         monsterManager.reload();
     }
@@ -77,9 +77,7 @@ public final class GameService {
 
     @Scheduled(fixedDelay = 1000)
     private synchronized void tickEverySecond() {
-//        log.info("tickEverySecond() called");
         doTickEverySecond();
-//        log.info("tickEverySecond() exited");
     }
 
     private synchronized void giveFreeXp() {
@@ -102,7 +100,7 @@ public final class GameService {
             registerEnemy(enemy);
     }
 
-    private synchronized void registerEnemy(Enemy enemy) {
+    public synchronized void registerEnemy(Enemy enemy) {
         monsterManager.registerEnemy(enemy);
 
         for (var session : sessions.values())
@@ -180,14 +178,14 @@ public final class GameService {
             }
 
             @Override
-            public void equipItem(Item item) {
+            public void equipItem(ItemId itemId) {
                 synchronized (GameService.this) {
                     sender.error("not supported");
                 }
             }
 
             @Override
-            public void unequipItem(Item item) {
+            public void unequipItem(ItemId itemId) {
                 synchronized (GameService.this) {
                     sender.error("not supported");
                 }
@@ -243,7 +241,7 @@ public final class GameService {
             return false;
         }
         PlayerEntity entity = repository.findByName(name).orElseGet(
-                () -> repository.save(new PlayerEntity(name, password))
+            () -> repository.save(new PlayerEntity(name, password))
         );
         if (!password.equals(entity.getHashedPassword())) {
             sender.error("incorrect password passed");
