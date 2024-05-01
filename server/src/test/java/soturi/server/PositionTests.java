@@ -1,6 +1,7 @@
-package soturi.model;
+package soturi.server;
 
 import org.junit.jupiter.api.Test;
+import soturi.model.Position;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.withinPercentage;

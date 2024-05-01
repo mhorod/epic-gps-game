@@ -35,6 +35,7 @@ android {
 }
 
 dependencies {
+    implementation(project(":model"))
     compileOnly("org.projectlombok:lombok:1.18.30")
     annotationProcessor("org.projectlombok:lombok:1.18.30")
     implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-xml:2.16.1")
