@@ -5,6 +5,7 @@ import java.util.Map;
 
 import gps.tracker.custom_overlays.EnemyOverlay;
 import soturi.model.Enemy;
+import soturi.model.EnemyId;
 import soturi.model.Position;
 
 public class EnemyList {
@@ -18,12 +19,14 @@ public class EnemyList {
         enemies.put(enemy, overlay);
     }
 
-    public EnemyOverlay getOverlay(Enemy enemy) {
-        return enemies.get(enemy);
+    public EnemyOverlay getOverlay(EnemyId enemy) {
+        Enemy key = enemies.keySet().stream().filter(e -> e.enemyId().equals(enemy)).findFirst().orElse(null);
+        return key == null ? null : enemies.get(key);
     }
 
-    public void removeEnemy(Enemy enemy) {
-        enemies.remove(enemy);
+    public void removeEnemy(EnemyId enemy) {
+        Enemy key = enemies.keySet().stream().filter(e -> e.enemyId().equals(enemy)).findFirst().orElse(null);
+        enemies.remove(key);
     }
 
     public Enemy getClosestEnemy(Position position) {

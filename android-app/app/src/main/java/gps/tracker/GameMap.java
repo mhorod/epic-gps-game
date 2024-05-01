@@ -1,5 +1,6 @@
 package gps.tracker;
 
+import android.app.AlertDialog;
 import android.graphics.drawable.Drawable;
 import android.location.Location;
 import android.os.Bundle;
@@ -24,6 +25,7 @@ import java.util.TimerTask;
 import gps.tracker.custom_overlays.EnemyOverlay;
 import gps.tracker.databinding.GameMapFragmentBinding;
 import soturi.model.Enemy;
+import soturi.model.EnemyId;
 import soturi.model.Position;
 
 public class GameMap extends Fragment {
@@ -96,9 +98,28 @@ public class GameMap extends Fragment {
                     return false;
                 }
 
-                if (e.position().distance(new Position(p.getLatitude(), p.getLongitude())) < 50000) {
-                    System.out.println("Attacking enemy " + e.enemyId());
-                    attackEnemy(e);
+                System.out.println("XDDDDD " + mapView.getZoomLevelDouble());
+                System.out.println("XDDDDD " + 10 * Math.pow(2.0, 20 - mapView.getZoomLevelDouble()));
+
+                if (e.position().distance(new Position(p.getLatitude(), p.getLongitude())) < 10 * Math.pow(2, 20 - mapView.getZoomLevelDouble())) {
+
+                    mainActivity.runOnUiThread(() -> {
+                        // Alert
+                        AlertDialog.Builder builder = new AlertDialog.Builder(mainActivity);
+                        builder.setMessage("Attack " + e.name() + " lvl " + e.lvl() + "?");
+                        builder.setPositiveButton("OK", (dialog, id) -> {
+                            System.out.println("Attacking enemy " + e.enemyId());
+                            new Thread(() -> attackEnemy(e)).start();
+                            dialog.dismiss();
+                        });
+                        builder.setNegativeButton("Nope", (dialog, id) -> {
+                            dialog.dismiss();
+                        });
+
+                        AlertDialog dialog = builder.create();
+                        dialog.show();
+                    });
+
                     return true;
                 }
 
@@ -117,6 +138,7 @@ public class GameMap extends Fragment {
 
         mainActivity.locationChangeRequestNotifier.registerListener(this::centerMapOncePossible);
         mainActivity.setEnemyAppearsConsumer(this::enemyAppearsConsumer);
+        mainActivity.setEnemyDisappearsConsumer(this::enemyDisappearsConsumer);
     }
 
     @Override
@@ -139,7 +161,7 @@ public class GameMap extends Fragment {
         });
     }
 
-    private void enemyDisappearsConsumer(Enemy e) {
+    private void enemyDisappearsConsumer(EnemyId e) {
         EnemyOverlay overlay = enemyList.getOverlay(e);
         enemyList.removeEnemy(e);
 

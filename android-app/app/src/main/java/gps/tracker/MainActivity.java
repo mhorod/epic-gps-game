@@ -1,6 +1,7 @@
 package gps.tracker;
 
 import android.annotation.SuppressLint;
+import android.app.AlertDialog;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.location.LocationListener;
@@ -167,57 +168,7 @@ public class MainActivity extends AppCompatActivity {
 
     public void registerLocationListener(LocationListener listener) {
         sublisteners.add(listener);
-    }    private final WebSocketClient webSocketClient = new WebSocketClient(new MessageToClientHandler() {
-        @Override
-        public void disconnect() {
-
-        }
-
-        @Override
-        public void enemyAppears(Enemy enemy) {
-            enemyAppearsConsumer.accept(enemy);
-        }
-
-        @Override
-        public void enemyDisappears(EnemyId enemyId) {
-            enemyDisappearsConsumer.accept(enemyId);
-        }
-
-        @Override
-        public void error(String error) {
-            System.err.println(error);
-        }
-
-        @Override
-        public void fightResult(Result result, EnemyId enemyId) {
-
-        }
-
-        @Override
-        public void meUpdate(Player me) {
-
-        }
-
-        @Override
-        public void ping() {
-            webSocketClient.send().pong();
-        }
-
-        @Override
-        public void playerDisappears(String playerName) {
-
-        }
-
-        @Override
-        public void playerUpdate(Player player, Position position) {
-
-        }
-
-        @Override
-        public void pong() {
-
-        }
-    });
+    }
 
     @SneakyThrows
     private void doProcessLocation(Location location) {
@@ -259,7 +210,71 @@ public class MainActivity extends AppCompatActivity {
 
     public Location getLastLocation() {
         return lastLocation;
-    }
+    }    private final WebSocketClient webSocketClient = new WebSocketClient(new MessageToClientHandler() {
+        @Override
+        public void disconnect() {
+
+        }
+
+        @Override
+        public void enemyAppears(Enemy enemy) {
+            enemyAppearsConsumer.accept(enemy);
+        }
+
+        @Override
+        public void enemyDisappears(EnemyId enemyId) {
+            enemyDisappearsConsumer.accept(enemyId);
+        }
+
+        @Override
+        public void error(String error) {
+            System.err.println(error);
+        }
+
+        @Override
+        public void fightResult(Result result, EnemyId enemyId) {
+            runOnUiThread(() -> {
+                AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+
+                if (result == Result.WON) {
+                    builder.setMessage("You won!");
+                    builder.setPositiveButton("Yay!", (dialog, id) -> {
+                    });
+                } else {
+                    builder.setMessage("You've lost!");
+                    builder.setPositiveButton("Quite the predicament", (dialog, id) -> {
+                    });
+                }
+                builder.create().show();
+
+            });
+        }
+
+        @Override
+        public void meUpdate(Player me) {
+
+        }
+
+        @Override
+        public void ping() {
+            webSocketClient.send().pong();
+        }
+
+        @Override
+        public void playerDisappears(String playerName) {
+
+        }
+
+        @Override
+        public void playerUpdate(Player player, Position position) {
+
+        }
+
+        @Override
+        public void pong() {
+
+        }
+    });
 
     public void setEnemyAppearsConsumer(Consumer<Enemy> enemyAppearsConsumer) {
         this.enemyAppearsConsumer = enemyAppearsConsumer;
@@ -272,6 +287,7 @@ public class MainActivity extends AppCompatActivity {
     public WebSocketClient getWebSocketClient() {
         return webSocketClient;
     }
+
 
 
 
