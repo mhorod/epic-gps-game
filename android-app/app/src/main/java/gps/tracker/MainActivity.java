@@ -10,6 +10,7 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
@@ -235,6 +236,14 @@ public class MainActivity extends AppCompatActivity {
 
     public boolean loggedIn() {
         return webSocketClient != null;
+    }
+
+    public void hideLocationKey() {
+        binding.findMeButton.setVisibility(View.GONE);
+    }
+
+    public void showLocationKey() {
+        binding.findMeButton.setVisibility(View.VISIBLE);
     }
 
     class MainActivityHandler implements MessageToClientHandler {

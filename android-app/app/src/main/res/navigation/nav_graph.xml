@@ -12,7 +12,7 @@
     <fragment
         android:id="@+id/loginFragment"
         android:name="gps.tracker.LoginFragment"
-        android:label="fragment_login"
+        android:label="Sign in"
         tools:layout="@layout/fragment_login">
         <action
             android:id="@+id/action_loginFragment_to_gameMap"

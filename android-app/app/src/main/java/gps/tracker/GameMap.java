@@ -82,7 +82,6 @@ public class GameMap extends Fragment {
     public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-
         IMapController controller = mapView.getController();
         controller.setZoom(19.0);
 
@@ -139,6 +138,12 @@ public class GameMap extends Fragment {
         mainActivity.locationChangeRequestNotifier.registerListener(this::centerMapOncePossible);
         mainActivity.setEnemyAppearsConsumer(this::enemyAppearsConsumer);
         mainActivity.setEnemyDisappearsConsumer(this::enemyDisappearsConsumer);
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        mainActivity.showLocationKey();
     }
 
     @Override

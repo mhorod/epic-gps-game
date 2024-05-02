@@ -47,4 +47,10 @@ public class LoginFragment extends Fragment {
         // Inflate the layout for this fragment
         return binding.getRoot();
     }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        mainActivity.hideLocationKey();
+    }
 }

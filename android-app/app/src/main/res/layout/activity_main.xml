@@ -28,6 +28,7 @@
         android:layout_gravity="bottom|end"
         android:layout_margin="16dp"
         android:contextClickable="false"
-        android:src="@android:drawable/ic_menu_mylocation" />
+        android:src="@android:drawable/ic_menu_mylocation"
+        android:visibility="gone" />
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>
