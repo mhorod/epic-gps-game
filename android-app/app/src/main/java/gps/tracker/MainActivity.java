@@ -57,10 +57,8 @@ public class MainActivity extends AppCompatActivity {
     private LocationListener locationListener;
     private LocationManager locationManager;
     private Location lastLocation;
-    private Consumer<Enemy> enemyAppearsConsumer = (Enemy e) -> {
-    };
-    private Consumer<EnemyId> enemyDisappearsConsumer = (EnemyId eid) -> {
-    };
+    private Consumer<Enemy> enemyAppearsConsumer = null;
+    private Consumer<EnemyId> enemyDisappearsConsumer = null;
     private FragmentManager fragmentManager;
 
     public void saveString(String key, String value) {
@@ -75,7 +73,7 @@ public class MainActivity extends AppCompatActivity {
             throw new RuntimeException(e);
         }
     }
-    
+
     public String getString(String key) {
 
         try {
@@ -280,18 +278,38 @@ public class MainActivity extends AppCompatActivity {
 
     class MainActivityHandler implements MessageToClientHandler {
 
+        private ArrayList<Enemy> enemiesBacklog = new ArrayList<>();
+
         @Override
         public void disconnect() {
 
         }
 
+        private void cleanBacklog(Consumer<Enemy> consumer) {
+            for (Enemy enemy : enemiesBacklog) {
+                consumer.accept(enemy);
+            }
+            enemiesBacklog.clear();
+        }
+
         @Override
         public void enemyAppears(Enemy enemy) {
+            if (enemyAppearsConsumer == null) {
+                enemiesBacklog.add(enemy);
+                return;
+            }
+
+            cleanBacklog(enemyAppearsConsumer);
             enemyAppearsConsumer.accept(enemy);
+
         }
 
         @Override
         public void enemyDisappears(EnemyId enemyId) {
+            if (enemyAppearsConsumer == null || enemyDisappearsConsumer == null) {
+                enemiesBacklog.removeIf(enemy -> enemy.enemyId().equals(enemyId));
+                return;
+            }
             enemyDisappearsConsumer.accept(enemyId);
         }
 
@@ -328,7 +346,19 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         public void meUpdate(Player me) {
+            // Because this event is sent cyclically, we will use it to put enemies from backlog on the map
+            if (enemyDisappearsConsumer != null) {
+                cleanBacklog(enemyAppearsConsumer);
+            }
 
+            runOnUiThread(
+                    () -> {
+                        binding.hpCounter.setText("HP: " + me.hp() + "/" + me.maxHp());
+                        binding.levelCounter.setText("Lvl: " + me.lvl());
+                        binding.hpCounter.setVisibility(View.VISIBLE);
+                        binding.levelCounter.setVisibility(View.VISIBLE);
+                    }
+            );
         }
 
         @Override
