@@ -27,8 +27,10 @@ public class WebSocketClient extends WebSocketListener {
     private volatile WebSocket webSocket = null;
     private volatile Position lastPosition = null;
 
-    public WebSocketClient(MessageToClientHandler handler) {
+    public WebSocketClient(MessageToClientHandler handler, String userName, String userPassword) {
         this.handler = handler;
+        this.userName = userName;
+        this.userPassword = userPassword;
     }
 
     private void ensureSocketOpened() {

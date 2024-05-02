@@ -10,6 +10,7 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
@@ -43,6 +44,8 @@ public class MainActivity extends AppCompatActivity {
 
     public final Notifier locationChangeRequestNotifier = new Notifier();
     private final List<LocationListener> sublisteners = new ArrayList<>();
+    private WebSocketClient webSocketClient;
+
     private AppBarConfiguration appBarConfiguration;
     private ActivityMainBinding binding;
     private LocationListener locationListener;
@@ -176,7 +179,10 @@ public class MainActivity extends AppCompatActivity {
         Log.e("main_activity", "doProcessLocation()");
         double lat = location.getLatitude();
         double lng = location.getLongitude();
-        webSocketClient.send().updateRealPosition(new Position(lat, lng));
+
+        if (loggedIn()) {
+            webSocketClient.send().updateRealPosition(new Position(lat, lng));
+        }
     }
 
     @Override
@@ -210,7 +216,38 @@ public class MainActivity extends AppCompatActivity {
 
     public Location getLastLocation() {
         return lastLocation;
-    }    private final WebSocketClient webSocketClient = new WebSocketClient(new MessageToClientHandler() {
+    }
+
+    public void setEnemyAppearsConsumer(Consumer<Enemy> enemyAppearsConsumer) {
+        this.enemyAppearsConsumer = enemyAppearsConsumer;
+    }
+
+    public void setEnemyDisappearsConsumer(Consumer<EnemyId> enemyDisappearsConsumer) {
+        this.enemyDisappearsConsumer = enemyDisappearsConsumer;
+    }
+
+    public WebSocketClient getWebSocketClient() {
+        return webSocketClient;
+    }
+
+    public void login(String userName, String userPassword) {
+        webSocketClient = new WebSocketClient(new MainActivityHandler(), userName, userPassword);
+    }
+
+    public boolean loggedIn() {
+        return webSocketClient != null;
+    }
+
+    public void hideLocationKey() {
+        binding.findMeButton.setVisibility(View.GONE);
+    }
+
+    public void showLocationKey() {
+        binding.findMeButton.setVisibility(View.VISIBLE);
+    }
+
+    class MainActivityHandler implements MessageToClientHandler {
+
         @Override
         public void disconnect() {
 
@@ -274,21 +311,8 @@ public class MainActivity extends AppCompatActivity {
         public void pong() {
 
         }
-    });
 
-    public void setEnemyAppearsConsumer(Consumer<Enemy> enemyAppearsConsumer) {
-        this.enemyAppearsConsumer = enemyAppearsConsumer;
     }
-
-    public void setEnemyDisappearsConsumer(Consumer<EnemyId> enemyDisappearsConsumer) {
-        this.enemyDisappearsConsumer = enemyDisappearsConsumer;
-    }
-
-    public WebSocketClient getWebSocketClient() {
-        return webSocketClient;
-    }
-
-
 
 
 }
