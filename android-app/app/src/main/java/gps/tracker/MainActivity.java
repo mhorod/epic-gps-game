@@ -265,7 +265,14 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         public void error(String error) {
-            System.err.println(error);
+            runOnUiThread(() -> {
+                AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+                builder.setTitle("Error");
+                builder.setMessage(error);
+                builder.setPositiveButton("Fine", (dialog, id) -> {
+                });
+                builder.create().show();
+            });
         }
 
         @Override

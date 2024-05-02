@@ -142,8 +142,7 @@ public class GameMap extends Fragment {
                     Position userPosition = new Position(userLocation.getLatitude(), userLocation.getLongitude());
 
                     boolean canAttack = userPosition.distance(e.position()) < 50;
-
-
+                    
                     mainActivity.runOnUiThread(() -> {
                         // Alert
                         AlertDialog.Builder builder = new AlertDialog.Builder(mainActivity);
