@@ -26,8 +26,14 @@ import org.osmdroid.config.Configuration;
 import org.osmdroid.config.IConfigurationProvider;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Scanner;
 import java.util.function.Consumer;
 
 import gps.tracker.databinding.ActivityMainBinding;
@@ -56,6 +62,32 @@ public class MainActivity extends AppCompatActivity {
     private Consumer<EnemyId> enemyDisappearsConsumer = (EnemyId eid) -> {
     };
     private FragmentManager fragmentManager;
+
+    public void saveString(String key, String value) {
+        try {
+            FileOutputStream stream = openFileOutput(key, MODE_PRIVATE);
+            OutputStreamWriter writer = new OutputStreamWriter(stream);
+
+            writer.write(value);
+            writer.flush();
+            writer.close();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+    
+    public String getString(String key) {
+
+        try {
+            FileInputStream stream = openFileInput(key);
+            Scanner scanner = new Scanner(stream);
+
+            return scanner.nextLine();
+
+        } catch (FileNotFoundException e) {
+            return null;
+        }
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {

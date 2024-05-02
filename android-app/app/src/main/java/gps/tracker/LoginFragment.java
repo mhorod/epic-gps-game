@@ -27,13 +27,28 @@ public class LoginFragment extends Fragment {
         binding = FragmentLoginBinding.inflate(getLayoutInflater());
         mainActivity = (MainActivity) getActivity();
 
+        String username = mainActivity.getString("username");
+        String password = mainActivity.getString("password");
+
+        if (username != null && password != null) {
+            binding.editTextText.setText(username);
+            binding.editTextTextPassword.setText(password);
+        }
+
+
         binding.button.setOnClickListener(
                 (e) -> {
-                    String username = binding.editTextText.getText().toString();
-                    String password = binding.editTextTextPassword.getText().toString();
+                    String lambdaUsername = binding.editTextText.getText().toString();
+                    String lambdaPassword = binding.editTextTextPassword.getText().toString();
+
+
+                    mainActivity.saveString("username", username);
+                    mainActivity.saveString("password", password);
+
+
                     mainActivity.runOnUiThread(
                             () -> {
-                                mainActivity.login(username, password);
+                                mainActivity.login(lambdaUsername, lambdaPassword);
                                 NavHostFragment.findNavController(LoginFragment.this).navigate(R.id.action_loginFragment_to_gameMap);
                             }
                     );
