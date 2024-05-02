@@ -39,6 +39,8 @@ public class GameMap extends Fragment {
     private Timer timer;
     private EnemyList enemyList;
     private MapEventsReceiver mapEventsReceiver;
+    private Timer refreshLocationTimer;
+    private MyLocationNewOverlay myLocationOverlay;
 
     @Override
     public View onCreateView(
@@ -80,6 +82,36 @@ public class GameMap extends Fragment {
         };
 
         timer.schedule(updater, 0, 1000);
+    }
+
+    private void startRefreshingLocation() {
+        refreshLocationTimer = new Timer();
+        TimerTask updater = new TimerTask() {
+            @Override
+            public void run() {
+                Location location = mainActivity.getLastLocation();
+
+                if (location == null) {
+                    return;
+                }
+
+                mainActivity.runOnUiThread(() -> {
+                    if (myLocationOverlay != null) {
+                        mapView.getOverlays().remove(myLocationOverlay);
+                    }
+                    myLocationOverlay = new MyLocationNewOverlay(new MyLocationProvider(), mapView);
+                    myLocationOverlay.enableMyLocation();
+                    myLocationOverlay.setDrawAccuracyEnabled(false);
+
+                    mapView.getOverlays().add(myLocationOverlay);
+                    mapView.invalidate();
+                });
+
+
+            }
+        };
+
+        refreshLocationTimer.schedule(updater, 0, 1000);
     }
 
     public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
@@ -142,18 +174,12 @@ public class GameMap extends Fragment {
         mainActivity.setEnemyAppearsConsumer(this::enemyAppearsConsumer);
         mainActivity.setEnemyDisappearsConsumer(this::enemyDisappearsConsumer);
 
-        MyLocationNewOverlay myLocationOverlay = new MyLocationNewOverlay(new MyLocationProvider(), mapView);
-        myLocationOverlay.enableMyLocation();
-        myLocationOverlay.enableFollowLocation();
-        myLocationOverlay.setDrawAccuracyEnabled(false);
-
-        mapView.getOverlays().add(myLocationOverlay);
-        mapView.getOverlays().add(myLocationOverlay);
     }
 
     @Override
     public void onResume() {
         super.onResume();
+        startRefreshingLocation();
         mainActivity.showLocationKey();
     }
 
