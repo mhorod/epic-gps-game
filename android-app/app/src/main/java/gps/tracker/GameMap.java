@@ -18,6 +18,9 @@ import org.osmdroid.tileprovider.MapTileProviderBasic;
 import org.osmdroid.util.GeoPoint;
 import org.osmdroid.views.MapView;
 import org.osmdroid.views.overlay.MapEventsOverlay;
+import org.osmdroid.views.overlay.mylocation.IMyLocationConsumer;
+import org.osmdroid.views.overlay.mylocation.IMyLocationProvider;
+import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay;
 
 import java.util.Timer;
 import java.util.TimerTask;
@@ -138,6 +141,14 @@ public class GameMap extends Fragment {
         mainActivity.locationChangeRequestNotifier.registerListener(this::centerMapOncePossible);
         mainActivity.setEnemyAppearsConsumer(this::enemyAppearsConsumer);
         mainActivity.setEnemyDisappearsConsumer(this::enemyDisappearsConsumer);
+
+        MyLocationNewOverlay myLocationOverlay = new MyLocationNewOverlay(new MyLocationProvider(), mapView);
+        myLocationOverlay.enableMyLocation();
+        myLocationOverlay.enableFollowLocation();
+        myLocationOverlay.setDrawAccuracyEnabled(false);
+
+        mapView.getOverlays().add(myLocationOverlay);
+        mapView.getOverlays().add(myLocationOverlay);
     }
 
     @Override
@@ -161,7 +172,7 @@ public class GameMap extends Fragment {
         enemyList.addEnemy(e, overlay);
 
         mainActivity.runOnUiThread(() -> {
-            mapView.getOverlays().add(overlay);
+            mapView.getOverlays().add(0, overlay);
             mapView.invalidate();
         });
     }
@@ -180,6 +191,28 @@ public class GameMap extends Fragment {
         MainActivity mainActivity = (MainActivity) getActivity();
 
         mainActivity.getWebSocketClient().send().attackEnemy(e.enemyId());
+    }
+
+    class MyLocationProvider implements IMyLocationProvider {
+        @Override
+        public boolean startLocationProvider(IMyLocationConsumer myLocationConsumer) {
+            return true;
+        }
+
+        @Override
+        public void stopLocationProvider() {
+
+        }
+
+        @Override
+        public Location getLastKnownLocation() {
+            return mainActivity.getLastLocation();
+        }
+
+        @Override
+        public void destroy() {
+
+        }
     }
 
 }
