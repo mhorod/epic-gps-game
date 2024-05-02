@@ -266,14 +266,31 @@ public class MainActivity extends AppCompatActivity {
 
     public void logout() {
         if (webSocketClient != null) {
-            webSocketClient.send().disconnect();
+            try {
+                webSocketClient.send().disconnect();
+            } catch (Exception e) {
+                // Do nothing, websocket may be already closed
+            }
             webSocketClient = null;
         }
     }
-    
+
 
     public boolean loggedIn() {
         return webSocketClient != null;
+    }
+
+    public boolean pingWorking() {
+        if (webSocketClient == null) {
+            return false;
+        }
+
+        try {
+            webSocketClient.send().ping();
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
     }
 
     public void hideLocationKey() {
