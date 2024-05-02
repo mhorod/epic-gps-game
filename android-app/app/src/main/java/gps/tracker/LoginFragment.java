@@ -28,9 +28,16 @@ public class LoginFragment extends Fragment {
         mainActivity = (MainActivity) getActivity();
 
         binding.button.setOnClickListener(
-                l -> mainActivity.runOnUiThread(
-                        () -> NavHostFragment.findNavController(LoginFragment.this).navigate(R.id.action_loginFragment_to_gameMap)
-                )
+                (e) -> {
+                    String username = binding.editTextText.getText().toString();
+                    String password = binding.editTextTextPassword.getText().toString();
+                    mainActivity.runOnUiThread(
+                            () -> {
+                                mainActivity.login(username, password);
+                                NavHostFragment.findNavController(LoginFragment.this).navigate(R.id.action_loginFragment_to_gameMap);
+                            }
+                    );
+                }
         );
     }
 
