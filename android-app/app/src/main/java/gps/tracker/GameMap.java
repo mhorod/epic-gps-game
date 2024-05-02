@@ -114,6 +114,7 @@ public class GameMap extends Fragment {
         refreshLocationTimer.schedule(updater, 0, 1000);
     }
 
+    @Override
     public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
@@ -123,6 +124,10 @@ public class GameMap extends Fragment {
         mapEventsReceiver = new MapEventsReceiver() {
             @Override
             public boolean singleTapConfirmedHelper(GeoPoint p) {
+                if (mainActivity.getLastLocation() == null) {
+                    return false;
+                }
+
                 System.out.println("Tapped at " + p);
                 Enemy e = enemyList.getClosestEnemy(new Position(p.getLatitude(), p.getLongitude()));
 
@@ -132,23 +137,35 @@ public class GameMap extends Fragment {
                     return false;
                 }
 
-                System.out.println("XDDDDD " + mapView.getZoomLevelDouble());
-                System.out.println("XDDDDD " + 10 * Math.pow(2.0, 20 - mapView.getZoomLevelDouble()));
-
                 if (e.position().distance(new Position(p.getLatitude(), p.getLongitude())) < 10 * Math.pow(2, 20 - mapView.getZoomLevelDouble())) {
+                    Location userLocation = mainActivity.getLastLocation();
+                    Position userPosition = new Position(userLocation.getLatitude(), userLocation.getLongitude());
+
+                    boolean canAttack = userPosition.distance(e.position()) < 50;
+
 
                     mainActivity.runOnUiThread(() -> {
                         // Alert
                         AlertDialog.Builder builder = new AlertDialog.Builder(mainActivity);
-                        builder.setMessage("Attack " + e.name() + " lvl " + e.lvl() + "?");
-                        builder.setPositiveButton("OK", (dialog, id) -> {
-                            System.out.println("Attacking enemy " + e.enemyId());
-                            new Thread(() -> attackEnemy(e)).start();
-                            dialog.dismiss();
-                        });
-                        builder.setNegativeButton("Nope", (dialog, id) -> {
-                            dialog.dismiss();
-                        });
+
+                        builder.setTitle("Enemy: " + e.name() + " lvl " + e.lvl());
+
+                        if (canAttack) {
+                            builder.setMessage("Proceed with an attack?");
+                            builder.setPositiveButton("OK", (dialog, id) -> {
+                                System.out.println("Attacking enemy " + e.enemyId());
+                                new Thread(() -> attackEnemy(e)).start();
+                                dialog.dismiss();
+                            });
+                            builder.setNegativeButton("Nope", (dialog, id) -> {
+                                dialog.dismiss();
+                            });
+                        } else {
+                            builder.setMessage("You are too far away to attack this enemy!");
+                            builder.setPositiveButton("Quite the predicament", (dialog, id) -> {
+                                dialog.dismiss();
+                            });
+                        }
 
                         AlertDialog dialog = builder.create();
                         dialog.show();
