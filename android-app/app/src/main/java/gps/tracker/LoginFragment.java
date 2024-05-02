@@ -66,6 +66,9 @@ public class LoginFragment extends Fragment {
     @Override
     public void onResume() {
         super.onResume();
+        mainActivity.logout();
         mainActivity.hideLocationKey();
+        mainActivity.hidePlayerStats();
+
     }
 }

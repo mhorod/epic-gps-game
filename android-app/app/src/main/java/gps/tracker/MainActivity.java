@@ -264,6 +264,14 @@ public class MainActivity extends AppCompatActivity {
         webSocketClient = new WebSocketClient(new MainActivityHandler(), userName, userPassword);
     }
 
+    public void logout() {
+        if (webSocketClient != null) {
+            webSocketClient.send().disconnect();
+            webSocketClient = null;
+        }
+    }
+    
+
     public boolean loggedIn() {
         return webSocketClient != null;
     }
@@ -274,6 +282,11 @@ public class MainActivity extends AppCompatActivity {
 
     public void showLocationKey() {
         binding.findMeButton.setVisibility(View.VISIBLE);
+    }
+
+    public void hidePlayerStats() {
+        binding.hpCounter.setVisibility(View.GONE);
+        binding.levelCounter.setVisibility(View.GONE);
     }
 
     class MainActivityHandler implements MessageToClientHandler {
