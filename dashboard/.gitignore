@@ -1,2 +1,0 @@
-# Ignore js files produced by esbuild
-app/public/js/*.js
