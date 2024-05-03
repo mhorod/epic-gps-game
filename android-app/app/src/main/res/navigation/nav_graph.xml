@@ -8,7 +8,11 @@
         android:id="@+id/gameMap"
         android:name="gps.tracker.GameMap"
         android:label="Map"
-        tools:layout="@layout/game_map_fragment" />
+        tools:layout="@layout/game_map_fragment">
+        <action
+            android:id="@+id/action_gameMap_to_loginFragment"
+            app:destination="@id/loginFragment" />
+    </fragment>
     <fragment
         android:id="@+id/loginFragment"
         android:name="gps.tracker.LoginFragment"

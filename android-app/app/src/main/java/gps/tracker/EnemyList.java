@@ -9,30 +9,37 @@ import soturi.model.EnemyId;
 import soturi.model.Position;
 
 public class EnemyList {
-    private final Map<Enemy, EnemyOverlay> enemies;
+    private final Map<EnemyId, EnemyInstance> enemies;
 
     public EnemyList() {
         this.enemies = new HashMap<>();
     }
 
     public void addEnemy(Enemy enemy, EnemyOverlay overlay) {
-        enemies.put(enemy, overlay);
+        EnemyInstance instance = new EnemyInstance(enemy, overlay);
+
+        enemies.put(enemy.enemyId(), instance);
     }
 
     public EnemyOverlay getOverlay(EnemyId enemy) {
-        Enemy key = enemies.keySet().stream().filter(e -> e.enemyId().equals(enemy)).findFirst().orElse(null);
-        return key == null ? null : enemies.get(key);
+        if (!enemies.containsKey(enemy)) {
+            return null;
+        }
+
+        EnemyInstance instance = enemies.get(enemy);
+
+        return instance.overlay();
     }
 
     public void removeEnemy(EnemyId enemy) {
-        Enemy key = enemies.keySet().stream().filter(e -> e.enemyId().equals(enemy)).findFirst().orElse(null);
-        enemies.remove(key);
+        enemies.remove(enemy);
     }
 
     public Enemy getClosestEnemy(Position position) {
         Enemy closestEnemy = null;
         double closestDistance = Double.MAX_VALUE;
-        for (Enemy enemy : enemies.keySet()) {
+        for (EnemyInstance instance : enemies.values()) {
+            Enemy enemy = instance.enemy();
             double distance = enemy.position().distance(position);
             if (distance < closestDistance) {
                 closestDistance = distance;
@@ -40,5 +47,8 @@ public class EnemyList {
             }
         }
         return closestEnemy;
+    }
+
+    private record EnemyInstance(Enemy enemy, EnemyOverlay overlay) {
     }
 }
