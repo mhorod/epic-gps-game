@@ -1,0 +1,129 @@
+#search-bar-wrapper {
+    position: absolute;
+    width: 100%;
+    z-index: 999;
+    display: flex;
+    justify-content: center;
+}
+
+#search-modal-wrapper {
+    position: relative;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+#search-modal {
+    height: 0;
+    width: 300px;
+
+    overflow: hidden;
+    background: #fff;
+    position: absolute;
+    border-radius: 10px;
+    z-index: 900;
+    transition: all 0.4s ease;
+    top: 20px;
+}
+
+#search-modal > * {
+    opacity: 0;
+    transition: opacity 0.4s ease;
+}
+
+#search-modal.active {
+    top: -40px;
+    height: 500px;
+    width: 500px;
+    padding: 20px;
+}
+
+#search-modal.active > * {
+    opacity: 100%;
+}
+
+.card-close-icon {
+    cursor: pointer;
+    font-size: 18px;
+}
+
+.card-header {
+    display: flex;
+    justify-content: space-between;
+}
+
+#search-bar-space {
+    height: 50px;
+}
+
+#search-filters {
+    padding: 10px;
+}
+
+#search-results {
+    border-top: 1px solid #666;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.search-result {
+    padding: 10px;
+    border-radius: 10px;
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    border: 1px solid #ddd;
+}
+
+.search-result:hover {
+    background: #dddddd;
+    cursor: pointer;
+}
+
+.search-result-icon {
+    margin-right: 5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.search-result-icon > * {
+    display: inherit;
+}
+
+.search-result-name {
+    display: flex;
+    align-items: center;
+}
+
+.light-gray {
+    color: #666;
+}
+
+#search-bar input {
+    outline: none;
+    height: 100%;
+    width: 100%;
+}
+
+#search-bar {
+    margin-top: 10px;
+    width: 300px;
+    height: 40px;
+    border-radius: 20px;
+    border: 1px solid #ddd;
+    padding: 10px;
+    background: rgba(255, 255, 255, 0.9);
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    transition: width 0.4s ease;
+}
+
+#search-bar.active {
+    width: 450px;
+    background: rgba(255, 255, 255, 1);
+}

@@ -11,26 +11,9 @@ import soturi.server.GameService;
 @Controller
 @RequiredArgsConstructor
 public class DashboardWebController {
-
-
-
-    @GetMapping("/")
+    // Rendering is done in React which also handles these paths
+    @GetMapping(value = {"/", "map-view", "spawn-areas", "players", "enemies"})
     public String index() {
         return "index";
-    }
-
-    @GetMapping("/sign-in")
-    public String signIn() {
-        return "sign-in";
-    }
-
-    @GetMapping("/spawn-areas")
-    public String spawnAreas() {
-        return "spawn-areas";
-    }
-
-    @GetMapping("/map-view")
-    public String mapView() {
-        return "map-view";
     }
 }
