@@ -1,11 +1,11 @@
-package soturi.server.communication;
+package soturi.server;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import org.junit.jupiter.api.Test;
+import soturi.server.communication.BlockingQueuePoll;
 
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
-
-import static org.assertj.core.api.Assertions.assertThat;
 
 class BlockingQueuePollTest {
     @Test

@@ -2,7 +2,10 @@ package soturi.server.geo;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
+import soturi.content.EnemyRegistry;
 import soturi.model.Area;
+import soturi.model.EnemyType;
+import soturi.model.EnemyTypeId;
 import soturi.server.Config;
 import soturi.model.Enemy;
 import soturi.model.EnemyId;
@@ -13,9 +16,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.Set;
 
 import static soturi.server.geo.MonsterManagerUtility.*;
 
@@ -24,6 +29,7 @@ import static soturi.server.geo.MonsterManagerUtility.*;
 public final class MonsterManager {
     private final CityProvider cityProvider;
     private final Config config;
+    private final EnemyRegistry enemyRegistry = new EnemyRegistry();
 
     private List<RectangularArea[][]> splits;
     private int maxSplit;
@@ -31,6 +37,8 @@ public final class MonsterManager {
 
     private List<EnemyId>[][] enemiesPerRegion;
     private final Map<EnemyId, Enemy> enemies = new LinkedHashMap<>();
+
+    private final Map<EnemyTypeId, Set<EnemyId>> enemiesPerType = new LinkedHashMap<>();
 
     public RectangularArea fullArea() {
         return splits.get(0)[0][0];
@@ -69,10 +77,15 @@ public final class MonsterManager {
         return indexOf(pos, maxSplit - 1);
     }
 
-    public void reload() {
+    public void reloadAreas() {
+        cityProvider.reloadCities();
         log.info("GeoManager::restart()");
         if (!enemies.isEmpty())
             throw new RuntimeException("remove all enemies first");
+
+        for (EnemyType type : enemyRegistry.getAllEnemyTypes())
+            enemiesPerType.put(type.typeId(), new LinkedHashSet<>());
+
         maxSplit = config.v.geoMaxSplit;
 
         RectangularArea fullArea = new RectangularArea(
@@ -132,7 +145,7 @@ public final class MonsterManager {
     public MonsterManager(CityProvider cityProvider, Config config) {
         this.cityProvider = cityProvider;
         this.config = config;
-        reload();
+        reloadAreas();
     }
 
     long nextEnemyIdLong = 0;
@@ -146,6 +159,7 @@ public final class MonsterManager {
             throw new RuntimeException();
 
         enemies.put(enemyId, enemy);
+        enemiesPerType.get(enemy.typeId()).add(enemyId);
 
         IntPair ij = indexOf(enemy.position());
         int i = ij.i(), j = ij.j();
@@ -161,6 +175,8 @@ public final class MonsterManager {
 
         if (!enemiesPerRegion[i][j].remove(enemyId))
             throw new RuntimeException();
+        if (!enemiesPerType.get(enemy.typeId()).remove(enemyId))
+            throw new RuntimeException();
     }
 
     public List<Enemy> getAllEnemies() {
@@ -171,7 +187,7 @@ public final class MonsterManager {
     }
 
     private final Random rnd = new Random();
-    /* this generates valid candidates to register, but does NOT actually register them */
+    /** this generates valid candidates to register, but does NOT actually register them */
     public List<Enemy> generateEnemies() {
         List<Enemy> returnList = new ArrayList<>();
 
@@ -179,15 +195,35 @@ public final class MonsterManager {
             IntPair ij = indexOf(area.dimensions().getCenter()); // inefficient af
             int i = ij.i(), j = ij.j();
 
-            int cap = Math.max(0, 5 - area.difficulty());
-            cap = 1;
+            int cap = 2;
             int curr = enemiesPerRegion[i][j].size();
 
             double failProbability = 1.0 * curr / cap;
             if (rnd.nextDouble() < failProbability)
                 continue;
 
-            returnList.add(generateEnemy(area, nextEnemyId(), rnd));
+            Position position = area.dimensions().randomPosition(rnd);
+
+            int lvl = 1 + (int) (rnd.nextDouble() * (3 + area.difficulty()));
+            List<EnemyType> legalTypes = enemyRegistry.getNormalEnemyTypes().stream()
+                .filter(t -> t.lvlInRange(lvl)).toList();
+
+            EnemyType type = legalTypes.get(rnd.nextInt(legalTypes.size()));
+            Enemy enemy = type.createEnemy(nextEnemyId(), lvl, position);
+            returnList.add(enemy);
+        }
+        for (EnemyType type : enemyRegistry.getAllBossTypes()) {
+            if (enemiesPerType.get(type.typeId()).size() > 0)
+                continue;
+
+            double failProbability = 1.0 - 1.0 / type.freqSuccess();
+            if (rnd.nextDouble() < failProbability)
+                continue;
+
+            Position position = type.allowedArea().randomPosition(rnd);
+            int lvl = rnd.nextInt(type.minLvl(), type.maxLvl() + 1);
+            Enemy enemy = type.createEnemy(nextEnemyId(), lvl, position);
+            returnList.add(enemy);
         }
 
         return returnList;

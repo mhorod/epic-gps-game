@@ -5,14 +5,16 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
+import soturi.content.GameRegistry;
+import soturi.content.ItemRegistry;
 import soturi.model.Enemy;
 import soturi.model.EnemyId;
-import soturi.model.FightResult;
 import soturi.model.ItemId;
 import soturi.model.Player;
 import soturi.model.PlayerWithPosition;
 import soturi.model.Position;
 import soturi.model.Result;
+import soturi.model.messages_to_client.FightResult;
 import soturi.model.messages_to_client.MessageToClientHandler;
 import soturi.model.messages_to_server.MessageToServerHandler;
 import soturi.server.geo.MonsterManager;
@@ -29,17 +31,21 @@ public final class GameService {
     private final Map<String, PlayerSession> sessions = new LinkedHashMap<>();
     private final Map<String, MessageToClientHandler> observers = new LinkedHashMap<>();
     private final PlayerRepository repository;
-    private final GameUtility gameUtility;
     private final Config config;
     private final MonsterManager monsterManager;
     private final FightSimulator fightSimulator;
 
-    public synchronized void stopAndDisconnectAll() {
+    private final GameRegistry gameRegistry = new GameRegistry();
+    private final ItemRegistry itemRegistry = new ItemRegistry();
+
+    public void kickAllPlayers() {
         while (!sessions.isEmpty())
             logout(sessions.entrySet().iterator().next().getKey());
+    }
+
+    public void kickAllObservers() {
         while (!observers.isEmpty())
-            remObserver(observers.entrySet().iterator().next().getKey());
-        reloadDynamicConfig();
+            removeObserver(observers.entrySet().iterator().next().getKey());
     }
 
     public synchronized void unregisterAllEnemies() {
@@ -49,7 +55,7 @@ public final class GameService {
 
     public synchronized void reloadDynamicConfig() {
         unregisterAllEnemies();
-        monsterManager.reload();
+        monsterManager.reloadAreas();
     }
 
     public synchronized List<Enemy> getEnemies() {
@@ -60,7 +66,7 @@ public final class GameService {
         return sessions.keySet().stream()
             .map(repository::findByName)
             .flatMap(Optional::stream)
-            .map(gameUtility::getPlayerFromEntity)
+            .map(this::getPlayerFromEntity)
             .map(p -> new PlayerWithPosition(p, sessions.get(p.name()).getPosition()))
             .toList();
     }
@@ -118,9 +124,28 @@ public final class GameService {
             sender.enemyDisappears(enemyId);
     }
 
+    public synchronized Player getPlayerFromEntity(PlayerEntity entity) {
+        int lvl = gameRegistry.getLvlFromXp(entity.getXp());
+        long maxHp = lvl * 5L;
+        long attack = lvl * 3L;
+        long defense = lvl * 2L;
+
+        return new Player(
+            entity.getName(),
+            lvl,
+            entity.getXp(),
+            entity.getHp(),
+            maxHp,
+            attack,
+            defense,
+            List.of(), // TODO list of items
+            List.of()
+        );
+    }
+
     private synchronized void sendUpdatesFor(@NonNull String playerName) {
         PlayerEntity playerEntity = repository.findByName(playerName).orElseThrow();
-        Player playerData = gameUtility.getPlayerFromEntity(playerEntity);
+        Player playerData = getPlayerFromEntity(playerEntity);
         PlayerSession playerSession = sessions.get(playerName);
         Position playerPosition = playerSession.getPosition();
 
@@ -135,7 +160,7 @@ public final class GameService {
 
     private synchronized void processAttackEnemy(String playerName, EnemyId enemyId) {
         PlayerEntity playerEntity = repository.findByName(playerName).orElseThrow();
-        Player playerData = gameUtility.getPlayerFromEntity(playerEntity);
+        Player playerData = getPlayerFromEntity(playerEntity);
         PlayerSession playerSession = sessions.get(playerName);
         Position playerPosition = playerSession.getPosition();
 
@@ -150,7 +175,7 @@ public final class GameService {
         }
 
         FightResult result = fightSimulator.simulateFight(playerData, enemy);
-        playerSession.getSender().fightResult(result.result(), enemyId);
+        playerSession.getSender().fightResult(result.result(), result.lostHp(), result.enemyId(), result.loot());
         playerEntity.applyFightResult(result);
         repository.save(playerEntity);
 
@@ -227,7 +252,7 @@ public final class GameService {
 
         for (var kv : sessions.entrySet()) if (!kv.getKey().equals(name))
             sender.playerUpdate(
-                gameUtility.getPlayerFromEntity(repository.findByName(kv.getKey()).orElseThrow()),
+                getPlayerFromEntity(repository.findByName(kv.getKey()).orElseThrow()),
                 kv.getValue().getPosition()
             );
         for (Enemy enemy : getEnemies())
@@ -274,14 +299,14 @@ public final class GameService {
 
         for (var kv : sessions.entrySet())
             observer.playerUpdate(
-                gameUtility.getPlayerFromEntity(repository.findByName(kv.getKey()).orElseThrow()),
+                getPlayerFromEntity(repository.findByName(kv.getKey()).orElseThrow()),
                 kv.getValue().getPosition()
             );
         for (Enemy enemy : getEnemies())
             observer.enemyAppears(enemy);
     }
 
-    public synchronized void remObserver(String id) {
+    public synchronized void removeObserver(String id) {
         if (observers.remove(id) == null)
             throw new RuntimeException();
     }

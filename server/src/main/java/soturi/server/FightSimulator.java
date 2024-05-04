@@ -4,19 +4,17 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 import soturi.model.Enemy;
-import soturi.model.FightResult;
+import soturi.model.Loot;
 import soturi.model.Player;
 import soturi.model.Result;
 import org.springframework.stereotype.Component;
+import soturi.model.messages_to_client.FightResult;
 
-import java.util.List;
 import java.util.Random;
 
 @Component
 @AllArgsConstructor
 public final class FightSimulator {
-    private final GameUtility gameUtility;
-
     @Getter
     @AllArgsConstructor
     private class Fighter {
@@ -57,14 +55,14 @@ public final class FightSimulator {
         simulateFight(playerFighter, enemyFighter);
 
         long lostHp = player.hp() - playerFighter.getHp();
-        if (playerFighter.getHp() == 0)
-            return new FightResult(Result.LOST, lostHp, 0, List.of());
+        Result result = Result.LOST;
+        Loot loot = new Loot();
 
-        return new FightResult(
-            Result.WON,
-            lostHp,
-            (long) (gameUtility.getXpForNextLvl(player.lvl()) * random.nextDouble()),
-            List.of()
-        );
+        if (playerFighter.getHp() > 0) {
+            result = Result.WON;
+            loot = new Loot();
+        }
+
+        return new FightResult(result, lostHp, enemy.enemyId(), loot);
     }
 }
