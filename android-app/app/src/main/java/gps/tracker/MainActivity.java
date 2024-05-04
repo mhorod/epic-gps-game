@@ -41,6 +41,7 @@ import gps.tracker.simple_listeners.Notifier;
 import lombok.SneakyThrows;
 import soturi.model.Enemy;
 import soturi.model.EnemyId;
+import soturi.model.Loot;
 import soturi.model.Player;
 import soturi.model.Position;
 import soturi.model.Result;
@@ -356,7 +357,7 @@ public class MainActivity extends AppCompatActivity {
         }
 
         @Override
-        public void fightResult(Result result, EnemyId enemyId) {
+        public void fightResult(Result result, long lostHp, EnemyId enemyId, Loot loot) {
             runOnUiThread(() -> {
                 AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
 
