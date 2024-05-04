@@ -21,6 +21,9 @@ public class EnemyRegistry {
             throw new RuntimeException();
         enemyList.add(enemyType);
 
+        SanityChecker.checkEncodingAndReport();
+        SanityChecker.checkResourceAndReport("static/" + enemyType.gfxName());
+
         if (enemyType.isBoss())
             bossList.add(enemyType);
         else
