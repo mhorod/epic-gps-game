@@ -10,6 +10,7 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
@@ -25,8 +26,14 @@ import org.osmdroid.config.Configuration;
 import org.osmdroid.config.IConfigurationProvider;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Scanner;
 import java.util.function.Consumer;
 
 import gps.tracker.databinding.ActivityMainBinding;
@@ -43,16 +50,42 @@ public class MainActivity extends AppCompatActivity {
 
     public final Notifier locationChangeRequestNotifier = new Notifier();
     private final List<LocationListener> sublisteners = new ArrayList<>();
+    private WebSocketClient webSocketClient;
+
     private AppBarConfiguration appBarConfiguration;
     private ActivityMainBinding binding;
     private LocationListener locationListener;
     private LocationManager locationManager;
     private Location lastLocation;
-    private Consumer<Enemy> enemyAppearsConsumer = (Enemy e) -> {
-    };
-    private Consumer<EnemyId> enemyDisappearsConsumer = (EnemyId eid) -> {
-    };
+    private Consumer<Enemy> enemyAppearsConsumer = null;
+    private Consumer<EnemyId> enemyDisappearsConsumer = null;
     private FragmentManager fragmentManager;
+
+    public void saveString(String key, String value) {
+        try {
+            FileOutputStream stream = openFileOutput(key, MODE_PRIVATE);
+            OutputStreamWriter writer = new OutputStreamWriter(stream);
+
+            writer.write(value);
+            writer.flush();
+            writer.close();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public String getString(String key) {
+
+        try {
+            FileInputStream stream = openFileInput(key);
+            Scanner scanner = new Scanner(stream);
+
+            return scanner.nextLine();
+
+        } catch (FileNotFoundException e) {
+            return null;
+        }
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -176,7 +209,10 @@ public class MainActivity extends AppCompatActivity {
         Log.e("main_activity", "doProcessLocation()");
         double lat = location.getLatitude();
         double lng = location.getLongitude();
-        webSocketClient.send().updateRealPosition(new Position(lat, lng));
+
+        if (loggedIn()) {
+            webSocketClient.send().updateRealPosition(new Position(lat, lng));
+        }
     }
 
     @Override
@@ -210,25 +246,113 @@ public class MainActivity extends AppCompatActivity {
 
     public Location getLastLocation() {
         return lastLocation;
-    }    private final WebSocketClient webSocketClient = new WebSocketClient(new MessageToClientHandler() {
+    }
+
+    public void setEnemyAppearsConsumer(Consumer<Enemy> enemyAppearsConsumer) {
+        this.enemyAppearsConsumer = enemyAppearsConsumer;
+    }
+
+    public void setEnemyDisappearsConsumer(Consumer<EnemyId> enemyDisappearsConsumer) {
+        this.enemyDisappearsConsumer = enemyDisappearsConsumer;
+    }
+
+    public WebSocketClient getWebSocketClient() {
+        return webSocketClient;
+    }
+
+    public void login(String userName, String userPassword) {
+        webSocketClient = new WebSocketClient(new MainActivityHandler(), userName, userPassword);
+    }
+
+    public void logout() {
+        if (webSocketClient != null) {
+            try {
+                webSocketClient.send().disconnect();
+            } catch (Exception e) {
+                // Do nothing, websocket may be already closed
+            }
+            webSocketClient = null;
+        }
+    }
+
+
+    public boolean loggedIn() {
+        return webSocketClient != null;
+    }
+
+    public boolean pingWorking() {
+        if (webSocketClient == null) {
+            return false;
+        }
+
+        try {
+            webSocketClient.send().ping();
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    public void hideLocationKey() {
+        binding.findMeButton.setVisibility(View.GONE);
+    }
+
+    public void showLocationKey() {
+        binding.findMeButton.setVisibility(View.VISIBLE);
+    }
+
+    public void hidePlayerStats() {
+        binding.hpCounter.setVisibility(View.GONE);
+        binding.levelCounter.setVisibility(View.GONE);
+    }
+
+    class MainActivityHandler implements MessageToClientHandler {
+
+        private ArrayList<Enemy> enemiesBacklog = new ArrayList<>();
+
         @Override
         public void disconnect() {
 
         }
 
+        private void cleanBacklog(Consumer<Enemy> consumer) {
+            for (Enemy enemy : enemiesBacklog) {
+                consumer.accept(enemy);
+            }
+            enemiesBacklog.clear();
+        }
+
         @Override
         public void enemyAppears(Enemy enemy) {
+            if (enemyAppearsConsumer == null) {
+                enemiesBacklog.add(enemy);
+                return;
+            }
+
+            cleanBacklog(enemyAppearsConsumer);
             enemyAppearsConsumer.accept(enemy);
+
         }
 
         @Override
         public void enemyDisappears(EnemyId enemyId) {
+            if (enemyAppearsConsumer == null || enemyDisappearsConsumer == null) {
+                enemiesBacklog.removeIf(enemy -> enemy.enemyId().equals(enemyId));
+                return;
+            }
             enemyDisappearsConsumer.accept(enemyId);
         }
 
         @Override
         public void error(String error) {
-            System.err.println(error);
+            runOnUiThread(() -> {
+                AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+                builder.setTitle("Error");
+                builder.setMessage(error);
+                builder.setPositiveButton("Fine", (dialog, id) -> {
+                });
+                builder.create().show();
+            });
         }
 
         @Override
@@ -252,7 +376,19 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         public void meUpdate(Player me) {
+            // Because this event is sent cyclically, we will use it to put enemies from backlog on the map
+            if (enemyDisappearsConsumer != null) {
+                cleanBacklog(enemyAppearsConsumer);
+            }
 
+            runOnUiThread(
+                    () -> {
+                        binding.hpCounter.setText("HP: " + me.hp() + "/" + me.maxHp());
+                        binding.levelCounter.setText("Lvl: " + me.lvl());
+                        binding.hpCounter.setVisibility(View.VISIBLE);
+                        binding.levelCounter.setVisibility(View.VISIBLE);
+                    }
+            );
         }
 
         @Override
@@ -274,21 +410,8 @@ public class MainActivity extends AppCompatActivity {
         public void pong() {
 
         }
-    });
 
-    public void setEnemyAppearsConsumer(Consumer<Enemy> enemyAppearsConsumer) {
-        this.enemyAppearsConsumer = enemyAppearsConsumer;
     }
-
-    public void setEnemyDisappearsConsumer(Consumer<EnemyId> enemyDisappearsConsumer) {
-        this.enemyDisappearsConsumer = enemyDisappearsConsumer;
-    }
-
-    public WebSocketClient getWebSocketClient() {
-        return webSocketClient;
-    }
-
-
 
 
 }
