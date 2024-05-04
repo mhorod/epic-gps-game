@@ -4,13 +4,17 @@ import TopNav from "./TopNav";
 
 import "./Main.css";
 
-function Main({ children }: { children: ReactNode }) {
+type MainProps = {
+  children?: ReactNode;
+};
+
+function Main(props: MainProps) {
   return (
     <div className="main">
       <SideNav />
       <div className="main-right">
         <TopNav />
-        {children}
+        {props.children}
       </div>
     </div>
   );

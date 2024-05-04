@@ -54,7 +54,7 @@
 }
 
 #search-bar-space {
-    height: 50px;
+    height: 60px;
 }
 
 #search-filters {
@@ -67,6 +67,8 @@
     display: flex;
     flex-direction: column;
     gap: 10px;
+    height: 400px;
+    overflow-y: scroll;
 }
 
 .search-result {

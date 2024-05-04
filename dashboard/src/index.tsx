@@ -2,18 +2,24 @@ import * as React from "react";
 import * as ReactDOM from "react-dom/client";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import "./index.css";
-import App from "./App";
-import MapView from "./MapView";
 import Main from "./Main";
+import MapView from "./map/MapView";
+import SpawnAreas from "./SpawnAreas";
+
+import enableMocking from "./mocks/server";
 
 const router = createBrowserRouter([
   {
     path: "/",
-    element: (
-      <Main>
-        <App />
-      </Main>
-    ),
+    element: <Main></Main>,
+  },
+  {
+    path: "/players",
+    element: <Main></Main>,
+  },
+  {
+    path: "/enemies",
+    element: <Main></Main>,
   },
   {
     path: "/map-view",
@@ -23,10 +29,22 @@ const router = createBrowserRouter([
       </Main>
     ),
   },
+  {
+    path: "/spawn-areas",
+    element: (
+      <Main>
+        <SpawnAreas />
+      </Main>
+    ),
+  },
 ]);
 
-ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
-  <React.StrictMode>
-    <RouterProvider router={router} />
-  </React.StrictMode>,
-);
+function startApp() {
+  ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
+    <React.StrictMode>
+      <RouterProvider router={router} />
+    </React.StrictMode>,
+  );
+}
+
+enableMocking().then(() => startApp());
