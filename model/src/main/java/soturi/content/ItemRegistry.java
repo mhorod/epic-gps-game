@@ -25,6 +25,9 @@ public class ItemRegistry {
         String path = "assets/armor/64x64/" + gfxName;
         Item item = new Item(new ItemId(id), name, type, hp, attack, defense, path);
 
+        SanityChecker.checkEncodingAndReport();
+        SanityChecker.checkResourceAndReport("static/" + path);
+
         if (itemsById.put(item.itemId(), item) != null)
             throw new RuntimeException();
         itemList.add(item);
