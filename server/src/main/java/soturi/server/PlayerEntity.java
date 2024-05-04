@@ -9,9 +9,8 @@ import jakarta.persistence.Id;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
-import soturi.model.FightResult;
-import soturi.model.Item;
 import soturi.model.ItemId;
+import soturi.model.messages_to_client.FightResult;
 
 import java.util.List;
 import java.util.stream.Stream;
@@ -53,14 +52,14 @@ public final class PlayerEntity {
         setHp(Math.max(0, getHp() + hp));
     }
 
-    void applyFightResult(FightResult fightResult) {
+    void applyFightResult(FightResult fightDamage) {
         List<Long> newInventory = Stream.concat(
-                getInventory().stream(),
-                fightResult.gainItems().stream().map(Item::itemId).map(ItemId::id)
+            getInventory().stream(),
+            fightDamage.loot().items().stream().map(ItemId::id)
         ).toList();
 
-        addHp(-fightResult.lostHp());
-        addXp(fightResult.gainXp());
+        addHp(-fightDamage.lostHp());
+        addXp(fightDamage.loot().xp());
         setInventory(newInventory);
     }
 }

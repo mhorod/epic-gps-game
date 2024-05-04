@@ -2,6 +2,7 @@ package soturi.model.messages_to_client;
 
 import soturi.model.Enemy;
 import soturi.model.EnemyId;
+import soturi.model.Loot;
 import soturi.model.Player;
 import soturi.model.Position;
 import soturi.model.Result;
@@ -36,8 +37,8 @@ public final class MessageToClientFactory implements MessageToClientHandler {
     }
 
     @Override
-    public void fightResult(Result result, EnemyId enemyId) {
-        consumer.accept(new FightResult(result, enemyId));
+    public void fightResult(Result result, long lostHp, EnemyId enemyId, Loot loot) {
+        consumer.accept(new FightResult(result, lostHp, enemyId, loot));
     }
 
     @Override

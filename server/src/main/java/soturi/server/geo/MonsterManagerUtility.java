@@ -5,6 +5,7 @@ import lombok.experimental.UtilityClass;
 import soturi.model.Area;
 import soturi.model.Enemy;
 import soturi.model.EnemyId;
+import soturi.model.EnemyTypeId;
 import soturi.model.Position;
 import soturi.model.RectangularArea;
 
@@ -74,14 +75,5 @@ public class MonsterManagerUtility {
                 }
             }
         }
-    }
-
-    public Enemy generateEnemy(Area area, EnemyId enemyId, Random rnd) {
-        String name = "Mrówka";
-        int lvl = 1 + (int) (rnd.nextDouble() * (3 + area.difficulty()));
-        Position pos = area.dimensions().randomPosition(rnd);
-        String gfxName = "gfx";
-
-        return new Enemy(name, lvl, pos, enemyId, gfxName);
     }
 }

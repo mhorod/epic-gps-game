@@ -10,10 +10,12 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLConnection;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -26,9 +28,15 @@ public final class GeoNamesCityProvider implements CityProvider {
     private final Config config;
     private final List<City> cities = new ArrayList<>();
 
-    @SneakyThrows(IOException.class)
     public GeoNamesCityProvider(Config config) {
         this.config = config;
+        reloadCities();
+    }
+
+    @Override
+    @SneakyThrows(IOException.class)
+    public void reloadCities() {
+        cities.clear();
         Files.createDirectories(Paths.get(config.v.geoNamesDownloadDir));
         config.v.geoNamesCountryCodes.forEach(this::processCode);
     }

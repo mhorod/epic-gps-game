@@ -11,6 +11,7 @@ import android.view.ViewGroup;
 import androidx.annotation.NonNull;
 import androidx.core.content.res.ResourcesCompat;
 import androidx.fragment.app.Fragment;
+import androidx.navigation.fragment.NavHostFragment;
 
 import org.osmdroid.api.IMapController;
 import org.osmdroid.events.MapEventsReceiver;
@@ -18,6 +19,9 @@ import org.osmdroid.tileprovider.MapTileProviderBasic;
 import org.osmdroid.util.GeoPoint;
 import org.osmdroid.views.MapView;
 import org.osmdroid.views.overlay.MapEventsOverlay;
+import org.osmdroid.views.overlay.mylocation.IMyLocationConsumer;
+import org.osmdroid.views.overlay.mylocation.IMyLocationProvider;
+import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay;
 
 import java.util.Timer;
 import java.util.TimerTask;
@@ -36,6 +40,9 @@ public class GameMap extends Fragment {
     private Timer timer;
     private EnemyList enemyList;
     private MapEventsReceiver mapEventsReceiver;
+    private Timer refreshLocationTimer;
+    private MyLocationNewOverlay myLocationOverlay;
+    private Timer areWeLoggedInTimer;
 
     @Override
     public View onCreateView(
@@ -79,9 +86,60 @@ public class GameMap extends Fragment {
         timer.schedule(updater, 0, 1000);
     }
 
+    private void startSanityChecks() {
+        areWeLoggedInTimer = new Timer();
+        TimerTask updater = new TimerTask() {
+            @Override
+            public void run() {
+                if (!mainActivity.pingWorking()) {
+                    mainActivity.runOnUiThread(() -> {
+                        System.out.println("Whoopsie! Connection lost! Fall back to the login screen!");
+
+                        mainActivity.runOnUiThread(() -> {
+                            NavHostFragment.findNavController(GameMap.this).navigate(R.id.action_gameMap_to_loginFragment);
+                        });
+                    });
+                    areWeLoggedInTimer.cancel();
+                }
+            }
+        };
+
+        areWeLoggedInTimer.schedule(updater, 10000, 5000);
+    }
+
+    private void startRefreshingLocation() {
+        refreshLocationTimer = new Timer();
+        TimerTask updater = new TimerTask() {
+            @Override
+            public void run() {
+                Location location = mainActivity.getLastLocation();
+
+                if (location == null) {
+                    return;
+                }
+
+                mainActivity.runOnUiThread(() -> {
+                    if (myLocationOverlay != null) {
+                        mapView.getOverlays().remove(myLocationOverlay);
+                    }
+                    myLocationOverlay = new MyLocationNewOverlay(new MyLocationProvider(), mapView);
+                    myLocationOverlay.enableMyLocation();
+                    myLocationOverlay.setDrawAccuracyEnabled(false);
+
+                    mapView.getOverlays().add(myLocationOverlay);
+                    mapView.invalidate();
+                });
+
+
+            }
+        };
+
+        refreshLocationTimer.schedule(updater, 0, 1000);
+    }
+
+    @Override
     public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-
 
         IMapController controller = mapView.getController();
         controller.setZoom(19.0);
@@ -89,6 +147,10 @@ public class GameMap extends Fragment {
         mapEventsReceiver = new MapEventsReceiver() {
             @Override
             public boolean singleTapConfirmedHelper(GeoPoint p) {
+                if (mainActivity.getLastLocation() == null) {
+                    return false;
+                }
+
                 System.out.println("Tapped at " + p);
                 Enemy e = enemyList.getClosestEnemy(new Position(p.getLatitude(), p.getLongitude()));
 
@@ -98,23 +160,34 @@ public class GameMap extends Fragment {
                     return false;
                 }
 
-                System.out.println("XDDDDD " + mapView.getZoomLevelDouble());
-                System.out.println("XDDDDD " + 10 * Math.pow(2.0, 20 - mapView.getZoomLevelDouble()));
-
                 if (e.position().distance(new Position(p.getLatitude(), p.getLongitude())) < 10 * Math.pow(2, 20 - mapView.getZoomLevelDouble())) {
+                    Location userLocation = mainActivity.getLastLocation();
+                    Position userPosition = new Position(userLocation.getLatitude(), userLocation.getLongitude());
+
+                    boolean canAttack = userPosition.distance(e.position()) < 50;
 
                     mainActivity.runOnUiThread(() -> {
                         // Alert
                         AlertDialog.Builder builder = new AlertDialog.Builder(mainActivity);
-                        builder.setMessage("Attack " + e.name() + " lvl " + e.lvl() + "?");
-                        builder.setPositiveButton("OK", (dialog, id) -> {
-                            System.out.println("Attacking enemy " + e.enemyId());
-                            new Thread(() -> attackEnemy(e)).start();
-                            dialog.dismiss();
-                        });
-                        builder.setNegativeButton("Nope", (dialog, id) -> {
-                            dialog.dismiss();
-                        });
+
+                        builder.setTitle("Enemy: " + e.name() + " lvl " + e.lvl());
+
+                        if (canAttack) {
+                            builder.setMessage("Proceed with an attack?");
+                            builder.setPositiveButton("OK", (dialog, id) -> {
+                                System.out.println("Attacking enemy " + e.enemyId());
+                                new Thread(() -> attackEnemy(e)).start();
+                                dialog.dismiss();
+                            });
+                            builder.setNegativeButton("Nope", (dialog, id) -> {
+                                dialog.dismiss();
+                            });
+                        } else {
+                            builder.setMessage("You are too far away to attack this enemy!");
+                            builder.setPositiveButton("Quite the predicament", (dialog, id) -> {
+                                dialog.dismiss();
+                            });
+                        }
 
                         AlertDialog dialog = builder.create();
                         dialog.show();
@@ -139,6 +212,17 @@ public class GameMap extends Fragment {
         mainActivity.locationChangeRequestNotifier.registerListener(this::centerMapOncePossible);
         mainActivity.setEnemyAppearsConsumer(this::enemyAppearsConsumer);
         mainActivity.setEnemyDisappearsConsumer(this::enemyDisappearsConsumer);
+
+
+        // TODO: Implement the sanity check so it works properly
+        // startSanityChecks();
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        startRefreshingLocation();
+        mainActivity.showLocationKey();
     }
 
     @Override
@@ -156,7 +240,7 @@ public class GameMap extends Fragment {
         enemyList.addEnemy(e, overlay);
 
         mainActivity.runOnUiThread(() -> {
-            mapView.getOverlays().add(overlay);
+            mapView.getOverlays().add(0, overlay);
             mapView.invalidate();
         });
     }
@@ -175,6 +259,28 @@ public class GameMap extends Fragment {
         MainActivity mainActivity = (MainActivity) getActivity();
 
         mainActivity.getWebSocketClient().send().attackEnemy(e.enemyId());
+    }
+
+    class MyLocationProvider implements IMyLocationProvider {
+        @Override
+        public boolean startLocationProvider(IMyLocationConsumer myLocationConsumer) {
+            return true;
+        }
+
+        @Override
+        public void stopLocationProvider() {
+
+        }
+
+        @Override
+        public Location getLastKnownLocation() {
+            return mainActivity.getLastLocation();
+        }
+
+        @Override
+        public void destroy() {
+
+        }
     }
 
 }

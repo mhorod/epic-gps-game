@@ -3,10 +3,23 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/nav_graph"
-    app:startDestination="@id/gameMap">
+    app:startDestination="@id/loginFragment">
     <fragment
         android:id="@+id/gameMap"
         android:name="gps.tracker.GameMap"
         android:label="Map"
-        tools:layout="@layout/game_map_fragment" />
+        tools:layout="@layout/game_map_fragment">
+        <action
+            android:id="@+id/action_gameMap_to_loginFragment"
+            app:destination="@id/loginFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/loginFragment"
+        android:name="gps.tracker.LoginFragment"
+        android:label="Sign in"
+        tools:layout="@layout/fragment_login">
+        <action
+            android:id="@+id/action_loginFragment_to_gameMap"
+            app:destination="@id/gameMap" />
+    </fragment>
 </navigation>

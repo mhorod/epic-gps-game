@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RestController;
 import soturi.model.Area;
+import soturi.model.EnemyTypeId;
 import soturi.server.Config;
 import soturi.model.Enemy;
 import soturi.model.EnemyId;
@@ -29,18 +30,7 @@ public class DashboardApiController {
 
     @GetMapping("/v1/enemies")
     public List<Enemy> getEnemies() {
-        List<Enemy> enemies = gameService.getEnemies();
-        Enemy enemy = new Enemy(
-                "Pomidor",
-                4,
-                new Position(50, 27),
-                new EnemyId(123),
-                "gfx"
-        );
-        if (enemies.isEmpty())
-            return List.of(enemy);
-        else
-            return enemies;
+        return gameService.getEnemies();
     }
 
     @GetMapping("/v1/players")

@@ -44,6 +44,6 @@ public final class DashboardWebSocketController extends AbstractWebSocketHandler
     @Override
     public void afterConnectionClosed(WebSocketSession session, CloseStatus status) {
         log.info("[DASH] {} Closed [STATUS] {}", session.getId(), status);
-        gameService.remObserver(session.getId());
+        gameService.removeObserver(session.getId());
     }
 }

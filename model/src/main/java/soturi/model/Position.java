@@ -3,9 +3,6 @@ package soturi.model;
 public record Position(double latitude, double longitude) {
     public static double maxLatitude = 90, minLatitude = -maxLatitude, maxLongitude = 180, minLongitude = -maxLongitude;
 
-    public static Position KRAKOW = new Position(50.06143, 19.93658);
-    public static Position WARSZAWA = new Position(52.22977, 21.01178);
-
     public Position {
         if (!(minLatitude <= latitude && latitude <= maxLatitude))
             throw new RuntimeException("incorrect latitude: " + latitude);
@@ -27,5 +24,26 @@ public record Position(double latitude, double longitude) {
         double earthRadius = 6371 * 1000;
 
         return 2 * earthRadius * Math.asin(Math.sqrt(t1 * t1 + t2 * t3 * t4 * t4));
+    }
+
+    /** This should work for relatively small areas */
+    public RectangularArea centeredArea(double sideLengthInMeters) {
+        double halfSideLengthInMeters = sideLengthInMeters / 2;
+
+        // let's play the epsilon game
+        double eps = 1e-2;
+
+        Position aBitHigher = new Position(latitude + eps, longitude);
+        double dLatitude = eps * halfSideLengthInMeters / aBitHigher.distance(this);
+
+        Position aBitRight = new Position(latitude, longitude + eps);
+        double dLongitude = eps * halfSideLengthInMeters / aBitRight.distance(this);
+
+        return new RectangularArea(
+            latitude - dLatitude,
+            latitude + dLatitude,
+            longitude - dLongitude,
+            longitude + dLongitude
+        );
     }
 }
