@@ -7,19 +7,6 @@ import static java.lang.Math.*;
 import static soturi.model.Position.*;
 
 public record RectangularArea(double lowerLatitude, double upperLatitude, double lowerLongitude, double upperLongitude) {
-    public static RectangularArea EARTH =
-        new RectangularArea(minLatitude, maxLatitude, minLongitude, maxLongitude);
-    public static RectangularArea POLAND =
-        new RectangularArea(49.15, 55.85, 13.70, 24.30);
-    public static RectangularArea KRAKOW =
-        new RectangularArea(49.97, 50.11, 19.74, 20.09);
-
-    public static Map<String, RectangularArea> COMMON_AREAS = Map.of(
-        "EARTH", EARTH,
-        "POLAND", POLAND,
-        "KRAKOW", KRAKOW
-    );
-
     public RectangularArea {
         if (!(minLatitude <= lowerLatitude && lowerLatitude <= upperLatitude &&
               upperLatitude <= maxLatitude))
@@ -83,4 +70,13 @@ public record RectangularArea(double lowerLatitude, double upperLatitude, double
                 areas[i][j] = new RectangularArea(gridPosition(i, j, k), gridPosition(i + 1, j + 1, k));
         return areas;
     }
+
+    public Position[][] getCorners() {
+        Position[][] corners = new Position[2][2];
+        for (int i = 0; i < 2; ++i)
+            for (int j = 0; j < 2; ++j)
+                corners[i][j] = proportionalPosition(i, j);
+        return corners;
+    }
+
 }

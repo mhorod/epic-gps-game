@@ -31,6 +31,10 @@ public class WebSocketClient extends WebSocketListener {
         this.handler = handler;
     }
 
+    public boolean isConnected() {
+        return webSocket != null;
+    }
+
     private void ensureSocketOpened() {
         if (webSocket != null)
             return;

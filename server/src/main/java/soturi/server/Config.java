@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.SneakyThrows;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+import soturi.content.GeoRegistry;
 import soturi.model.RectangularArea;
 
 import java.io.File;
@@ -37,19 +38,19 @@ public final class Config {
         public double geoMaxLatitude = 50.11;
         public double geoMinLongitude = 19.74;
         public double geoMaxLongitude = 20.09;
-    }
 
-    private void setGeoFromArea(RectangularArea area) {
-        v.geoMinLatitude = area.lowerLatitude();
-        v.geoMaxLatitude = area.upperLatitude();
-        v.geoMinLongitude = area.lowerLongitude();
-        v.geoMaxLongitude = area.upperLongitude();
+        public void setGeoFromArea(RectangularArea area) {
+            geoMinLatitude = area.lowerLatitude();
+            geoMaxLatitude = area.upperLatitude();
+            geoMinLongitude = area.lowerLongitude();
+            geoMaxLongitude = area.upperLongitude();
+        }
     }
 
     @SneakyThrows
     public void setValue(String key, String value) {
         if (key.equals("geo"))
-            setGeoFromArea(RectangularArea.COMMON_AREAS.get(value));
+            v.setGeoFromArea(GeoRegistry.KNOWN_AREAS.get(value));
         else {
             Field field = ConfigValues.class.getField(key);
             Object mapped = objectMapper.readValue(value, field.getType());
