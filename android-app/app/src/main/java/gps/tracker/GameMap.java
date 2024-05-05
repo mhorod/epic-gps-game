@@ -96,7 +96,11 @@ public class GameMap extends Fragment {
             System.out.println("Whoopsie! Connection lost! Fall back to the login screen!");
 
             mainActivity.runOnUiThread(() -> {
-                NavHostFragment.findNavController(GameMap.this).navigate(R.id.action_gameMap_to_loginFragment);
+                try {
+                    NavHostFragment.findNavController(GameMap.this).navigate(R.id.action_gameMap_to_loginFragment);
+                } catch(Exception e) {
+                    // It happens
+                }
             });
         });
     }
