@@ -49,6 +49,13 @@ const MapAccess = ({ setMap }: { setMap: (m: Map) => void }) => {
   return null;
 };
 
+function enemyIcon(gfxName: string) {
+  return new Icon({
+    iconUrl: "/static/" + gfxName,
+    iconSize: [32, 32],
+  });
+}
+
 function MapComponent(props: MapComponentProps) {
   return (
     <MapContainer
@@ -67,13 +74,11 @@ function MapComponent(props: MapComponentProps) {
             <Marker
               key={"enemy-" + e.enemyId.id}
               position={mapPosition(e.position)}
-              icon={frogIcon}
+              icon={enemyIcon(e.gfxName)}
               eventHandlers={{
                 click: () => props.selectEnemy(e),
               }}
-            >
-              <Popup>{e.name}</Popup>
-            </Marker>
+            ></Marker>
           );
         })}
         {Array.from(props.entities.players.values())
@@ -87,9 +92,7 @@ function MapComponent(props: MapComponentProps) {
                 eventHandlers={{
                   click: () => props.selectPlayer(p),
                 }}
-              >
-                <Popup>{p.player.name}</Popup>
-              </Marker>
+              ></Marker>
             );
           })}
       </div>
