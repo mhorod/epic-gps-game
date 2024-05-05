@@ -1,6 +1,9 @@
 name: Build and deploy Dashbord
 
-on: push
+on:
+  push:
+    branches:
+      - main
 
 jobs:
   build:
@@ -52,4 +55,6 @@ jobs:
           name: dashboard
 
       - name: Upload dashboard
-        run: scp -s static.zip ulm@soturi.online:static.zip
+        run: |
+          scp -s static.zip ulm@soturi.online:static.zip
+          ssh -s "bash ./update-dashboard.sh"
