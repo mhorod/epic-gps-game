@@ -122,7 +122,10 @@ class MapView extends Component<MapViewProps, MapViewState> {
   }
 
   componentDidMount(): void {
-    const websocket = new WebSocket(window.location.origin + "/ws/dashboard");
+    const protocol = window.location.protocol === "https:" ? "wss" : "ws";
+    const websocket = new WebSocket(
+      protocol + "://" + window.location.host + "/ws/dashboard",
+    );
 
     websocket.onmessage = (e) => {
       let obj = JSON.parse(e.data);
