@@ -6,3 +6,12 @@ spring:
     generate-ddl: true
     hibernate:
       ddl-auto: update
+
+
+  thymeleaf:
+    cache: false
+    prefix: file:static/
+
+  web:
+    resources:
+      static-locations: file:static/
