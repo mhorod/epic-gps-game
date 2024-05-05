@@ -1,4 +1,4 @@
-package soturi.server;
+package soturi;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.test.context.TestPropertySource;

@@ -71,6 +71,21 @@ public final class GameService {
             .toList();
     }
 
+    public synchronized void healPlayers() {
+        for (String player : sessions.keySet()) {
+            PlayerEntity entity = repository.findByName(player).orElseThrow();
+            long missingHp = getPlayerFromEntity(entity).maxHp() - entity.getHp();
+            long healed = (long) (missingHp * config.v.healFraction) + 1;
+            healed = Math.max(0, Math.min(missingHp, healed));
+            if (healed == 0)
+                continue;
+            entity.addHp(healed);
+            repository.save(entity);
+            sendUpdatesFor(player);
+        }
+    }
+
+
     private long secondCount = 0;
     private synchronized void doTickEverySecond() {
         secondCount++;
@@ -79,6 +94,8 @@ public final class GameService {
             giveFreeXp();
         if (config.v.spawnEnemyDelayInSeconds > 0 && secondCount % config.v.spawnEnemyDelayInSeconds == 0)
             spawnEnemies();
+        if (config.v.healDelayInSeconds > 0 && secondCount % config.v.healDelayInSeconds == 0)
+            healPlayers();
     }
 
     @Scheduled(fixedDelay = 1000)
