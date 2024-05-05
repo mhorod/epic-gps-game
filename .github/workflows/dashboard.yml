@@ -25,7 +25,6 @@ jobs:
       - name: Zip dashboard
         working-directory: ./dashboard/build
         run: |
-          cd build
           zip static.zip -r static
       - name: Store artifacts
         uses: actions/upload-artifact@v3
