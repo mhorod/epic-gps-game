@@ -10,3 +10,6 @@ spring:
   thymeleaf:
     cache: false
     prefix: file:static/dashboard/
+
+server:
+  forward-headers-strategy: framework

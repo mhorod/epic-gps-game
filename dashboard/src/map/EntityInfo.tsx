@@ -46,16 +46,22 @@ function PlayerInfo(props: EntityInfoProps) {
           <span> Player lvl {player.lvl} </span>
           <ul className="entity-stats-list">
             <li>
-              <IconWrapper icon=<Heart /> /> Health: {player.hp}/{player.maxHp}
+              <IconWrapper icon=<Heart /> />{" "}
+              <div>
+                {" "}
+                Health: {player.hp}/{player.maxHp}{" "}
+              </div>
             </li>
             <li>
-              <IconWrapper icon=<Star /> /> XP: {player.xp}
+              <IconWrapper icon=<Star /> /> <div> XP: {player.xp} </div>
             </li>
             <li>
-              <IconWrapper icon=<Flash /> /> Attack: {player.attack}
+              <IconWrapper icon=<Flash /> />{" "}
+              <div> Attack: {player.attack} </div>
             </li>
             <li>
-              <IconWrapper icon=<Shield /> /> Defense: {player.defense}
+              <IconWrapper icon=<Shield /> />{" "}
+              <div> Defense: {player.defense} </div>
             </li>
           </ul>
         </div>
