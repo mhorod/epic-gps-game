@@ -28,27 +28,27 @@ jobs:
           name: dashboard
           path: static.zip
 
-deploy:
-  needs: build
+  deploy:
+    needs: build
 
-  runs-on: ubuntu-latest
+    runs-on: ubuntu-latest
 
-  steps:
-    - name: Setup SSH
-      run: |
-        install -m 600 -D /dev/null ~/.ssh/id_rsa
-        echo ${SSH_PRIVATE_KEY} > ~/.ssh/id_rsa
-        echo ${SSH_KNOWN_HOSTS} >> ~/.ssh/known_hosts
-        chmod 600 ~/.ssh/known_hosts
-      shell: bash
-      env:
-        SSH_PRIVATE_KEY: ${{secrets.SSH_PRIVATE_KEY}}"
-        SSH_KNOWN_HOSTS: ${{secrets.SSH_KNOWN_HOSTS}}
+    steps:
+      - name: Setup SSH
+        run: |
+          install -m 600 -D /dev/null ~/.ssh/id_rsa
+          echo ${SSH_PRIVATE_KEY} > ~/.ssh/id_rsa
+          echo ${SSH_KNOWN_HOSTS} >> ~/.ssh/known_hosts
+          chmod 600 ~/.ssh/known_hosts
+        shell: bash
+        env:
+          SSH_PRIVATE_KEY: ${{secrets.SSH_PRIVATE_KEY}}"
+          SSH_KNOWN_HOSTS: ${{secrets.SSH_KNOWN_HOSTS}}
 
-    - name: Download built dashboard
-      uses: actions/download-artifact@v3
-      with:
-        name: dashboard
+      - name: Download built dashboard
+        uses: actions/download-artifact@v3
+        with:
+          name: dashboard
 
-    - name: Upload dashboard
-      run: scp -s static.zip ulm@soturi.online:static.zip
+      - name: Upload dashboard
+        run: scp -s static.zip ulm@soturi.online:static.zip
