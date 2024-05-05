@@ -1,4 +1,4 @@
-name: Build Dashbord
+name: Build and deploy Dashbord
 
 on: push
 
@@ -16,9 +16,10 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: ${{ matrix.node-version }}
-      - run: cd dashboard
-      - run: npm ci
-      - run: |
+      - name: Build dashboard
+        working-directory: ./dashboard
+        run: |
+          npm ci
           ./build.sh |
           cd build
           zip static.zip -r static
@@ -26,7 +27,7 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: dashboard
-          path: static.zip
+          path: ./dashboard/build/static.zip
 
   deploy:
     needs: build
