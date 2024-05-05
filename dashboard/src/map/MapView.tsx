@@ -23,7 +23,7 @@ import {
 import EntityInfo from "./EntityInfo";
 
 const warriorIcon = new Icon({
-  iconUrl: "/dahsboard/img/warrior.png",
+  iconUrl: "/dashboard/img/warrior.png",
   iconSize: [50, 50],
 });
 
