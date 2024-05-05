@@ -7,11 +7,6 @@ spring:
     hibernate:
       ddl-auto: update
 
-
   thymeleaf:
     cache: false
-    prefix: file:static/
-
-  web:
-    resources:
-      static-locations: file:static/
+    prefix: file:static/dashboard/

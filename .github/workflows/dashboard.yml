@@ -1,0 +1,59 @@
+name: Build and deploy Dashbord
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [21.x]
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ matrix.node-version }}
+      - name: Build dashboard
+        working-directory: ./dashboard
+        run: |
+          npm ci
+          ./build.sh
+
+      - name: Zip dashboard
+        working-directory: ./dashboard/build
+        run: |
+          zip static.zip -r static
+      - name: Store artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: dashboard
+          path: ./dashboard/build/static.zip
+
+  deploy:
+    needs: build
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Setup SSH
+        run: |
+          install -m 600 -D /dev/null ~/.ssh/id_rsa
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          ssh-keyscan -H soturi.online >> ~/.ssh/known_hosts
+          chmod 600 ~/.ssh/known_hosts
+        shell: bash
+
+      - name: Download built dashboard
+        uses: actions/download-artifact@v3
+        with:
+          name: dashboard
+
+      - name: Upload dashboard
+        run: |
+          scp -s static.zip ulm@soturi.online:static.zip
+          ssh ulm@soturi.online "bash ./update-dashboard.sh"
