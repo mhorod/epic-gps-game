@@ -20,7 +20,11 @@ jobs:
         working-directory: ./dashboard
         run: |
           npm ci
-          ./build.sh |
+          ./build.sh
+
+      - name: Zip dashboard
+        working-directory: ./dashboard/build
+        run: |
           cd build
           zip static.zip -r static
       - name: Store artifacts
