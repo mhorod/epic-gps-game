@@ -61,6 +61,7 @@ public class MainActivity extends AppCompatActivity {
     private Consumer<Enemy> enemyAppearsConsumer = null;
     private Consumer<EnemyId> enemyDisappearsConsumer = null;
     private FragmentManager fragmentManager;
+    private Runnable onDisconnectRunnable = null;
 
     public void saveString(String key, String value) {
         try {
@@ -281,19 +282,6 @@ public class MainActivity extends AppCompatActivity {
         return webSocketClient != null;
     }
 
-    public boolean pingWorking() {
-        if (webSocketClient == null) {
-            return false;
-        }
-
-        try {
-            webSocketClient.send().ping();
-            return true;
-        } catch (Exception e) {
-            return false;
-        }
-    }
-
     public void hideLocationKey() {
         binding.findMeButton.setVisibility(View.GONE);
     }
@@ -308,7 +296,16 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void onDisconnect() {
-        System.exit(0);
+        this.webSocketClient = null;
+
+        if(onDisconnectRunnable != null) {
+            onDisconnectRunnable.run();
+            onDisconnectRunnable = null;
+        }
+    }
+
+    public void setOnDisconnect(Runnable runnable) {
+        this.onDisconnectRunnable = runnable;
     }
 
     class MainActivityHandler implements MessageToClientHandler {

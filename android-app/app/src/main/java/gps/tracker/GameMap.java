@@ -91,25 +91,14 @@ public class GameMap extends Fragment {
         timer.schedule(updater, 0, 1000);
     }
 
-    private void startSanityChecks() {
-        areWeLoggedInTimer = new Timer();
-        TimerTask updater = new TimerTask() {
-            @Override
-            public void run() {
-                if (!mainActivity.pingWorking()) {
-                    mainActivity.runOnUiThread(() -> {
-                        System.out.println("Whoopsie! Connection lost! Fall back to the login screen!");
+    private void onDisconnect() {
+        mainActivity.runOnUiThread(() -> {
+            System.out.println("Whoopsie! Connection lost! Fall back to the login screen!");
 
-                        mainActivity.runOnUiThread(() -> {
-                            NavHostFragment.findNavController(GameMap.this).navigate(R.id.action_gameMap_to_loginFragment);
-                        });
-                    });
-                    areWeLoggedInTimer.cancel();
-                }
-            }
-        };
-
-        areWeLoggedInTimer.schedule(updater, 10000, 5000);
+            mainActivity.runOnUiThread(() -> {
+                NavHostFragment.findNavController(GameMap.this).navigate(R.id.action_gameMap_to_loginFragment);
+            });
+        });
     }
 
     private void startRefreshingLocation() {
@@ -218,15 +207,14 @@ public class GameMap extends Fragment {
         mainActivity.setEnemyAppearsConsumer(this::enemyAppearsConsumer);
         mainActivity.setEnemyDisappearsConsumer(this::enemyDisappearsConsumer);
 
-
-        // TODO: Implement the sanity check so it works properly
-        // startSanityChecks();
     }
 
     @Override
     public void onResume() {
         super.onResume();
         startRefreshingLocation();
+
+        mainActivity.setOnDisconnect(this::onDisconnect);
         mainActivity.showLocationKey();
     }
 
