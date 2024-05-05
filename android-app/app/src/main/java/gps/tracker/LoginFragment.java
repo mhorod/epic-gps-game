@@ -42,8 +42,8 @@ public class LoginFragment extends Fragment {
                     String lambdaPassword = binding.editTextTextPassword.getText().toString();
 
 
-                    mainActivity.saveString("username", username);
-                    mainActivity.saveString("password", password);
+                    mainActivity.saveString("username", lambdaUsername);
+                    mainActivity.saveString("password", lambdaPassword);
 
 
                     mainActivity.runOnUiThread(

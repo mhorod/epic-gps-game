@@ -23,13 +23,17 @@ import org.osmdroid.views.overlay.mylocation.IMyLocationConsumer;
 import org.osmdroid.views.overlay.mylocation.IMyLocationProvider;
 import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.Timer;
 import java.util.TimerTask;
 
 import gps.tracker.custom_overlays.EnemyOverlay;
 import gps.tracker.databinding.GameMapFragmentBinding;
+import soturi.content.EnemyRegistry;
 import soturi.model.Enemy;
 import soturi.model.EnemyId;
+import soturi.model.EnemyType;
 import soturi.model.Position;
 
 public class GameMap extends Fragment {
@@ -43,6 +47,7 @@ public class GameMap extends Fragment {
     private Timer refreshLocationTimer;
     private MyLocationNewOverlay myLocationOverlay;
     private Timer areWeLoggedInTimer;
+    private EnemyRegistry enemyRegistry = new EnemyRegistry();
 
     @Override
     public View onCreateView(
@@ -234,6 +239,16 @@ public class GameMap extends Fragment {
 
     private void enemyAppearsConsumer(Enemy e) {
         Drawable d = ResourcesCompat.getDrawable(getResources(), R.mipmap.ic_launcher, null);
+        try {
+            EnemyType type = enemyRegistry.getEnemyTypeById(e.typeId());
+            InputStream stream = getClass().getClassLoader().getResourceAsStream("static/" + type.gfxName());
+            Drawable draw = Drawable.createFromStream(stream, null);
+            if (draw != null)
+                d = draw;
+        }
+        catch (Exception exc) {
+            exc.printStackTrace();
+        }
         EnemyOverlay overlay = new EnemyOverlay(mapView, new DrawableEnemy(d, e));
         overlay.enableMyLocation();
 

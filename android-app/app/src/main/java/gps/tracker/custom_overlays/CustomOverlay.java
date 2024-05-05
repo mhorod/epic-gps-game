@@ -19,8 +19,10 @@ public class CustomOverlay extends MyLocationNewOverlay {
     public CustomOverlay(MapView mapView, Position position, Drawable drawable) {
         super(mapView);
         Bitmap bitmap = getBitmapFromDrawable(drawable);
+        bitmap = Bitmap.createScaledBitmap(bitmap, 64, 64, true);
         setPersonIcon(bitmap);
         setMyLocationProvider(getTrivialLocationProvider(position));
+        setPersonAnchor(0.5f, 0.5f);
     }
 
     // From https://stackoverflow.com/questions/50077917/android-graphics-drawable-adaptiveicondrawable-cannot-be-cast-to-android-graphic
