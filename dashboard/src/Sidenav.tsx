@@ -7,7 +7,11 @@ import "./SideNav.css";
 function SideNav() {
   return (
     <div className="sidenav">
-      <img src="img/logo-full.png" className="logo" alt="Soturi Online" />
+      <img
+        src="/dashboard/img/logo-full.png"
+        className="logo"
+        alt="Soturi Online"
+      />
 
       <ul>
         <li>

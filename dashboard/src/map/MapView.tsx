@@ -22,13 +22,8 @@ import {
 } from "../model/messages";
 import EntityInfo from "./EntityInfo";
 
-const frogIcon = new Icon({
-  iconUrl: "/img/frog.png",
-  iconSize: [50, 50],
-});
-
 const warriorIcon = new Icon({
-  iconUrl: "/img/warrior.png",
+  iconUrl: "/dahsboard/img/warrior.png",
   iconSize: [50, 50],
 });
 
