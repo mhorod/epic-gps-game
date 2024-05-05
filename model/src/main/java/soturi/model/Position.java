@@ -26,24 +26,33 @@ public record Position(double latitude, double longitude) {
         return 2 * earthRadius * Math.asin(Math.sqrt(t1 * t1 + t2 * t3 * t4 * t4));
     }
 
-    /** This should work for relatively small areas */
-    public RectangularArea centeredArea(double sideLengthInMeters) {
-        double halfSideLengthInMeters = sideLengthInMeters / 2;
-
+    /** This should work for usual cases */
+    public Position move(double metersNorth, double metersEast) {
         // let's play the epsilon game
         double eps = 1e-2;
 
         Position aBitHigher = new Position(latitude + eps, longitude);
-        double dLatitude = eps * halfSideLengthInMeters / aBitHigher.distance(this);
+        double dLatitude = eps * metersNorth / aBitHigher.distance(this);
 
         Position aBitRight = new Position(latitude, longitude + eps);
-        double dLongitude = eps * halfSideLengthInMeters / aBitRight.distance(this);
+        double dLongitude = eps * metersEast / aBitRight.distance(this);
 
-        return new RectangularArea(
-            latitude - dLatitude,
-            latitude + dLatitude,
-            longitude - dLongitude,
-            longitude + dLongitude
+        return new Position(latitude + dLatitude, longitude + dLongitude);
+    }
+
+    /** This should work for relatively close points */
+    public Position reflect(Position reflected) {
+        return new Position(
+            2 * latitude - reflected.latitude,
+            2 * longitude - reflected.longitude
         );
+    }
+
+    /** This should work for relatively small areas */
+    public RectangularArea centeredArea(double sideLengthInMeters) {
+        Position northEastCorner = move(sideLengthInMeters / 2, sideLengthInMeters / 2);
+        Position southWestCorner = reflect(northEastCorner);
+
+        return new RectangularArea(northEastCorner, southWestCorner);
     }
 }

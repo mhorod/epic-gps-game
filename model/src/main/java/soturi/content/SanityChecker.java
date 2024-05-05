@@ -7,6 +7,9 @@ import java.util.HashSet;
 import java.util.Set;
 
 public class SanityChecker {
+    private SanityChecker() {
+        throw new RuntimeException();
+    }
     private static final Set<String> alreadyChecked = Collections.synchronizedSet(new HashSet<>());
 
     public static void checkEncodingAndReport() {
@@ -35,7 +38,7 @@ public class SanityChecker {
 
         System.err.println(
             "Resource: \"" + resource + "\" is missing. \n" +
-            "(it should be placed inside classpath during compilation)\n"
+            "(it should be placed inside classpath before compilation)\n"
         );
     }
 }

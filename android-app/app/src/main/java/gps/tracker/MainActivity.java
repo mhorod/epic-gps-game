@@ -83,7 +83,7 @@ public class MainActivity extends AppCompatActivity {
 
             return scanner.nextLine();
 
-        } catch (FileNotFoundException e) {
+        } catch (Exception e) {
             return null;
         }
     }
@@ -307,13 +307,17 @@ public class MainActivity extends AppCompatActivity {
         binding.levelCounter.setVisibility(View.GONE);
     }
 
+    public void onDisconnect() {
+        System.exit(0);
+    }
+
     class MainActivityHandler implements MessageToClientHandler {
 
         private ArrayList<Enemy> enemiesBacklog = new ArrayList<>();
 
         @Override
         public void disconnect() {
-
+            onDisconnect();
         }
 
         private void cleanBacklog(Consumer<Enemy> consumer) {

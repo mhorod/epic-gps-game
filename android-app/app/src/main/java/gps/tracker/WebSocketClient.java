@@ -86,6 +86,7 @@ public class WebSocketClient extends WebSocketListener {
     public void onClosing(WebSocket closedSocket, int code, String reason) {
         if (webSocket == closedSocket)
             webSocket = null;
+        handler.disconnect();
         System.out.println("CLOSE: " + code + " " + reason);
     }
 
