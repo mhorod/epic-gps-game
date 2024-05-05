@@ -41,13 +41,10 @@ jobs:
       - name: Setup SSH
         run: |
           install -m 600 -D /dev/null ~/.ssh/id_rsa
-          echo ${SSH_PRIVATE_KEY} > ~/.ssh/id_rsa
-          echo ${SSH_KNOWN_HOSTS} >> ~/.ssh/known_hosts
+          echo ${{ secrets.SSH_PRIVATE_KEY }} > ~/.ssh/id_rsa
+          ssh-keyscan -H soturi.online >> ~/.ssh/known_hosts
           chmod 600 ~/.ssh/known_hosts
         shell: bash
-        env:
-          SSH_PRIVATE_KEY: ${{secrets.SSH_PRIVATE_KEY}}"
-          SSH_KNOWN_HOSTS: ${{secrets.SSH_KNOWN_HOSTS}}
 
       - name: Download built dashboard
         uses: actions/download-artifact@v3
