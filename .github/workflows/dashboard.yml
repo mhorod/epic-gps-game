@@ -54,4 +54,4 @@ jobs:
       - name: Upload dashboard
         run: |
           scp -s static.zip ulm@soturi.online:static.zip
-          ssh -s "bash ./update-dashboard.sh"
+          ssh ulm@soturi.online "bash ./update-dashboard.sh"
