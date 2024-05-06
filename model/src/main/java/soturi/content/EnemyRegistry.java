@@ -3,6 +3,7 @@ package soturi.content;
 import soturi.model.Enemy;
 import soturi.model.EnemyType;
 import soturi.model.EnemyTypeId;
+import soturi.model.Loot;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -37,6 +38,16 @@ public class EnemyRegistry {
     public EnemyType getEnemyType(Enemy enemy) {
         return getEnemyTypeById(enemy.typeId());
     }
+    public long getEnemyAttack(Enemy enemy) {
+        return enemy.lvl() * 40L;
+    }
+    public long getEnemyDefense(Enemy enemy) {
+        return enemy.lvl() * 20L;
+    }
+    public long getEnemyHp(Enemy enemy) {
+        return enemy.lvl() * 75L;
+    }
+
     public List<EnemyType> getAllEnemyTypes() {
         return Collections.unmodifiableList(enemyList);
     }
@@ -45,6 +56,13 @@ public class EnemyRegistry {
     }
     public List<EnemyType> getAllBossTypes() {
         return Collections.unmodifiableList(bossList);
+    }
+
+    private final GameRegistry gameRegistry = new GameRegistry();
+    public Loot lootFor(Enemy enemy) {
+        EnemyType type = getEnemyType(enemy);
+        long xp = (long) (gameRegistry.getXpForNextLvl(enemy.lvl()) * type.xpFactor() / Math.sqrt(2 * enemy.lvl()));
+        return new Loot(xp, List.of()); // TODO items
     }
 
     public EnemyRegistry() {

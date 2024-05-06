@@ -3,6 +3,7 @@ package soturi.server;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
+import soturi.content.EnemyRegistry;
 import soturi.model.Enemy;
 import soturi.model.Loot;
 import soturi.model.Player;
@@ -15,6 +16,8 @@ import java.util.Random;
 @Component
 @AllArgsConstructor
 public final class FightSimulator {
+    private final EnemyRegistry enemyRegistry = new EnemyRegistry(); // TODO get EnemyRegistry from somewhere else
+
     @Getter
     @AllArgsConstructor
     private class Fighter {
@@ -33,10 +36,16 @@ public final class FightSimulator {
             this(player.hp(), player.attack(), player.defense(), player.lvl());
         }
         Fighter(Enemy enemy) {
-            this(enemy.lvl(), enemy.lvl(), enemy.lvl(), enemy.lvl());
+            this(
+                enemyRegistry.getEnemyHp(enemy),
+                enemyRegistry.getEnemyAttack(enemy),
+                enemyRegistry.getEnemyDefense(enemy),
+                enemy.lvl()
+            );
         }
     }
 
+    private final Random random = new Random();
     private void simulateFight(Fighter left, Fighter right) {
         long leftAttack = Math.max(left.getAttack() - right.getDefense(), 1);
         long rightAttack = Math.max(right.getAttack() - left.getDefense(), 1);
@@ -49,7 +58,6 @@ public final class FightSimulator {
         }
     }
 
-    private final Random random = new Random();
     public FightResult simulateFight(Player player, Enemy enemy) {
         Fighter playerFighter = new Fighter(player), enemyFighter = new Fighter(enemy);
         simulateFight(playerFighter, enemyFighter);
@@ -60,7 +68,7 @@ public final class FightSimulator {
 
         if (playerFighter.getHp() > 0) {
             result = Result.WON;
-            loot = new Loot();
+            loot = enemyRegistry.lootFor(enemy);
         }
 
         return new FightResult(result, lostHp, enemy.enemyId(), loot);

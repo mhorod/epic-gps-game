@@ -12,6 +12,8 @@ import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.List;
 
+// TODO put EnemyRegistry here !!!
+
 @Component
 public final class Config {
     private final File configFile = new File("config.json");

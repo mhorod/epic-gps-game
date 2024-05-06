@@ -8,14 +8,15 @@ import org.junit.jupiter.api.TestInstance.Lifecycle;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.TestPropertySource;
+import soturi.content.EnemyRegistry;
+import soturi.content.GameRegistry;
 import soturi.content.GeoRegistry;
 import soturi.model.Enemy;
 import soturi.model.EnemyId;
-import soturi.model.EnemyTypeId;
+import soturi.model.EnemyType;
 import soturi.model.Loot;
 import soturi.model.Player;
 import soturi.model.Position;
-import soturi.model.RectangularArea;
 import soturi.model.Result;
 import soturi.model.messages_to_client.Disconnect;
 import soturi.model.messages_to_client.EnemyDisappears;
@@ -25,6 +26,7 @@ import soturi.model.messages_to_client.MessageToClient;
 import soturi.model.messages_to_client.MessageToClientFactory;
 import soturi.model.messages_to_client.MessageToClientHandler;
 import soturi.server.Config;
+import soturi.server.FightSimulator;
 import soturi.server.GameService;
 import soturi.server.PlayerRepository;
 import soturi.server.geo.CityProvider;
@@ -49,11 +51,17 @@ public class ServerTests {
     CityProvider cityProvider;
     @Autowired
     Config config;
+    @Autowired
+    FightSimulator fightSimulator;
+
+    EnemyRegistry enemyRegistry = new EnemyRegistry();
+    GameRegistry gameRegistry = new GameRegistry();
 
     @BeforeAll
     void setupGameService() {
         config.v.giveFreeXpDelayInSeconds = 0;
         config.v.spawnEnemyDelayInSeconds = 0;
+        config.v.healDelayInSeconds = 0;
         config.v.fightingMaxDistInMeters = 50;
         config.v.geoMaxSplit = 2;
         config.v.setGeoFromArea(GeoRegistry.POLAND);
@@ -68,15 +76,21 @@ public class ServerTests {
         repository.deleteAll();
     }
 
+
     private Enemy newEnemy(int lvl, Position position, EnemyId enemyId) {
-        return new Enemy(
-            new EnemyTypeId(0),
-            enemyId,
-            lvl,
-            position,
-            "name",
-            "name"
-        );
+        EnemyType type = enemyRegistry
+            .getNormalEnemyTypes()
+            .stream()
+            .filter(t -> t.lvlInRange(lvl))
+            .findFirst()
+            .orElseThrow();
+
+        return type.createEnemy(enemyId, lvl, position);
+    }
+
+    private void healPlayers() {
+        for (int i = 0; i < 100; ++i)
+            gameService.healPlayers();
     }
 
     @Test
@@ -132,6 +146,7 @@ public class ServerTests {
         List<MessageToClient> received = new ArrayList<>();
         gameService.login("p", "", GeoRegistry.KRAKOW, new MessageToClientFactory(received::add));
         gameService.receiveFrom("p").attackEnemy(new EnemyId(0));
+        healPlayers();
 
         assertThat(received)
             .anyMatch(Error.class::isInstance)
@@ -160,6 +175,7 @@ public class ServerTests {
     void player_attacks_monster_and_wins() {
         MessageToClientHandler received = mock();
         gameService.login("p", "", GeoRegistry.KRAKOW, received);
+        healPlayers();
 
         Enemy enemy = newEnemy(1, GeoRegistry.KRAKOW, new EnemyId(0));
         gameService.registerEnemy(enemy);
@@ -173,6 +189,7 @@ public class ServerTests {
     void player_attacks_monster_and_loses() {
         MessageToClientHandler received = mock();
         gameService.login("p", "", GeoRegistry.KRAKOW, received);
+        healPlayers();
 
         Enemy enemy = newEnemy(100, GeoRegistry.KRAKOW, new EnemyId(0));
         gameService.registerEnemy(enemy);
@@ -186,5 +203,72 @@ public class ServerTests {
     void wieliczka_to_wieś() {
         assertThat(cityProvider.getCities())
             .anyMatch(c -> c.name().equals("Wieliczka") && c.population() < 50000);
+    }
+    @Test
+    void lvl_1_player_stats_make_sense() {
+        gameService.login("p", "", GeoRegistry.KRAKOW, mock());
+        Player beforeHeal = gameService.getPlayers().get(0).player();
+        healPlayers();
+        Player afterHeal = gameService.getPlayers().get(0).player();
+
+        assertThat(beforeHeal.hp()).isZero();
+        assertThat(afterHeal.hp()).isPositive().isGreaterThan((long) (beforeHeal.maxHp() * 0.85));
+
+        assertThat(beforeHeal.maxHp()).isEqualTo(afterHeal.maxHp()).isPositive();
+        assertThat(beforeHeal.attack()).isEqualTo(afterHeal.attack()).isPositive();
+        assertThat(beforeHeal.defense()).isEqualTo(afterHeal.defense()).isPositive();
+    }
+    @Test
+    void lvl_1_player_beats_lvl_1_enemy_and_receives_damage() {
+        gameService.login("p", "", GeoRegistry.KRAKOW, mock());
+        healPlayers();
+
+        Player p = gameService.getPlayers().get(0).player();
+        Enemy e = newEnemy(1, GeoRegistry.KRAKOW, new EnemyId(0));
+
+        FightResult result = fightSimulator.simulateFight(p, e);
+
+        assertThat(result.result()).isEqualTo(Result.WON);
+        assertThat(result.lostHp()).isPositive().isGreaterThan((long) (p.maxHp() * 0.15));
+    }
+    @Test
+    void lvl_1_enemy_xp_loot_makes_sense() {
+        Enemy e = newEnemy(1, GeoRegistry.KRAKOW, new EnemyId(0));
+        long xp = enemyRegistry.lootFor(e).xp();
+
+        long xp_to_2 = gameRegistry.getXpForLvlCumulative(2);
+        long xp_to_3 = gameRegistry.getXpForLvlCumulative(3);
+
+        assertThat(xp).isPositive()
+            .isGreaterThan((long) (xp_to_2 * 0.33))
+            .isLessThan(xp_to_3);
+    }
+    @Test
+    void lvl_10_enemy_xp_loot_makes_sense() {
+        Enemy e = newEnemy(1, GeoRegistry.KRAKOW, new EnemyId(0));
+        long xp = enemyRegistry.lootFor(e).xp();
+
+        long xp_to_11 = gameRegistry.getXpForNextLvl(10);
+
+        System.err.println(xp);
+        System.err.println(xp_to_11);
+
+        assertThat(xp).isPositive()
+            .isGreaterThan((long) (xp_to_11 * 0.05))
+            .isLessThan((long) (xp_to_11 * 0.25));
+    }
+    @Test
+    void xp_requirement_make_sense() {
+        assertThat(gameRegistry.getXpForNextLvl(1)).isGreaterThanOrEqualTo(75);
+
+        for (int i = 1; i < 100; ++i)
+            assertThat(gameRegistry.getXpForNextLvl(i))
+                .as("Xp requirement for lvl %d", i)
+                .isGreaterThan(gameRegistry.getXpForNextLvl(i-1));
+    }
+    @Test
+    void there_is_enemy_for_each_lvl() {
+        for (int i = 1; i < 100; ++i)
+            assertThat(newEnemy(i, GeoRegistry.KRAKOW, new EnemyId(0))).isNotNull();
     }
 }
