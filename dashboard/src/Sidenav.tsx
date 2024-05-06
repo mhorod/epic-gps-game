@@ -1,4 +1,12 @@
-import { Grid, Skull, People, Disc, Map, Code } from "react-ionicons";
+import {
+  Grid,
+  Skull,
+  People,
+  Disc,
+  Map,
+  Code,
+  LogoAndroid,
+} from "react-ionicons";
 import { Link } from "react-router-dom";
 import IconWrapper from "./IconWrapper";
 
@@ -42,6 +50,12 @@ function SideNav() {
         <li>
           <a href="/swagger-ui/index.html">
             <IconWrapper icon=<Code /> /> API
+          </a>
+        </li>
+
+        <li>
+          <a href="/static/app.apk">
+            <IconWrapper icon=<LogoAndroid /> /> Android App
           </a>
         </li>
       </ul>
