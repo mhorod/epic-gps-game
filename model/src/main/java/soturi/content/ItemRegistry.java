@@ -34,7 +34,7 @@ public class ItemRegistry {
     }
 
     public ItemRegistry() {
-        registerItem(0, "Napierśnik smoka", ItemType.ARMOR, 50, 0, 100, "tile049.png");
-        registerItem(1, "Buty smoka", ItemType.BOOTS, 40, 0, 20, "tile034.png");
+        registerItem(0, SanityChecker.fixEnc("Napierśnik smoka"), ItemType.ARMOR, 50, 0, 100, "tile049.png");
+        registerItem(1, SanityChecker.fixEnc("Buty smoka"), ItemType.BOOTS, 40, 0, 20, "tile034.png");
     }
 }

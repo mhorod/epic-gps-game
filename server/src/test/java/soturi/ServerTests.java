@@ -1,4 +1,4 @@
-package soturi.server;
+package soturi;
 
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -24,6 +24,9 @@ import soturi.model.messages_to_client.FightResult;
 import soturi.model.messages_to_client.MessageToClient;
 import soturi.model.messages_to_client.MessageToClientFactory;
 import soturi.model.messages_to_client.MessageToClientHandler;
+import soturi.server.Config;
+import soturi.server.GameService;
+import soturi.server.PlayerRepository;
 import soturi.server.geo.CityProvider;
 
 import java.util.ArrayList;

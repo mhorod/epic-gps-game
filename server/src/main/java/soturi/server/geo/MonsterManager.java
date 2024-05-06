@@ -3,6 +3,7 @@ package soturi.server.geo;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import soturi.content.EnemyRegistry;
+import soturi.content.GeoRegistry;
 import soturi.model.Area;
 import soturi.model.EnemyType;
 import soturi.model.EnemyTypeId;
@@ -104,7 +105,12 @@ public final class MonsterManager {
         for (int[] row : marks)
             Arrays.fill(row, (int) 1e9);
 
-        for (City city : cityProvider.getCities()) {
+        List<City> cities = cityProvider.getCities().stream()
+            .filter(c -> fullArea().isInside(c.position())).toList();
+        if (cities.isEmpty())
+            cities = List.of(new City("Centrum", 8, fullArea.getCenter()));
+
+        for (City city : cities) {
             if (!fullArea.isInside(city.position()))
                 continue;
             IntPair ij = indexOf(city.position());
@@ -161,6 +167,9 @@ public final class MonsterManager {
         enemies.put(enemyId, enemy);
         enemiesPerType.get(enemy.typeId()).add(enemyId);
 
+        if (!fullArea().isInside(enemy.position())) // TODO remove this hack
+            return;
+
         IntPair ij = indexOf(enemy.position());
         int i = ij.i(), j = ij.j();
         enemiesPerRegion[i][j].add(enemyId);
@@ -170,12 +179,15 @@ public final class MonsterManager {
         if (enemy == null)
             throw new RuntimeException();
 
+        if (!enemiesPerType.get(enemy.typeId()).remove(enemyId))
+            throw new RuntimeException();
+
+        if (!fullArea().isInside(enemy.position())) // TODO remove this hack
+            return;
         IntPair ij = indexOf(enemy.position());
         int i = ij.i(), j = ij.j();
 
         if (!enemiesPerRegion[i][j].remove(enemyId))
-            throw new RuntimeException();
-        if (!enemiesPerType.get(enemy.typeId()).remove(enemyId))
             throw new RuntimeException();
     }
 
@@ -195,7 +207,7 @@ public final class MonsterManager {
             IntPair ij = indexOf(area.dimensions().getCenter()); // inefficient af
             int i = ij.i(), j = ij.j();
 
-            int cap = 2;
+            int cap = 1;
             int curr = enemiesPerRegion[i][j].size();
 
             double failProbability = 1.0 * curr / cap;
@@ -204,7 +216,8 @@ public final class MonsterManager {
 
             Position position = area.dimensions().randomPosition(rnd);
 
-            int lvl = 1 + (int) (rnd.nextDouble() * (3 + area.difficulty()));
+            int diff = area.difficulty() - 1;
+            int lvl = rnd.nextInt(1 + 3 * diff, 5 + 7 * diff);
             List<EnemyType> legalTypes = enemyRegistry.getNormalEnemyTypes().stream()
                 .filter(t -> t.lvlInRange(lvl)).toList();
 
@@ -213,9 +226,6 @@ public final class MonsterManager {
             returnList.add(enemy);
         }
         for (EnemyType type : enemyRegistry.getAllBossTypes()) {
-            if (enemiesPerType.get(type.typeId()).size() > 0)
-                continue;
-
             double failProbability = 1.0 - 1.0 / type.freqSuccess();
             if (rnd.nextDouble() < failProbability)
                 continue;
@@ -226,7 +236,14 @@ public final class MonsterManager {
             returnList.add(enemy);
         }
 
-        return returnList;
+        return returnList.stream().filter(enemy -> {
+            EnemyType type = enemyRegistry.getEnemyType(enemy);
+
+            if (type.cap() <= enemiesPerType.get(enemy.typeId()).size())
+                return false;
+
+            return GeoRegistry.BANNED_AREAS.stream().noneMatch(a -> a.isInside(enemy.position()));
+        }).toList();
     }
 
 }

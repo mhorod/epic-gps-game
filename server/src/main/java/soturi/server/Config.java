@@ -26,8 +26,10 @@ public final class Config {
 
     public static class ConfigValues {
         public int giveFreeXpDelayInSeconds = 100;
-        public long giveFreeXpAmount = 10000;
+        public long giveFreeXpAmount = 100;
         public int spawnEnemyDelayInSeconds = 5;
+        public int healDelayInSeconds = 1;
+        public double healFraction = 0.10;
         public int fightingMaxDistInMeters = 60;
 
         public List<String> geoNamesCountryCodes = List.of("PL");

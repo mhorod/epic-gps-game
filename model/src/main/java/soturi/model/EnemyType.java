@@ -1,13 +1,17 @@
 package soturi.model;
 
+import lombok.Builder;
+
 import java.util.List;
 
+@Builder
 public record EnemyType(
     EnemyTypeId typeId,
     String name,
     String gfxName,
     int minLvl,
     int maxLvl,
+    int cap,
     boolean isBoss,
     double xpFactor,
     RectangularArea allowedArea,
