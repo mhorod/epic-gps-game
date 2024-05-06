@@ -143,9 +143,9 @@ public final class GameService {
 
     public synchronized Player getPlayerFromEntity(PlayerEntity entity) {
         int lvl = gameRegistry.getLvlFromXp(entity.getXp());
-        long maxHp = lvl * 5L;
-        long attack = lvl * 3L;
-        long defense = lvl * 2L;
+        long maxHp = lvl * 100L;
+        long attack = lvl * 50L;
+        long defense = lvl * 25L;
 
         return new Player(
             entity.getName(),

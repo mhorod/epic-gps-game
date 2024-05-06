@@ -30,6 +30,9 @@ public class GeoRegistry {
     public static RectangularArea BOARS_ZAKRZOWEK = new RectangularArea(50.03326, 50.04004, 19.91327, 19.91831);
     public static RectangularArea PRESENTATION_AREA = new RectangularArea(50.02665, 50.03977, 19.90190, 19.91845);
 
+    public static RectangularArea TEST_BRZOZOWKA = PRESENTATION_AREA.moveCenter(new Position(50.37729, 19.80196));
+    public static RectangularArea TEST_SKOSNA = PRESENTATION_AREA.moveCenter(BOARS_SKOSNA.getCenter());
+
     public static List<RectangularArea> BANNED_AREAS = List.of(JEDNOSTKA_NIL, ZALEW_ZAKRZOWEK);
 
     public static Map<String, Position> KNOWN_POSITIONS;

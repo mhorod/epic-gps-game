@@ -34,7 +34,6 @@ public final class PlayerEntity {
     private List<Long> equipped, inventory;
 
     public PlayerEntity() {
-        setHp(1);
         setEquipped(List.of());
         setInventory(List.of());
     }

@@ -5,12 +5,18 @@ public class GameRegistry {
     public long getXpForLvlCumulative(int lvl) {
         if (lvl <= 1)
             return 0;
-        return (long) (Math.pow(1.1, lvl - 2) * 100);
+
+        double alfa = 1.15;
+        long mul = 100;
+
+        double xp = (Math.pow(alfa, lvl - 1) - 1) / (alfa - 1);
+
+        return (long) (xp * mul);
     }
 
     /** Xp requirement to for from {@code lvl} to {@code lvl + 1} */
     public long getXpForNextLvl(int lvl) {
-        if (lvl <= 1)
+        if (lvl < 1)
             return 0;
         return getXpForLvlCumulative(lvl + 1) - getXpForLvlCumulative(lvl);
     }
