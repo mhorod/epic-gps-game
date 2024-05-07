@@ -18,6 +18,7 @@ jobs:
         shell: bash
 
       - name: Upload website
+        working-directory: .
         run: |
           zip website.zip -r website
           scp -s website.zip ulm@soturi.online:website.zip
