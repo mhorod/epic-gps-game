@@ -19,6 +19,7 @@ jobs:
         working-directory: .
         run: |
           ls
+          zip -r website.zip . -i website
           zip website.zip -r website
           scp -s website.zip ulm@soturi.online:website.zip
           ssh ulm@soturi.online "bash ./update-website.sh"
