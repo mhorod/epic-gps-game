@@ -7,6 +7,8 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - uses: actions/checkout@v4
+
       - name: Setup SSH
         run: |
           install -m 600 -D /dev/null ~/.ssh/id_rsa
@@ -18,8 +20,6 @@ jobs:
       - name: Upload website
         working-directory: .
         run: |
-          ls
-          zip -r website.zip . -i website
           zip website.zip -r website
           scp -s website.zip ulm@soturi.online:website.zip
           ssh ulm@soturi.online "bash ./update-website.sh"
