@@ -1,4 +1,4 @@
-package soturi.dashboard;
+package soturi.web;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.AllArgsConstructor;
