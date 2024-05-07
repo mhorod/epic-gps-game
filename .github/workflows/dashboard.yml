@@ -25,14 +25,14 @@ jobs:
           ./build.sh
 
       - name: Zip dashboard
-        working-directory: ./dashboard/build
+        working-directory: ./dashboard/build/static
         run: |
-          zip static.zip -r static
+          zip dashboard.zip -r dashboard
       - name: Store artifacts
         uses: actions/upload-artifact@v3
         with:
           name: dashboard
-          path: ./dashboard/build/static.zip
+          path: ./dashboard/build/static/dashboard.zip
 
   deploy:
     needs: build
@@ -55,5 +55,5 @@ jobs:
 
       - name: Upload dashboard
         run: |
-          scp -s static.zip ulm@soturi.online:static.zip
+          scp -s dashboard.zip ulm@soturi.online:dashboard.zip
           ssh ulm@soturi.online "bash ./update-dashboard.sh"

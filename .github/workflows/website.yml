@@ -1,0 +1,22 @@
+name: Deploy website
+
+jobs:
+  deploy:
+    needs: build
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Setup SSH
+        run: |
+          install -m 600 -D /dev/null ~/.ssh/id_rsa
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          ssh-keyscan -H soturi.online >> ~/.ssh/known_hosts
+          chmod 600 ~/.ssh/known_hosts
+        shell: bash
+
+      - name: Upload website
+        run: |
+          zip website.zip -r website
+          scp -s website.zip ulm@soturi.online:website.zip
+          ssh ulm@soturi.online "bash ./update-website.sh"

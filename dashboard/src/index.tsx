@@ -10,19 +10,19 @@ import enableMocking from "./mocks/server";
 
 const router = createBrowserRouter([
   {
-    path: "/",
+    path: "/dashboard",
     element: <Main></Main>,
   },
   {
-    path: "/players",
+    path: "/dashboard/players",
     element: <Main></Main>,
   },
   {
-    path: "/enemies",
+    path: "/dashboard/enemies",
     element: <Main></Main>,
   },
   {
-    path: "/map-view",
+    path: "/dashboard/map-view",
     element: (
       <Main>
         <MapView />
@@ -30,7 +30,7 @@ const router = createBrowserRouter([
     ),
   },
   {
-    path: "/spawn-areas",
+    path: "/dashboard/spawn-areas",
     element: (
       <Main>
         <SpawnAreas />

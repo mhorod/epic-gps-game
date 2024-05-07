@@ -23,27 +23,27 @@ function SideNav() {
 
       <ul>
         <li>
-          <Link to="/">
+          <Link to="/dashboard">
             <IconWrapper icon=<Grid /> /> Dashboard
           </Link>
         </li>
         <li>
-          <Link to="/enemies">
+          <Link to="/dashboard/enemies">
             <IconWrapper icon=<Skull /> /> Enemies
           </Link>
         </li>
         <li>
-          <Link to="/players">
+          <Link to="/dashboard/players">
             <IconWrapper icon=<People /> /> Players
           </Link>
         </li>
         <li>
-          <Link to="/spawn-areas">
+          <Link to="/dashboard/spawn-areas">
             <IconWrapper icon=<Disc /> /> Spawn Areas
           </Link>
         </li>
         <li>
-          <Link to="/map-view">
+          <Link to="/dashboard/map-view">
             <IconWrapper icon=<Map /> /> Map View
           </Link>
         </li>
