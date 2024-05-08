@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <link rel="icon" href="/website/favicon.ico" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <meta name="theme-color" content="#000000" />
+
+        <meta property="og:title" content="Soturi Online" />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://soturi.online/sign-up" />
+        <meta
+            property="og:image"
+            content="https://soturi.online/static/website/img/thumbnail.png"
+        />
+        <meta property="og:description" content="Sign Up to Soturi Online" />
+
+        <link rel="stylesheet" href="/website/css/common.css" type="text/css" />
+
+        <link
+            rel="stylesheet"
+            href="/website/css/sign-up.css"
+            type="text/css"
+        />
+
+        <title>Sign Up</title>
+    </head>
+    <body>
+        <main>
+            <img src="/website/img/logo-full-white.png" id="logo" />
+
+            <form id="sign-up-form" action="/sign-up" method="POST">
+                <h1>Sign Up for free!</h1>
+
+                <input
+                    type="text"
+                    name="username"
+                    class="text-input"
+                    placeholder="Username"
+                />
+                <input
+                    type="password"
+                    name="password"
+                    class="text-input"
+                    placeholder="Password"
+                />
+                <input
+                    type="password"
+                    name="password-repeat"
+                    class="text-input"
+                    placeholder="Repeat password"
+                />
+                <input type="submit" value="Sign Up" class="btn-primary" />
+            </form>
+        </main>
+    </body>
+</html>

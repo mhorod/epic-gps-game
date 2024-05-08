@@ -1,0 +1,57 @@
+@media screen and (min-width: 800px) {
+    main {
+        display: flex;
+        flex-direction: row;
+        margin: auto;
+        align-items: center;
+        gap: 20px;
+    }
+
+    #logo {
+        width: 300px;
+    }
+
+    #sign-up-form {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        align-items: center;
+    }
+
+    #sign-up-form > h1 {
+        font-size: 30px;
+    }
+
+    #sign-up-form > input {
+        width: 300px;
+    }
+}
+
+@media screen and (max-width: 800px) {
+    main {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        margin-top: 50px;
+        gap: 50px;
+    }
+
+    #logo {
+        width: 300px;
+    }
+
+    #sign-up-form {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        align-items: center;
+    }
+
+    #sign-up-form > h1 {
+        font-size: 30px;
+    }
+
+    #sign-up-form > input {
+        width: 300px;
+    }
+}
