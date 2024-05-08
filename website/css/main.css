@@ -1,30 +1,16 @@
-@import url("https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&display=swap");
-
-/* CSS Reset */
-* {
-    margin: 0;
-    padding: 0;
-    border: 0;
-    font-size: 100%;
-    vertical-align: baseline;
-    background: transparent;
-    box-sizing: border-box;
-}
-
 body {
     height: 100vh;
     font-size: 14px;
     display: flex;
     flex-direction: column;
 
-    background: rgba(60, 60, 60, 0.4) url("/website/img/background-large.png");
+    background: rgba(60, 60, 60, 0.4) url("/website/img/background-large.jpg");
     background-size: cover;
     background-blend-mode: multiply;
 
     color: #fff;
-
-    font-family: "Noto Sans";
 }
+
 #top-bar {
     display: flex;
     justify-content: center;
@@ -65,7 +51,7 @@ body {
         display: none;
     }
     #slogan {
-        margin: 60px;
+        margin: 50px;
     }
     #main-slogan {
         font-size: calc(min(4vw, 100px));
@@ -111,22 +97,7 @@ main {
     display: flex;
     justify-content: space-between;
     gap: 10px;
-    margin: 60px;
-}
-
-.btn-primary {
-    border: 2px solid #fff;
-    border-radius: 5px;
-    text-decoration: none;
-    display: block;
-    color: #fff;
-    text-align: center;
-    font-weight: 600;
-}
-
-.btn-primary:hover {
-    background: #fff;
-    color: #aa2673;
+    margin: 40px;
 }
 
 #secondary-buttons {

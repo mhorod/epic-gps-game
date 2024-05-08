@@ -20,4 +20,14 @@ public class SoturiWebController {
     public String index() {
         return "website/index";
     }
+
+    @GetMapping("/log-in")
+    public String logIn() {
+        return "website/log-in";
+    }
+
+    @GetMapping("/sign-up")
+    public String signUp() {
+        return "website/sign-up";
+    }
 }

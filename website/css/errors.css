@@ -1,0 +1,29 @@
+main {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-items: center;
+    margin-top: 200px;
+}
+
+h1 {
+    font-size: calc(max(4vw, 24px));
+    text-align: center;
+}
+
+h2 {
+    font-size: calc(max(2vw, 18px));
+    font-weight: 300;
+    text-align: center;
+}
+
+#header {
+    margin: 50px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.btn-primary {
+    font-size: calc(max(1vw, 16px));
+}
