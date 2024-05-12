@@ -34,7 +34,7 @@ public class JTSGeoProvider implements GeoProvider {
         if (g.getDimension() < 2)
             return List.of();
         if (g instanceof Polygon p)
-            return List.of(convertFromJTS(p));
+            return p.isEmpty() ? List.of() : List.of(convertFromJTS(p));
         if (g instanceof GeometryCollection gc)
             return IntStream.range(0, gc.getNumGeometries()).mapToObj(gc::getGeometryN)
                 .flatMap(geo -> convertFromJTS(geo).stream()).toList();
@@ -42,8 +42,8 @@ public class JTSGeoProvider implements GeoProvider {
         throw new RuntimeException("this geometry is strange " + g);
     }
     private soturi.model.Polygon convertFromJTS(Polygon p) {
-        if (p.getNumInteriorRing() > 0)
-            throw new RuntimeException("polygon with holes");
+        if (p.getNumInteriorRing() > 0 || p.isEmpty() || !p.isValid())
+            throw new RuntimeException("invalid polygon " + p);
         List<Position> positions = Arrays.stream(p.getExteriorRing().getCoordinates())
             .skip(1)
             .map(this::convertFromJTS).toList();

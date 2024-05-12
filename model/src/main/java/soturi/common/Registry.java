@@ -49,7 +49,8 @@ public class Registry {
         enemiesPerLvl.add(List.of());
 
         for (int i = 1; i <= getMaxLvl(); ++i) {
-            cumulativeXpForLvl[i] = cumulativeXpForLvl[i - 1] + (long) config.xpToLvl().eval(i);
+            if (i > 1)
+                cumulativeXpForLvl[i] = cumulativeXpForLvl[i - 1] + (long) config.xpToLvl().eval(i);
             int finalI = i;
             enemiesPerLvl.add(getAllEnemyTypes().stream().filter(type -> type.lvlInRange(finalI)).toList());
         }

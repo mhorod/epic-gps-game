@@ -12,6 +12,8 @@ import soturi.model.EnemyId;
 import soturi.model.EnemyType;
 import soturi.model.Player;
 import soturi.model.PlayerWithPosition;
+import soturi.model.Polygon;
+import soturi.model.PolygonId;
 import soturi.model.PolygonWithDifficulty;
 import soturi.model.Position;
 import soturi.model.Statistics;
@@ -52,6 +54,20 @@ public class DashboardApiController {
         return gameService.getAreas();
     }
 
+    @GetMapping("/v1/wkt-areas")
+    public String getAreasAsWKT() {
+        List<Polygon> polys = gameService.getAreas().stream().map(PolygonWithDifficulty::polygon).toList();
+        return Polygon.asWKT(polys);
+    }
+
+    @GetMapping("/v1/polygon-wkt-converter")
+    public String getPolygonAsWKT(String name) {
+        Polygon poly = dynamicConfig.getRegistry().getPolygonById(new PolygonId(name));
+        if (poly == null)
+            throw new RuntimeException("polygon %s not found".formatted(name));
+        return poly.asWKT();
+    }
+
     @PostMapping("/v1/config-kv")
     public void changeConfig(String key, String value) throws Exception {
         Config config = dynamicConfig.getRegistry().getConfig();
@@ -74,7 +90,7 @@ public class DashboardApiController {
         return dynamicConfig.getRegistry().getConfig();
     }
 
-    @PostMapping("/v1/reload")
+    @PostMapping("/v1/kill-all-enemies")
     public void killAllEnemies() {
         gameService.unregisterAllEnemies();
     }
@@ -85,7 +101,7 @@ public class DashboardApiController {
 
         StringBuilder sb = new StringBuilder();
         sb.append("Current lvl | Xp for next lvl | Xp gain | Xp gain (%) | Enemies to lvl up\n");
-        for (int i = 1; i < 100; ++i) {
+        for (int i = 1; i < registry.getMaxLvl(); ++i) {
             long xpForNext = registry.getXpForNextLvl(i);
             EnemyType type = registry.getEnemyTypesPerLvl(i)
                 .stream()

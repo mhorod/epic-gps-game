@@ -11,5 +11,9 @@ spring:
     cache: false
     prefix: file:static/
 
+springdoc:
+  swagger-ui:
+    tryItOutEnabled: true
+
 server:
   forward-headers-strategy: framework

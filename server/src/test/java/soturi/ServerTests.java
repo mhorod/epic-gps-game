@@ -36,7 +36,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
-@TestPropertySource(locations = "classpath:application.yml", properties="spring.datasource.url=jdbc:h2:mem:")
+@TestPropertySource(properties="spring.datasource.url=jdbc:h2:mem:")
 @SpringBootTest
 public class ServerTests {
     @Autowired
@@ -241,9 +241,6 @@ public class ServerTests {
         long xp = registry.getLootFor(e).xp();
 
         long xp_to_11 = registry.getXpForNextLvl(10);
-
-        System.err.println(xp);
-        System.err.println(xp_to_11);
 
         assertThat(xp).isPositive()
             .isGreaterThan((long) (xp_to_11 * 0.05))

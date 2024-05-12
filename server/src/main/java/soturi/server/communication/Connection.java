@@ -8,6 +8,8 @@ import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 import soturi.model.Position;
 import soturi.model.messages_to_client.Disconnect;
+import soturi.model.messages_to_client.EnemiesAppear;
+import soturi.model.messages_to_client.EnemiesDisappear;
 import soturi.model.messages_to_client.MessageToClient;
 import soturi.model.messages_to_client.MessageToClientFactory;
 import soturi.model.messages_to_client.MessageToClientHandler;
@@ -135,7 +137,13 @@ public final class Connection {
                     close();
                     break;
                 }
-                log.info("[ TO ] {} [MSG] {}", authorizedUser, messageToClient);
+
+                if (messageToClient instanceof EnemiesAppear appear)
+                    log.info("[ TO ] {} [MSG] EnemiesAppear[#={}]", authorizedUser, appear.enemies().size());
+                else if (messageToClient instanceof EnemiesDisappear disappear)
+                    log.info("[ TO ] {} [MSG] EnemiesDisappear[#={}]", authorizedUser, disappear.enemyIds().size());
+                else
+                    log.info("[ TO ] {} [MSG] {}", authorizedUser, messageToClient);
 
                 try {
                     String payload = objectMapper.writeValueAsString(messageToClient);

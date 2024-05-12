@@ -20,6 +20,8 @@ import soturi.model.messages_to_server.MessageToServerHandler;
 import soturi.server.geo.CityProvider;
 import soturi.server.geo.MonsterManager;
 
+import java.time.Duration;
+import java.time.Instant;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -148,8 +150,11 @@ public class GameService {
     }
 
     private synchronized void spawnEnemies() {
-        log.info("spawnEnemies() called");
+        Instant start = Instant.now();
         registerEnemies(monsterManager.generateEnemies());
+        long mss = Duration.between(start, Instant.now()).toMillis();
+        if (mss >= 5)
+            log.info("spawnEnemies() took {}ms", mss);
     }
 
     public synchronized void registerEnemy(Enemy enemy) {
@@ -157,6 +162,9 @@ public class GameService {
     }
 
     public synchronized void registerEnemies(List<Enemy> enemies) {
+        if (enemies.isEmpty())
+            return;
+
         enemies.forEach(monsterManager::registerEnemy);
 
         for (var session : sessions.values())
@@ -171,6 +179,9 @@ public class GameService {
 
 
     private synchronized void unregisterEnemies(List<EnemyId> enemyIds) {
+        if (enemyIds.isEmpty())
+            return;
+
         enemyIds.forEach(monsterManager::unregisterEnemy);
 
         for (var session : sessions.values())
