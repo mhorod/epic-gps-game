@@ -1,194 +1,210 @@
 package soturi.server.geo;
 
+import lombok.With;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Component;
-import soturi.content.EnemyRegistry;
-import soturi.content.GeoRegistry;
-import soturi.model.Area;
-import soturi.model.EnemyType;
-import soturi.model.EnemyTypeId;
-import soturi.server.Config;
+import org.apache.commons.lang3.mutable.MutableInt;
+import soturi.common.Registry;
+import soturi.model.DifficultyLvl;
 import soturi.model.Enemy;
 import soturi.model.EnemyId;
+import soturi.model.EnemyType;
+import soturi.model.EnemyTypeId;
+import soturi.model.Polygon;
+import soturi.model.PolygonWithDifficulty;
 import soturi.model.Position;
-import soturi.model.RectangularArea;
+import soturi.model.Rectangle;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
-
-import static soturi.server.geo.MonsterManagerUtility.*;
+import java.util.function.Supplier;
 
 @Slf4j
-@Component
-public final class MonsterManager {
-    private final CityProvider cityProvider;
-    private final Config config;
-    private final EnemyRegistry enemyRegistry = new EnemyRegistry();
+public class MonsterManager {
+    private final Registry registry;
+    private final Supplier<EnemyId> enemyIdSupplier;
 
-    private List<RectangularArea[][]> splits;
-    private int maxSplit;
-    private List<Area> areas;
+    private final List<PolygonWithDifficulty> areasWithDifficulties = new ArrayList<>();
+    private final Region[] regions;
 
-    private List<EnemyId>[][] enemiesPerRegion;
+    private final int[][] regionIdOf;
+    private final Rectangle fullEnvelope;
+
     private final Map<EnemyId, Enemy> enemies = new LinkedHashMap<>();
-
     private final Map<EnemyTypeId, Set<EnemyId>> enemiesPerType = new LinkedHashMap<>();
 
-    public RectangularArea fullArea() {
-        return splits.get(0)[0][0];
+    record Region(Rectangle rectangle, List<EnemyId> enemiesHere, int difficulty, MutableInt capLeft) {
+        Region(Rectangle rectangle, int difficulty, int cap) {
+            this(rectangle, new ArrayList<>(), difficulty, new MutableInt(cap));
+        }
     }
-    public List<Area> getAreas() {
-        return Collections.unmodifiableList(areas);
+
+    private int latitudeIdOf(double latitude) {
+        int n = 1 << registry.getGameAreaSplitLvl();
+        double envLatW = fullEnvelope.upperLatitude() - fullEnvelope.lowerLatitude();
+        double dx = (latitude - fullEnvelope.lowerLatitude()) / envLatW * n;
+        return Math.max(0, Math.min((int) dx, n - 1));
+    }
+    private int longitudeIdOf(double longitude) {
+        int n = 1 << registry.getGameAreaSplitLvl();
+        double envLonW = fullEnvelope.upperLongitude() - fullEnvelope.lowerLongitude();
+        double dy = (longitude - fullEnvelope.lowerLongitude()) / envLonW * n;
+        return Math.max(0, Math.min((int) dy, n - 1));
+    }
+    private int getRegionIdOf(Position position) {
+        return regionIdOf[latitudeIdOf(position.latitude())][longitudeIdOf(position.longitude())];
     }
 
-    public IntPair indexOf(Position pos, int depth) { // depth is from [0, maxSplit)
-        if (!fullArea().isInside(pos))
-            throw new RuntimeException();
-        if (depth < 0 || depth >= maxSplit)
-            throw new RuntimeException("invalid depth argument");
+    public List<PolygonWithDifficulty> getAreas() {
+        return areasWithDifficulties;
+    }
 
-        IntPair r = new IntPair(0, 0);
+    private class RegionGenerator {
+        final int n = 1 << registry.getGameAreaSplitLvl();
+        final int[][] difficulty = new int[n][n];
 
-        for (int d = 1; d <= depth; ++d) {
-            double best = Double.MAX_VALUE;
-            IntPair best_r = null;
+        final List<Region> generatedRegions = new ArrayList<>();
+        final int[][] generatedRegionIdOf = new int[n][n];
 
-            for (int next_i = 2 * r.i(); next_i < 2 * r.i() + 2; ++next_i) {
-                for (int next_j = 2 * r.j(); next_j < 2 * r.j() + 2; ++next_j) {
-                    double here = splits.get(d)[next_i][next_j].getCenter().distance(pos);
-                    if (here < best) {
-                        best = here;
-                        best_r = new IntPair(next_i, next_j);
-                    }
+        @With
+        record RegionInfo(int latL, int latR, int lonL, int lonR, Rectangle rectangle, int difficulty, int cap) { }
+
+        void registerRegion(RegionInfo info) {
+            if (info == null)
+                return;
+            Region region = new Region(info.rectangle, info.difficulty, info.cap);
+
+            for (int i = info.latL; i < info.latR; ++i)
+                for (int j = info.lonL; j < info.lonR; ++j)
+                    generatedRegionIdOf[i][j] = generatedRegions.size();
+            generatedRegions.add(region);
+        }
+
+        RegionInfo recursive(int latL, int latR, int lonL, int lonR, Rectangle rectangle) {
+            RegionInfo info = new RegionInfo(latL, latR, lonL, lonR, rectangle, difficulty[latL][lonL], 1);
+
+            if (latR - latL == 1)
+                return info;
+
+            Rectangle[][] subRectangles = rectangle.kSplit(2);
+            int latM = (latL + latR) / 2;
+            int lonM = (lonL + lonR) / 2;
+
+            RegionInfo[] infos = {
+                recursive(latL, latM, lonL, lonM, subRectangles[0][0]),
+                recursive(latL, latM, lonM, lonR, subRectangles[0][1]),
+                recursive(latM, latR, lonL, lonM, subRectangles[1][0]),
+                recursive(latM, latR, lonM, lonR, subRectangles[1][1])
+            };
+
+            for (RegionInfo subInfo : infos) {
+                if (subInfo == null || subInfo.difficulty != info.difficulty || info.difficulty == 0) {
+                    Arrays.stream(infos).forEach(this::registerRegion);
+                    return null;
                 }
             }
 
-            r = best_r;
+            return info.withCap(infos[0].cap * 3);
         }
-        return r;
-    }
-    public IntPair indexOf(Position pos) {
-        return indexOf(pos, maxSplit - 1);
-    }
 
-    public void reloadAreas() {
-        cityProvider.reloadCities();
-        log.info("GeoManager::restart()");
-        if (!enemies.isEmpty())
-            throw new RuntimeException("remove all enemies first");
+        void mark(Position position, int value, double radius, int di, int dj) {
+            int startI = latitudeIdOf(position.latitude());
+            int startJ = longitudeIdOf(position.longitude());
 
-        for (EnemyType type : enemyRegistry.getAllEnemyTypes())
-            enemiesPerType.put(type.typeId(), new LinkedHashSet<>());
-
-        maxSplit = config.v.geoMaxSplit;
-
-        RectangularArea fullArea = new RectangularArea(
-            config.v.geoMinLatitude,
-            config.v.geoMaxLatitude,
-            config.v.geoMinLongitude,
-            config.v.geoMaxLongitude
-        );
-
-        splits = new ArrayList<>();
-        for (int i = 0; i < maxSplit; ++i)
-            splits.add(fullArea.kSplit(1 << i));
-
-        int n = 1 << (maxSplit-1);
-        int[][] marks = new int[n][n];
-        for (int[] row : marks)
-            Arrays.fill(row, (int) 1e9);
-
-        List<City> cities = cityProvider.getCities().stream()
-            .filter(c -> fullArea().isInside(c.position())).toList();
-        if (cities.isEmpty())
-            cities = List.of(new City("Centrum", 8, fullArea.getCenter()));
-
-        for (City city : cities) {
-            if (!fullArea.isInside(city.position()))
-                continue;
-            IntPair ij = indexOf(city.position());
-            int i = ij.i(), j = ij.j();
-
-            //   0 population -> 0km
-            //  1k population -> 1km
-            // 1kk population -> 2km
-            double distance_mx = 1000 * (Math.log10(city.population()) / 3);
-
-            markClose(i, j, +1, +1, splits.getLast(), city.position(), distance_mx, marks, 1);
-            markClose(i, j, +1, -1, splits.getLast(), city.position(), distance_mx, marks, 1);
-            markClose(i, j, -1, +1, splits.getLast(), city.position(), distance_mx, marks, 1);
-            markClose(i, j, -1, -1, splits.getLast(), city.position(), distance_mx, marks, 1);
-            marks[i][j] = 1;
-        }
-        dijkstra(marks);
-
-        log.info("n**2: {}", n*n);
-
-        areas = new ArrayList<>();
-        for (int i = 0; i < n; ++i) {
-            for (int j = 0; j < n; ++j) {
-                marks[i][j] = (int) Math.sqrt(marks[i][j] + 0.5);
-
-                areas.add(new Area(splits.getLast()[i][j], marks[i][j]));
+            outerLoop:
+            for (int i = startI; 0 <= i && i < n; i += di) {
+                for (int j = startJ; 0 <= j && j < n; j += dj) {
+                    Position center = fullEnvelope.proportionalPosition((i + 0.5) / n, (j + 0.5) / n);
+                    if (position.distance(center) >= radius) {
+                        if (j == startJ)
+                            break outerLoop;
+                        break;
+                    }
+                    difficulty[i][j] = Math.min(difficulty[i][j], value);
+                }
             }
         }
 
-        enemies.clear();
-        enemiesPerRegion = new List[n][n];
-        for (int i = 0; i < n; ++i) {
-            for (int j = 0; j < n; ++j)
-                enemiesPerRegion[i][j] = new ArrayList<>();
+        void processCity(City city) {
+            if (city.population() < registry.getCityThreshold())
+                return;
+
+            double scale = Math.log10(city.population()) / 6; // city 1M <=> scale == 1
+            List<DifficultyLvl> difficulties = registry.getDifficulties();
+
+            for (int lvl = 0; lvl < difficulties.size() - 1; ++lvl) {
+                double radius = difficulties.get(lvl).radiusInMeters() * scale;
+                mark(city.position(), lvl, radius, -1, -1);
+                mark(city.position(), lvl, radius, -1, +1);
+                mark(city.position(), lvl, radius, +1, -1);
+                mark(city.position(), lvl, radius, +1, +1);
+            }
+        }
+
+        RegionGenerator(List<City> cities) {
+            if ((n & (n - 1)) > 0)
+                throw new RuntimeException("regionIdOf.length has to be a power of 2");
+            for (int[] row : difficulty)
+                Arrays.fill(row, registry.getDifficulties().size() - 1);
+
+            cities.forEach(this::processCity);
+            registerRegion(recursive(0, n, 0, n, fullEnvelope));
         }
     }
 
-    public MonsterManager(CityProvider cityProvider, Config config) {
-        this.cityProvider = cityProvider;
-        this.config = config;
-        reloadAreas();
+    public MonsterManager(CityProvider cityProvider, Registry registry, Supplier<EnemyId> enemyIdSupplier) {
+        this.registry = registry;
+        this.enemyIdSupplier = enemyIdSupplier;
+
+        for (EnemyType type : registry.getAllEnemyTypes())
+            enemiesPerType.put(type.typeId(), new LinkedHashSet<>());
+
+        fullEnvelope = Rectangle.envelopeOf(registry.getGameArea());
+
+        RegionGenerator generator = new RegionGenerator(cityProvider.getCities());
+        regionIdOf = generator.generatedRegionIdOf;
+        regions = generator.generatedRegions.toArray(Region[]::new);
+
+        for (Region region : regions) {
+            List<Polygon> polys = registry.getIntersectionWithGameArea(region.rectangle().asPolygon());
+            polys.forEach(poly -> areasWithDifficulties.add(new PolygonWithDifficulty(poly, region.difficulty)));
+        }
     }
 
-    long nextEnemyIdLong = 0;
-    public EnemyId nextEnemyId() {
-        return new EnemyId(nextEnemyIdLong++);
-    }
     public void registerEnemy(Enemy enemy) {
         EnemyId enemyId = enemy.enemyId();
+        EnemyType type = registry.getEnemyType(enemy);
+        Region region = regions[getRegionIdOf(enemy.position())];
 
         if (enemies.containsKey(enemyId))
             throw new RuntimeException();
 
         enemies.put(enemyId, enemy);
         enemiesPerType.get(enemy.typeId()).add(enemyId);
+        region.enemiesHere.add(enemyId);
 
-        if (!fullArea().isInside(enemy.position())) // TODO remove this hack
-            return;
-
-        IntPair ij = indexOf(enemy.position());
-        int i = ij.i(), j = ij.j();
-        enemiesPerRegion[i][j].add(enemyId);
+        if (!type.ignoreAreaCap())
+            region.capLeft.decrement();
     }
     public void unregisterEnemy(EnemyId enemyId) {
         Enemy enemy = enemies.remove(enemyId);
-        if (enemy == null)
-            throw new RuntimeException();
+        EnemyType type = registry.getEnemyType(enemy);
+        Region region = regions[getRegionIdOf(enemy.position())];
 
         if (!enemiesPerType.get(enemy.typeId()).remove(enemyId))
             throw new RuntimeException();
-
-        if (!fullArea().isInside(enemy.position())) // TODO remove this hack
-            return;
-        IntPair ij = indexOf(enemy.position());
-        int i = ij.i(), j = ij.j();
-
-        if (!enemiesPerRegion[i][j].remove(enemyId))
+        if (!region.enemiesHere.remove(enemyId))
             throw new RuntimeException();
+
+        if (!type.ignoreAreaCap())
+            region.capLeft.increment();
     }
 
     public List<Enemy> getAllEnemies() {
@@ -198,52 +214,76 @@ public final class MonsterManager {
         return Collections.unmodifiableMap(enemies);
     }
 
-    private final Random rnd = new Random();
-    /** this generates valid candidates to register, but does NOT actually register them */
-    public List<Enemy> generateEnemies() {
-        List<Enemy> returnList = new ArrayList<>();
+    private class EnemyGenerator {
+        final Random rnd = new Random();
+        final List<Enemy> generated = new ArrayList<>();
+        final Map<EnemyTypeId, Integer> capLeftByType = new HashMap<>();
+        final int[] capLeftByRegion;
 
-        for (Area area : areas) {
-            IntPair ij = indexOf(area.dimensions().getCenter()); // inefficient af
-            int i = ij.i(), j = ij.j();
-
-            int cap = 1;
-            int curr = enemiesPerRegion[i][j].size();
-
-            double failProbability = 1.0 * curr / cap;
-            if (rnd.nextDouble() < failProbability)
-                continue;
-
-            Position position = area.dimensions().randomPosition(rnd);
-
-            int diff = area.difficulty() - 1;
-            int lvl = rnd.nextInt(1 + 3 * diff, 5 + 7 * diff);
-            List<EnemyType> legalTypes = enemyRegistry.getNormalEnemyTypes().stream()
-                .filter(t -> t.lvlInRange(lvl)).toList();
-
-            EnemyType type = legalTypes.get(rnd.nextInt(legalTypes.size()));
-            Enemy enemy = type.createEnemy(nextEnemyId(), lvl, position);
-            returnList.add(enemy);
+        int minLvl(Region region) {
+            return registry.getDifficulties().get(region.difficulty).minLvl();
         }
-        for (EnemyType type : enemyRegistry.getAllBossTypes()) {
-            double failProbability = 1.0 - 1.0 / type.freqSuccess();
-            if (rnd.nextDouble() < failProbability)
-                continue;
-
-            Position position = type.allowedArea().randomPosition(rnd);
-            int lvl = rnd.nextInt(type.minLvl(), type.maxLvl() + 1);
-            Enemy enemy = type.createEnemy(nextEnemyId(), lvl, position);
-            returnList.add(enemy);
+        int maxLvl(Region region) {
+            return registry.getDifficulties().get(region.difficulty).maxLvl();
+        }
+        boolean lvlInRange(Region region, int lvl) {
+            return minLvl(region) <= lvl && lvl <= maxLvl(region);
         }
 
-        return returnList.stream().filter(enemy -> {
-            EnemyType type = enemyRegistry.getEnemyType(enemy);
+        void tryAdd(Enemy enemy) {
+            EnemyType type = registry.getEnemyType(enemy);
+            int typeCapLeft = capLeftByType.get(type.typeId());
+            int regionId = getRegionIdOf(enemy.position());
 
-            if (type.cap() <= enemiesPerType.get(enemy.typeId()).size())
-                return false;
+            if (typeCapLeft <= 0)
+                return;
+            if (!type.ignoreAreaCap() && capLeftByRegion[regionId] <= 0)
+                return;
+            if (!type.ignoreAreaDifficulty() && !lvlInRange(regions[regionId], enemy.lvl()))
+                return;
+            if (!registry.isInsideGameArea(enemy.position()))
+                return;
+            if (!registry.isInsideSpawnAreaForType(enemy.typeId(), enemy.position()))
+                return;
 
-            return GeoRegistry.BANNED_AREAS.stream().noneMatch(a -> a.isInside(enemy.position()));
-        }).toList();
+            generated.add(enemy);
+            capLeftByType.put(type.typeId(), typeCapLeft - 1);
+            if (!type.ignoreAreaCap())
+                capLeftByRegion[regionId]--;
+        }
+
+        EnemyGenerator() {
+            capLeftByRegion = Arrays.stream(regions).mapToInt(r -> r.capLeft.intValue()).toArray();
+            for (EnemyType type : registry.getAllEnemyTypes()) {
+                int currently = enemiesPerType.get(type.typeId()).size();
+                capLeftByType.put(type.typeId(), type.totalCap() < 0 ? Integer.MAX_VALUE : type.totalCap() - currently);
+            }
+
+            // area based algo
+            for (Region region : regions) {
+                if (rnd.nextDouble() < registry.getSpawnEnemyFailChance())
+                    continue;
+                Position position = region.rectangle.randomPosition(rnd);
+                int lvl = rnd.nextInt(minLvl(region), maxLvl(region) + 1);
+                EnemyTypeId typeId = registry.getRandomEnemyTypeOfLvl(lvl).typeId();
+                EnemyId enemyId = enemyIdSupplier.get();
+                tryAdd(new Enemy(typeId, enemyId, lvl, position));
+            }
+
+            // type based algo
+            for (EnemyType type : registry.getAllEnemyTypes()) {
+                if (rnd.nextDouble() < type.failChance())
+                    continue;
+                Position position = registry.randomSpawnPointForType(type.typeId());
+                int lvl = rnd.nextInt(type.minLvl(), type.maxLvl() + 1);
+                EnemyId enemyId = enemyIdSupplier.get();
+                tryAdd(new Enemy(type.typeId(), enemyId, lvl, position));
+            }
+        }
     }
 
+    /** this generates valid candidates to register, but does NOT actually register them */
+    public List<Enemy> generateEnemies() {
+        return new EnemyGenerator().generated;
+    }
 }

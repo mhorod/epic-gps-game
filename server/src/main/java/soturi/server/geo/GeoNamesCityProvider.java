@@ -3,19 +3,17 @@ package soturi.server.geo;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
-import soturi.server.Config;
+import soturi.server.DynamicConfig;
 
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLConnection;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -24,25 +22,20 @@ import java.util.zip.ZipInputStream;
 
 @Slf4j
 @Component
-public final class GeoNamesCityProvider implements CityProvider {
-    private final Config config;
+public class GeoNamesCityProvider implements CityProvider {
+    private final String geoNamesDownloadDir = "static";
+    private final DynamicConfig dynamicConfig;
     private final List<City> cities = new ArrayList<>();
+    private List<String> lastCodes;
 
-    public GeoNamesCityProvider(Config config) {
-        this.config = config;
-        reloadCities();
-    }
-
-    @Override
     @SneakyThrows(IOException.class)
-    public void reloadCities() {
-        cities.clear();
-        Files.createDirectories(Paths.get(config.v.geoNamesDownloadDir));
-        config.v.geoNamesCountryCodes.forEach(this::processCode);
+    public GeoNamesCityProvider(DynamicConfig dynamicConfig) {
+        this.dynamicConfig = dynamicConfig;
+        Files.createDirectories(Paths.get(geoNamesDownloadDir));
     }
 
     private Path pathForCode(String code) {
-        return Paths.get(config.v.geoNamesDownloadDir, code + ".txt");
+        return Paths.get(geoNamesDownloadDir, code + "_GeoNames.txt");
     }
 
     @SneakyThrows(IOException.class)
@@ -82,6 +75,12 @@ public final class GeoNamesCityProvider implements CityProvider {
 
     @Override
     public List<City> getCities() {
+        List<String> newCodes = dynamicConfig.getRegistry().getCountryCodes();
+        if (!newCodes.equals(lastCodes)) {
+            cities.clear();
+            lastCodes = newCodes;
+            lastCodes.forEach(this::processCode);
+        }
         return Collections.unmodifiableList(cities);
     }
 }

@@ -10,7 +10,7 @@ import soturi.model.messages_to_client.MessageToClientHandler;
 // TODO nice wrapper around PlayerEntity
 
 @AllArgsConstructor
-public final class PlayerSession {
+public class PlayerSession {
     @Getter @NonNull
     private final MessageToClientHandler sender;
 

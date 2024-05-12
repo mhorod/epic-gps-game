@@ -1,0 +1,114 @@
+{
+  "areas" : {
+    "EARTH" : {
+      "points" : [ {
+        "latitude" : -90.0,
+        "longitude" : -180.0
+      }, {
+        "latitude" : 90.0,
+        "longitude" : -180.0
+      }, {
+        "latitude" : 90.0,
+        "longitude" : 180.0
+      }, {
+        "latitude" : -90.0,
+        "longitude" : 180.0
+      } ]
+    },
+    "POLAND" : {
+      "points" : [ {
+        "latitude" : 49.15,
+        "longitude" : 13.7
+      }, {
+        "latitude" : 55.85,
+        "longitude" : 13.7
+      }, {
+        "latitude" : 55.85,
+        "longitude" : 24.3
+      }, {
+        "latitude" : 49.15,
+        "longitude" : 24.3
+      } ]
+    }
+  },
+  "gameAreaId" : "POLAND",
+  "gameAreaSplitLvl" : 3,
+  "bannedAreas" : [ ],
+  "fightingDistanceMaxInMeters" : 50,
+  "maxLvl" : 100,
+  "xpToLvl" : {
+    "add" : 1.0,
+    "mul" : 0.0,
+    "base" : 1.075
+  },
+  "xpLoot" : {
+    "add" : 1.0,
+    "mul" : 0.0,
+    "base" : 1.05
+  },
+  "statisticsPlayerBase" : {
+    "maxHp" : 100,
+    "attack" : 50,
+    "defense" : 50
+  },
+  "statisticsPlayerPerLvl" : {
+    "maxHp" : 100,
+    "attack" : 50,
+    "defense" : 50
+  },
+  "statisticsEnemyBase" : {
+    "maxHp" : 100,
+    "attack" : 50,
+    "defense" : 50
+  },
+  "statisticsEnemyPerLvl" : {
+    "maxHp" : 100,
+    "attack" : 50,
+    "defense" : 50
+  },
+  "items" : [ ],
+  "enemyTypes" : [ {
+    "typeId" : 0,
+    "name" : "xd",
+    "gfxName" : "static/asset",
+    "minLvl" : 1,
+    "maxLvl" : 100,
+    "statisticsMul" : 1.0,
+    "totalCap" : -1,
+    "xpFactor" : 1.0,
+    "spawnAreas" : [ "EARTH" ],
+    "failChance" : 0.5,
+    "lootList" : [ ],
+    "lootChance" : 0.0
+  }, {
+    "typeId" : 1,
+    "name" : "xd2",
+    "gfxName" : "static/asset",
+    "minLvl" : 1,
+    "maxLvl" : 100,
+    "statisticsMul" : 1.0,
+    "totalCap" : -1,
+    "xpFactor" : 1.0,
+    "spawnAreas" : [ "EARTH" ],
+    "failChance" : 0.5,
+    "lootList" : [ ],
+    "lootChance" : 0.0
+  } ],
+  "cityThreshold" : 0,
+  "difficultyConfiguration" : [ {
+    "radiusInMeters" : 50.0,
+    "minLvl" : 1,
+    "maxLvl" : 10
+  }, {
+    "radiusInMeters" : 5000.0,
+    "minLvl" : 10,
+    "maxLvl" : 100
+  } ],
+  "countryCodes" : [ "PL" ],
+  "giveFreeXpDelayInSeconds" : 0,
+  "giveFreeXpAmount" : 0,
+  "spawnEnemyDelayInSeconds" : 2,
+  "spawnEnemyFailChance" : 0.5,
+  "healDelayInSeconds" : 1,
+  "healFraction" : 0.1
+}

@@ -5,16 +5,15 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
 import org.springframework.web.socket.TextMessage;
+import org.springframework.web.socket.WebSocketSession;
 import soturi.model.Position;
 import soturi.model.messages_to_client.Disconnect;
 import soturi.model.messages_to_client.MessageToClient;
-import soturi.model.messages_to_client.Ping;
 import soturi.model.messages_to_client.MessageToClientFactory;
 import soturi.model.messages_to_client.MessageToClientHandler;
+import soturi.model.messages_to_client.Ping;
 import soturi.model.messages_to_server.MessageToServer;
 import soturi.server.GameService;
-
-import org.springframework.web.socket.WebSocketSession;
 
 import java.io.IOException;
 import java.time.Duration;
@@ -22,7 +21,7 @@ import java.time.Instant;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
-/*
+/**
  * This class is thread safe
  */
 @Slf4j
@@ -147,7 +146,7 @@ public final class Connection {
                     close();
                     break;
                 }
-                catch (IOException ioException) {
+                catch (IOException | IllegalStateException exception) {
                     close();
                     break;
                 }

@@ -4,13 +4,13 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.AllArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-import soturi.model.messages_to_client.MessageToClient;
-import soturi.model.messages_to_client.MessageToClientFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.handler.AbstractWebSocketHandler;
+import soturi.model.messages_to_client.MessageToClient;
+import soturi.model.messages_to_client.MessageToClientFactory;
 import soturi.server.GameService;
 
 import java.util.function.Consumer;
@@ -18,7 +18,7 @@ import java.util.function.Consumer;
 @Slf4j
 @AllArgsConstructor
 @Component
-public final class DashboardWebSocketController extends AbstractWebSocketHandler {
+public class DashboardWebSocketController extends AbstractWebSocketHandler {
     private final ObjectMapper mapper;
     private final GameService gameService;
 

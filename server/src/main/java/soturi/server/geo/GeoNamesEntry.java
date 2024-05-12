@@ -52,7 +52,7 @@ record GeoNamesEntry(
     }
 
     public Optional<City> toCity() {
-        if (feature_class != 'P' || population <= 5000)
+        if (feature_class != 'P' || population <= 0)
             return Optional.empty();
         Position position = new Position(latitude, longitude);
         return Optional.of(new City(asciiname, population, position));

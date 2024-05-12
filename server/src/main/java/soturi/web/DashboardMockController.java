@@ -7,7 +7,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RestController;
-import soturi.content.GeoRegistry;
 import soturi.model.Position;
 import soturi.model.messages_to_client.MessageToClient;
 import soturi.model.messages_to_client.MessageToClientFactory;
@@ -29,7 +28,7 @@ public class DashboardMockController {
 
     @PostMapping("/v1/mock/login")
     public boolean login(String name, String password) {
-        return gameService.login(name, password, GeoRegistry.KRAKOW, new MessageToClientFactory(m -> queueFor(name).add(m)));
+        return gameService.login(name, password, Position.KRAKOW, new MessageToClientFactory(m -> queueFor(name).add(m)));
     }
 
     @PostMapping("/v1/mock/logout")

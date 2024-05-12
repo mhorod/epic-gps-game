@@ -2,6 +2,8 @@ package soturi.model;
 
 public record Position(double latitude, double longitude) {
     public static double maxLatitude = 90, minLatitude = -maxLatitude, maxLongitude = 180, minLongitude = -maxLongitude;
+    public static Position KRAKOW = new Position(50.06143, 19.93658);
+    public static Position WARSZAWA = new Position(52.22977, 21.01178);
 
     public Position {
         if (!(minLatitude <= latitude && latitude <= maxLatitude))
@@ -49,10 +51,10 @@ public record Position(double latitude, double longitude) {
     }
 
     /** This should work for relatively small areas */
-    public RectangularArea centeredArea(double sideLengthInMeters) {
+    public Rectangle centeredArea(double sideLengthInMeters) {
         Position northEastCorner = move(sideLengthInMeters / 2, sideLengthInMeters / 2);
         Position southWestCorner = reflect(northEastCorner);
 
-        return new RectangularArea(northEastCorner, southWestCorner);
+        return new Rectangle(northEastCorner, southWestCorner);
     }
 }

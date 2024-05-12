@@ -21,14 +21,14 @@ public final class WebSocketGameController extends TextWebSocketHandler {
     public void afterConnectionEstablished(WebSocketSession session) {
         synchronized (session) {
             Connection connection = new Connection(session, gameService, mapper);
-            session.getAttributes().put("ws-connection", connection);
+            session.getAttributes().put("epic-connection", connection);
         }
     }
 
     @Override
     protected void handleTextMessage(WebSocketSession session, TextMessage textMessage) {
         synchronized (session) {
-            Connection connection = (Connection) session.getAttributes().get("ws-connection");
+            Connection connection = (Connection) session.getAttributes().get("epic-connection");
             connection.handleTextMessage(textMessage.getPayload());
         }
     }
@@ -36,7 +36,7 @@ public final class WebSocketGameController extends TextWebSocketHandler {
     @Override
     public void afterConnectionClosed(WebSocketSession session, CloseStatus status) {
         synchronized (session) {
-            Connection connection = (Connection) session.getAttributes().get("ws-connection");
+            Connection connection = (Connection) session.getAttributes().get("epic-connection");
             connection.close();
         }
     }

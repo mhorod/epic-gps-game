@@ -1,22 +1,23 @@
 package soturi.server;
 
 import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
-import soturi.content.GameRegistry;
-import soturi.content.ItemRegistry;
+import soturi.common.Registry;
+import soturi.model.Config;
 import soturi.model.Enemy;
 import soturi.model.EnemyId;
 import soturi.model.ItemId;
 import soturi.model.Player;
 import soturi.model.PlayerWithPosition;
+import soturi.model.PolygonWithDifficulty;
 import soturi.model.Position;
 import soturi.model.Result;
 import soturi.model.messages_to_client.FightResult;
 import soturi.model.messages_to_client.MessageToClientHandler;
 import soturi.model.messages_to_server.MessageToServerHandler;
+import soturi.server.geo.CityProvider;
 import soturi.server.geo.MonsterManager;
 
 import java.util.LinkedHashMap;
@@ -26,17 +27,24 @@ import java.util.Optional;
 
 @Slf4j
 @Component
-@RequiredArgsConstructor
-public final class GameService {
+public class GameService {
+    private final PlayerRepository repository;
+    private final DynamicConfig dynamicConfig;
+    private final CityProvider cityProvider;
+
+    private Registry registry;
+    private MonsterManager monsterManager;
+
+    public GameService(PlayerRepository repository, DynamicConfig dynamicConfig, CityProvider cityProvider) {
+        this.repository = repository;
+        this.dynamicConfig = dynamicConfig;
+        this.cityProvider = cityProvider;
+        registry = dynamicConfig.getRegistry();
+        monsterManager = new MonsterManager(cityProvider, registry, this::nextEnemyId);
+    }
+
     private final Map<String, PlayerSession> sessions = new LinkedHashMap<>();
     private final Map<String, MessageToClientHandler> observers = new LinkedHashMap<>();
-    private final PlayerRepository repository;
-    private final Config config;
-    private final MonsterManager monsterManager;
-    private final FightSimulator fightSimulator;
-
-    private final GameRegistry gameRegistry = new GameRegistry();
-    private final ItemRegistry itemRegistry = new ItemRegistry();
 
     public void kickAllPlayers() {
         while (!sessions.isEmpty())
@@ -53,13 +61,26 @@ public final class GameService {
             unregisterEnemy(enemy.enemyId());
     }
 
-    public synchronized void reloadDynamicConfig() {
-        unregisterAllEnemies();
-        monsterManager.reloadAreas();
+    public synchronized void setConfig(Config config) {
+        dynamicConfig.setConfigWithoutReloading(config);
+        if (!registry.getConfig().geoEquals(config)) {
+            unregisterAllEnemies();
+            monsterManager = new MonsterManager(cityProvider, registry, this::nextEnemyId);
+        }
+
+        registry = dynamicConfig.getRegistry();
+        for (PlayerSession session : sessions.values())
+            session.getSender().setConfig(config);
+        for (MessageToClientHandler obs : observers.values())
+            obs.setConfig(config);
     }
 
     public synchronized List<Enemy> getEnemies() {
         return monsterManager.getAllEnemies();
+    }
+
+    public synchronized List<PolygonWithDifficulty> getAreas() {
+        return monsterManager.getAreas();
     }
 
     public synchronized List<PlayerWithPosition> getPlayers() {
@@ -74,8 +95,8 @@ public final class GameService {
     public synchronized void healPlayers() {
         for (String player : sessions.keySet()) {
             PlayerEntity entity = repository.findByName(player).orElseThrow();
-            long missingHp = getPlayerFromEntity(entity).maxHp() - entity.getHp();
-            long healed = (long) (missingHp * config.v.healFraction) + 1;
+            long missingHp = getPlayerFromEntity(entity).statistics().maxHp() - entity.getHp();
+            long healed = (long) (missingHp * registry.getHealFraction()) + 1;
             healed = Math.max(0, Math.min(missingHp, healed));
             if (healed == 0)
                 continue;
@@ -85,16 +106,20 @@ public final class GameService {
         }
     }
 
-
     private long secondCount = 0;
     private synchronized void doTickEverySecond() {
         secondCount++;
 
-        if (config.v.giveFreeXpDelayInSeconds > 0 && secondCount % config.v.giveFreeXpDelayInSeconds == 0)
+        int fxDelay = registry.getGiveFreeXpDelayInSeconds();
+        if (fxDelay > 0 && secondCount % fxDelay == 0)
             giveFreeXp();
-        if (config.v.spawnEnemyDelayInSeconds > 0 && secondCount % config.v.spawnEnemyDelayInSeconds == 0)
+
+        int seDelay = registry.getSpawnEnemyDelayInSeconds();
+        if (seDelay > 0 && secondCount % seDelay == 0)
             spawnEnemies();
-        if (config.v.healDelayInSeconds > 0 && secondCount % config.v.healDelayInSeconds == 0)
+
+        int hpDelay = registry.getHealDelayInSeconds();
+        if (hpDelay > 0 && secondCount % hpDelay == 0)
             healPlayers();
     }
 
@@ -106,55 +131,63 @@ public final class GameService {
     private synchronized void giveFreeXp() {
         log.info("giveFreeXp() called");
 
-        if (config.v.giveFreeXpAmount == 0)
+        long xp = registry.getGiveFreeXpAmount();
+        if (xp == 0)
             return;
         for (String player : sessions.keySet()) {
             PlayerEntity entity = repository.findByName(player).orElseThrow();
-            entity.addXp(config.v.giveFreeXpAmount);
+            entity.addXp(xp);
             repository.save(entity);
             sendUpdatesFor(player);
         }
     }
 
+    private long nextEnemyIdLong = 0;
+    public EnemyId nextEnemyId() {
+        return new EnemyId(nextEnemyIdLong++);
+    }
+
     private synchronized void spawnEnemies() {
         log.info("spawnEnemies() called");
-
-        for (Enemy enemy : monsterManager.generateEnemies())
-            registerEnemy(enemy);
+        registerEnemies(monsterManager.generateEnemies());
     }
 
     public synchronized void registerEnemy(Enemy enemy) {
-        monsterManager.registerEnemy(enemy);
+        registerEnemies(List.of(enemy));
+    }
+
+    public synchronized void registerEnemies(List<Enemy> enemies) {
+        enemies.forEach(monsterManager::registerEnemy);
 
         for (var session : sessions.values())
-            session.getSender().enemyAppears(enemy);
+            session.getSender().enemiesAppear(enemies);
         for (var sender : observers.values())
-            sender.enemyAppears(enemy);
+            sender.enemiesAppear(enemies);
     }
 
     private synchronized void unregisterEnemy(EnemyId enemyId) {
-        monsterManager.unregisterEnemy(enemyId);
+        unregisterEnemies(List.of(enemyId));
+    }
+
+
+    private synchronized void unregisterEnemies(List<EnemyId> enemyIds) {
+        enemyIds.forEach(monsterManager::unregisterEnemy);
 
         for (var session : sessions.values())
-            session.getSender().enemyDisappears(enemyId);
+            session.getSender().enemiesDisappear(enemyIds);
         for (var sender : observers.values())
-            sender.enemyDisappears(enemyId);
+            sender.enemiesDisappear(enemyIds);
     }
 
     public synchronized Player getPlayerFromEntity(PlayerEntity entity) {
-        int lvl = gameRegistry.getLvlFromXp(entity.getXp());
-        long maxHp = lvl * 100L;
-        long attack = lvl * 50L;
-        long defense = lvl * 25L;
+        int lvl = registry.getLvlFromXp(entity.getXp());
 
         return new Player(
             entity.getName(),
             lvl,
             entity.getXp(),
             entity.getHp(),
-            maxHp,
-            attack,
-            defense,
+            registry.getPlayerStatistics(lvl),
             List.of(), // TODO list of items
             List.of()
         );
@@ -186,12 +219,12 @@ public final class GameService {
             playerSession.getSender().error("this enemy does not exist");
             return;
         }
-        if (enemy.position().distance(playerPosition) > config.v.fightingMaxDistInMeters) {
+        if (enemy.position().distance(playerPosition) > registry.getFightingDistanceMaxInMeters()) {
             playerSession.getSender().error("this enemy is too far");
             return;
         }
 
-        FightResult result = fightSimulator.simulateFight(playerData, enemy);
+        FightResult result = new FightSimulator(registry).simulateFight(playerData, enemy);
         playerSession.getSender().fightResult(result.result(), result.lostHp(), result.enemyId(), result.loot());
         playerEntity.applyFightResult(result);
         repository.save(playerEntity);
@@ -261,10 +294,11 @@ public final class GameService {
         };
     }
 
-    private synchronized void doLogin(@NonNull String name, @NonNull String password,
-                                      @NonNull Position initialPosition, @NonNull MessageToClientHandler sender) {
+    private synchronized void doLogin(@NonNull String name, @NonNull Position initialPosition,
+                                      @NonNull MessageToClientHandler sender) {
         log.info("doLogin({})", name);
         sessions.put(name, new PlayerSession(sender, initialPosition, initialPosition));
+        sender.setConfig(registry.getConfig());
         sendUpdatesFor(name);
 
         for (var kv : sessions.entrySet()) if (!kv.getKey().equals(name))
@@ -272,8 +306,7 @@ public final class GameService {
                 getPlayerFromEntity(repository.findByName(kv.getKey()).orElseThrow()),
                 kv.getValue().getPosition()
             );
-        for (Enemy enemy : getEnemies())
-            sender.enemyAppears(enemy);
+        sender.enemiesAppear(getEnemies());
     }
 
     public synchronized boolean login(String name, String password,
@@ -294,7 +327,7 @@ public final class GameService {
             return false;
         }
 
-        doLogin(name, password, initialPosition, sender);
+        doLogin(name, initialPosition, sender);
         return true;
     }
 
@@ -314,13 +347,13 @@ public final class GameService {
         if (observers.put(id, observer) != null)
             throw new RuntimeException();
 
+        observer.setConfig(registry.getConfig());
         for (var kv : sessions.entrySet())
             observer.playerUpdate(
                 getPlayerFromEntity(repository.findByName(kv.getKey()).orElseThrow()),
                 kv.getValue().getPosition()
             );
-        for (Enemy enemy : getEnemies())
-            observer.enemyAppears(enemy);
+        observer.enemiesAppear(getEnemies());
     }
 
     public synchronized void removeObserver(String id) {
