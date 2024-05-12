@@ -30,7 +30,6 @@ import java.util.TimerTask;
 
 import gps.tracker.custom_overlays.EnemyOverlay;
 import gps.tracker.databinding.GameMapFragmentBinding;
-import soturi.content.EnemyRegistry;
 import soturi.model.Enemy;
 import soturi.model.EnemyId;
 import soturi.model.EnemyType;
@@ -47,7 +46,6 @@ public class GameMap extends Fragment {
     private Timer refreshLocationTimer;
     private MyLocationNewOverlay myLocationOverlay;
     private Timer areWeLoggedInTimer;
-    private EnemyRegistry enemyRegistry = new EnemyRegistry();
 
     @Override
     public View onCreateView(
@@ -168,7 +166,8 @@ public class GameMap extends Fragment {
                         // Alert
                         AlertDialog.Builder builder = new AlertDialog.Builder(mainActivity);
 
-                        builder.setTitle("Enemy: " + e.name() + " lvl " + e.lvl());
+                        String name = mainActivity.gameRegistry.getEnemyType(e).name();
+                        builder.setTitle("Enemy: " + name + " lvl " + e.lvl());
 
                         if (canAttack) {
                             builder.setMessage("Proceed with an attack?");
@@ -232,8 +231,8 @@ public class GameMap extends Fragment {
     private void enemyAppearsConsumer(Enemy e) {
         Drawable d = ResourcesCompat.getDrawable(getResources(), R.mipmap.ic_launcher, null);
         try {
-            EnemyType type = enemyRegistry.getEnemyTypeById(e.typeId());
-            InputStream stream = getClass().getClassLoader().getResourceAsStream("static/" + type.gfxName());
+            EnemyType type = mainActivity.gameRegistry.getEnemyType(e);
+            InputStream stream = getClass().getClassLoader().getResourceAsStream(type.gfxName());
             Drawable draw = Drawable.createFromStream(stream, null);
             if (draw != null)
                 d = draw;

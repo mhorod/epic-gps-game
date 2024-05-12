@@ -39,6 +39,8 @@ import java.util.function.Consumer;
 import gps.tracker.databinding.ActivityMainBinding;
 import gps.tracker.simple_listeners.Notifier;
 import lombok.SneakyThrows;
+import soturi.common.Registry;
+import soturi.model.Config;
 import soturi.model.Enemy;
 import soturi.model.EnemyId;
 import soturi.model.Loot;
@@ -62,6 +64,7 @@ public class MainActivity extends AppCompatActivity {
     private Consumer<EnemyId> enemyDisappearsConsumer = null;
     private FragmentManager fragmentManager;
     private Runnable onDisconnectRunnable = null;
+    public Registry gameRegistry;
 
     public void saveString(String key, String value) {
         try {
@@ -263,7 +266,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void login(String userName, String userPassword) {
-        webSocketClient = new WebSocketClient(new MainActivityHandler(), userName, userPassword);
+        webSocketClient = new WebSocketClient(new MainActivityHandler(), userName, userPassword, false);
     }
 
     public void logout() {
@@ -317,6 +320,16 @@ public class MainActivity extends AppCompatActivity {
             onDisconnect();
         }
 
+        @Override
+        public void enemiesAppear(List<Enemy> enemies) {
+            enemies.forEach(this::enemyAppears);
+        }
+
+        @Override
+        public void enemiesDisappear(List<EnemyId> enemyIds) {
+            enemyIds.forEach(this::enemyDisappears);
+        }
+
         private void cleanBacklog(Consumer<Enemy> consumer) {
             for (Enemy enemy : enemiesBacklog) {
                 consumer.accept(enemy);
@@ -324,8 +337,7 @@ public class MainActivity extends AppCompatActivity {
             enemiesBacklog.clear();
         }
 
-        @Override
-        public void enemyAppears(Enemy enemy) {
+        private void enemyAppears(Enemy enemy) {
             if (enemyAppearsConsumer == null) {
                 enemiesBacklog.add(enemy);
                 return;
@@ -336,8 +348,7 @@ public class MainActivity extends AppCompatActivity {
 
         }
 
-        @Override
-        public void enemyDisappears(EnemyId enemyId) {
+        private void enemyDisappears(EnemyId enemyId) {
             if (enemyAppearsConsumer == null || enemyDisappearsConsumer == null) {
                 enemiesBacklog.removeIf(enemy -> enemy.enemyId().equals(enemyId));
                 return;
@@ -385,7 +396,7 @@ public class MainActivity extends AppCompatActivity {
 
             runOnUiThread(
                     () -> {
-                        binding.hpCounter.setText("HP: " + me.hp() + "/" + me.maxHp());
+                        binding.hpCounter.setText("HP: " + me.hp() + "/" + me.statistics().maxHp());
                         binding.levelCounter.setText("Lvl: " + me.lvl());
                         binding.hpCounter.setVisibility(View.VISIBLE);
                         binding.levelCounter.setVisibility(View.VISIBLE);
@@ -411,6 +422,11 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void pong() {
 
+        }
+
+        @Override
+        public void setConfig(Config config) {
+            gameRegistry = new Registry(config, null);
         }
 
     }
