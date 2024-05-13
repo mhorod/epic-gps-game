@@ -1,3 +1,5 @@
 package soturi.model;
 
-public record EnemyTypeId(long id) { }
+import com.fasterxml.jackson.annotation.JsonValue;
+
+public record EnemyTypeId(@JsonValue long id) { }

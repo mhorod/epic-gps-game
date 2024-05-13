@@ -1,7 +1,6 @@
 package soturi.model.messages_to_server;
 
 import soturi.model.EnemyId;
-import soturi.model.Item;
 import soturi.model.ItemId;
 import soturi.model.Position;
 

@@ -5,7 +5,7 @@ plugins {
     id("io.freefair.lombok") version "8.6"
 }
 
-version = "0.0.4-SNAPSHOT"
+version = "0.0.5-SNAPSHOT"
 
 java {
     sourceCompatibility = JavaVersion.VERSION_21
@@ -30,6 +30,9 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-thymeleaf")
 
     implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.5.0")
+
+    implementation("org.locationtech.jts:jts-core:1.19.0")
+    implementation("com.auth0:java-jwt:2.0.1")
 
     compileOnly("org.springframework.boot:spring-boot-devtools")
 

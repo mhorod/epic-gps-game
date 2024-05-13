@@ -17,7 +17,7 @@ import java.util.stream.Stream;
 
 @Slf4j
 @Entity
-public final class PlayerEntity {
+public class PlayerEntity {
     @Getter @Id @GeneratedValue
     private Integer id;
 

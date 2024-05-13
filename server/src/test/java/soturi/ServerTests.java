@@ -1,31 +1,28 @@
 package soturi;
 
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestInstance;
-import org.junit.jupiter.api.TestInstance.Lifecycle;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.TestPropertySource;
-import soturi.content.EnemyRegistry;
-import soturi.content.GameRegistry;
-import soturi.content.GeoRegistry;
+import soturi.common.Registry;
+import soturi.model.Config;
 import soturi.model.Enemy;
 import soturi.model.EnemyId;
 import soturi.model.EnemyType;
 import soturi.model.Loot;
 import soturi.model.Player;
+import soturi.model.PolygonId;
 import soturi.model.Position;
 import soturi.model.Result;
 import soturi.model.messages_to_client.Disconnect;
-import soturi.model.messages_to_client.EnemyDisappears;
+import soturi.model.messages_to_client.EnemiesDisappear;
 import soturi.model.messages_to_client.Error;
 import soturi.model.messages_to_client.FightResult;
 import soturi.model.messages_to_client.MessageToClient;
 import soturi.model.messages_to_client.MessageToClientFactory;
 import soturi.model.messages_to_client.MessageToClientHandler;
-import soturi.server.Config;
+import soturi.server.DynamicConfig;
 import soturi.server.FightSimulator;
 import soturi.server.GameService;
 import soturi.server.PlayerRepository;
@@ -39,9 +36,8 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
-@TestPropertySource(locations = "classpath:application.yml", properties="spring.datasource.url=jdbc:h2:mem:")
+@TestPropertySource(properties="spring.datasource.url=jdbc:h2:mem:")
 @SpringBootTest
-@TestInstance(Lifecycle.PER_CLASS)
 public class ServerTests {
     @Autowired
     GameService gameService;
@@ -50,42 +46,38 @@ public class ServerTests {
     @Autowired
     CityProvider cityProvider;
     @Autowired
-    Config config;
-    @Autowired
+    DynamicConfig dynamicConfig;
+    Registry registry;
     FightSimulator fightSimulator;
-
-    EnemyRegistry enemyRegistry = new EnemyRegistry();
-    GameRegistry gameRegistry = new GameRegistry();
-
-    @BeforeAll
-    void setupGameService() {
-        config.v.giveFreeXpDelayInSeconds = 0;
-        config.v.spawnEnemyDelayInSeconds = 0;
-        config.v.healDelayInSeconds = 0;
-        config.v.fightingMaxDistInMeters = 50;
-        config.v.geoMaxSplit = 2;
-        config.v.setGeoFromArea(GeoRegistry.POLAND);
-        gameService.reloadDynamicConfig();
-    }
+    PolygonId POLAND = new PolygonId("POLAND");
 
     @BeforeEach
     void cleanGameService() {
+        Config defaultConfig = dynamicConfig.getDefaultConfig();
+        Config testConfig = defaultConfig
+            .withGiveFreeXpDelayInSeconds(0)
+            .withSpawnEnemyDelayInSeconds(0)
+            .withHealDelayInSeconds(0)
+            .withGameAreaId(POLAND);
+
+        gameService.setConfig(testConfig);
+        registry = dynamicConfig.getRegistry();
+        fightSimulator = new FightSimulator(registry);
+
         gameService.kickAllObservers();
         gameService.kickAllPlayers();
         gameService.unregisterAllEnemies();
         repository.deleteAll();
     }
 
-
     private Enemy newEnemy(int lvl, Position position, EnemyId enemyId) {
-        EnemyType type = enemyRegistry
-            .getNormalEnemyTypes()
+        EnemyType type = registry
+            .getEnemyTypesPerLvl(lvl)
             .stream()
-            .filter(t -> t.lvlInRange(lvl))
+            .filter(t -> t.xpFactor() == 1)
             .findFirst()
             .orElseThrow();
-
-        return type.createEnemy(enemyId, lvl, position);
+        return new Enemy(type.typeId(), enemyId, lvl, position);
     }
 
     private void healPlayers() {
@@ -95,38 +87,38 @@ public class ServerTests {
 
     @Test
     void null_player_name() {
-        assertThat(gameService.login(null, "password", GeoRegistry.KRAKOW, mock())).isFalse();
+        assertThat(gameService.login(null, "password", Position.KRAKOW, mock())).isFalse();
     }
     @Test
     void empty_player_name() {
-        assertThat(gameService.login("", "password", GeoRegistry.KRAKOW, mock())).isFalse();
+        assertThat(gameService.login("", "password", Position.KRAKOW, mock())).isFalse();
     }
     @Test
     void null_password() {
-        assertThat(gameService.login("user", null, GeoRegistry.KRAKOW, mock())).isFalse();
+        assertThat(gameService.login("user", null, Position.KRAKOW, mock())).isFalse();
     }
     @Test
     void player_registration() {
-        assertThat(gameService.login("user", "pass", GeoRegistry.KRAKOW, mock())).isTrue();
+        assertThat(gameService.login("user", "pass", Position.KRAKOW, mock())).isTrue();
     }
     @Test
     void player_login_logout_cycle() {
-        assertThat(gameService.login("user", "pass", GeoRegistry.KRAKOW, mock())).isTrue();
+        assertThat(gameService.login("user", "pass", Position.KRAKOW, mock())).isTrue();
         gameService.logout("user");
-        assertThat(gameService.login("user", "pass", GeoRegistry.KRAKOW, mock())).isTrue();
+        assertThat(gameService.login("user", "pass", Position.KRAKOW, mock())).isTrue();
     }
     @Test
     void player_enters_incorrect_password() {
-        assertThat(gameService.login("user", "pass", GeoRegistry.KRAKOW, mock())).isTrue();
+        assertThat(gameService.login("user", "pass", Position.KRAKOW, mock())).isTrue();
         gameService.logout("user");
-        assertThat(gameService.login("user", "----", GeoRegistry.KRAKOW, mock())).isFalse();
+        assertThat(gameService.login("user", "----", Position.KRAKOW, mock())).isFalse();
     }
     @Test
     void observers_get_notified_about_player_joining() {
         MessageToClientHandler observer = mock(MessageToClientHandler.class);
 
         gameService.addObserver("o1", observer);
-        assertThat(gameService.login("name", "password", GeoRegistry.KRAKOW, mock())).isTrue();
+        assertThat(gameService.login("name", "password", Position.KRAKOW, mock())).isTrue();
         Player player = gameService.getPlayers().getFirst().player();
 
         verify(observer).playerUpdate(eq(player), any());
@@ -136,7 +128,7 @@ public class ServerTests {
         MessageToClientHandler observer = mock(MessageToClientHandler.class);
 
         gameService.addObserver("o1", observer);
-        gameService.login("name", "password", GeoRegistry.KRAKOW, mock());
+        gameService.login("name", "password", Position.KRAKOW, mock());
         gameService.logout("name");
 
         verify(observer).playerDisappears("name");
@@ -144,7 +136,7 @@ public class ServerTests {
     @Test
     void player_attacks_non_existent_monster() {
         List<MessageToClient> received = new ArrayList<>();
-        gameService.login("p", "", GeoRegistry.KRAKOW, new MessageToClientFactory(received::add));
+        gameService.login("p", "", Position.KRAKOW, new MessageToClientFactory(received::add));
         gameService.receiveFrom("p").attackEnemy(new EnemyId(0));
         healPlayers();
 
@@ -152,14 +144,14 @@ public class ServerTests {
             .anyMatch(Error.class::isInstance)
             .noneMatch(Disconnect.class::isInstance)
             .noneMatch(FightResult.class::isInstance)
-            .noneMatch(EnemyDisappears.class::isInstance);
+            .noneMatch(EnemiesDisappear.class::isInstance);
     }
     @Test
     void player_attacks_enemy_too_far_away() {
         List<MessageToClient> received = new ArrayList<>();
-        gameService.login("p", "", GeoRegistry.KRAKOW, new MessageToClientFactory(received::add));
+        gameService.login("p", "", Position.KRAKOW, new MessageToClientFactory(received::add));
 
-        Enemy enemy = newEnemy(1, GeoRegistry.WARSZAWA, new EnemyId(0));
+        Enemy enemy = newEnemy(1, Position.WARSZAWA, new EnemyId(0));
         gameService.registerEnemy(enemy);
 
         gameService.receiveFrom("p").attackEnemy(enemy.enemyId());
@@ -168,35 +160,35 @@ public class ServerTests {
             .anyMatch(Error.class::isInstance)
             .noneMatch(Disconnect.class::isInstance)
             .noneMatch(FightResult.class::isInstance)
-            .noneMatch(EnemyDisappears.class::isInstance);
+            .noneMatch(EnemiesDisappear.class::isInstance);
         assertThat(gameService.getEnemies()).containsExactly(enemy);
     }
     @Test
     void player_attacks_monster_and_wins() {
         MessageToClientHandler received = mock();
-        gameService.login("p", "", GeoRegistry.KRAKOW, received);
+        gameService.login("p", "", Position.KRAKOW, received);
         healPlayers();
 
-        Enemy enemy = newEnemy(1, GeoRegistry.KRAKOW, new EnemyId(0));
+        Enemy enemy = newEnemy(1, Position.KRAKOW, new EnemyId(0));
         gameService.registerEnemy(enemy);
 
         gameService.receiveFrom("p").attackEnemy(enemy.enemyId());
         verify(received).fightResult(eq(Result.WON), anyLong(), eq(enemy.enemyId()), any());
-        verify(received).enemyDisappears(enemy.enemyId());
+        verify(received).enemiesDisappear(List.of(enemy.enemyId()));
         verify(received, never()).disconnect();
     }
     @Test
     void player_attacks_monster_and_loses() {
         MessageToClientHandler received = mock();
-        gameService.login("p", "", GeoRegistry.KRAKOW, received);
+        gameService.login("p", "", Position.KRAKOW, received);
         healPlayers();
 
-        Enemy enemy = newEnemy(100, GeoRegistry.KRAKOW, new EnemyId(0));
+        Enemy enemy = newEnemy(100, Position.KRAKOW, new EnemyId(0));
         gameService.registerEnemy(enemy);
 
         gameService.receiveFrom("p").attackEnemy(enemy.enemyId());
         verify(received).fightResult(eq(Result.LOST), anyLong(), eq(enemy.enemyId()), eq(new Loot()));
-        verify(received, never()).enemyDisappears(enemy.enemyId());
+        verify(received, never()).enemiesDisappear(any());
         verify(received, never()).disconnect();
     }
     @Test
@@ -206,38 +198,38 @@ public class ServerTests {
     }
     @Test
     void lvl_1_player_stats_make_sense() {
-        gameService.login("p", "", GeoRegistry.KRAKOW, mock());
+        gameService.login("p", "", Position.KRAKOW, mock());
         Player beforeHeal = gameService.getPlayers().get(0).player();
         healPlayers();
         Player afterHeal = gameService.getPlayers().get(0).player();
 
         assertThat(beforeHeal.hp()).isZero();
-        assertThat(afterHeal.hp()).isPositive().isGreaterThan((long) (beforeHeal.maxHp() * 0.85));
+        assertThat(afterHeal.hp()).isPositive().isGreaterThan((long) (beforeHeal.statistics().maxHp() * 0.85));
 
-        assertThat(beforeHeal.maxHp()).isEqualTo(afterHeal.maxHp()).isPositive();
-        assertThat(beforeHeal.attack()).isEqualTo(afterHeal.attack()).isPositive();
-        assertThat(beforeHeal.defense()).isEqualTo(afterHeal.defense()).isPositive();
+        assertThat(beforeHeal.statistics().maxHp()).isEqualTo(afterHeal.statistics().maxHp()).isPositive();
+        assertThat(beforeHeal.statistics().attack()).isEqualTo(afterHeal.statistics().attack()).isPositive();
+        assertThat(beforeHeal.statistics().defense()).isEqualTo(afterHeal.statistics().defense()).isPositive();
     }
     @Test
     void lvl_1_player_beats_lvl_1_enemy_and_receives_damage() {
-        gameService.login("p", "", GeoRegistry.KRAKOW, mock());
+        gameService.login("p", "", Position.KRAKOW, mock());
         healPlayers();
 
         Player p = gameService.getPlayers().get(0).player();
-        Enemy e = newEnemy(1, GeoRegistry.KRAKOW, new EnemyId(0));
+        Enemy e = newEnemy(1, Position.KRAKOW, new EnemyId(0));
 
         FightResult result = fightSimulator.simulateFight(p, e);
 
         assertThat(result.result()).isEqualTo(Result.WON);
-        assertThat(result.lostHp()).isPositive().isGreaterThan((long) (p.maxHp() * 0.15));
+        assertThat(result.lostHp()).isPositive().isGreaterThan((long) (p.statistics().maxHp() * 0.15));
     }
     @Test
     void lvl_1_enemy_xp_loot_makes_sense() {
-        Enemy e = newEnemy(1, GeoRegistry.KRAKOW, new EnemyId(0));
-        long xp = enemyRegistry.lootFor(e).xp();
+        Enemy e = newEnemy(1, Position.KRAKOW, new EnemyId(0));
+        long xp = registry.getLootFor(e).xp();
 
-        long xp_to_2 = gameRegistry.getXpForLvlCumulative(2);
-        long xp_to_3 = gameRegistry.getXpForLvlCumulative(3);
+        long xp_to_2 = registry.getXpForLvlCumulative(2);
+        long xp_to_3 = registry.getXpForLvlCumulative(3);
 
         assertThat(xp).isPositive()
             .isGreaterThan((long) (xp_to_2 * 0.33))
@@ -245,13 +237,10 @@ public class ServerTests {
     }
     @Test
     void lvl_10_enemy_xp_loot_makes_sense() {
-        Enemy e = newEnemy(1, GeoRegistry.KRAKOW, new EnemyId(0));
-        long xp = enemyRegistry.lootFor(e).xp();
+        Enemy e = newEnemy(1, Position.KRAKOW, new EnemyId(0));
+        long xp = registry.getLootFor(e).xp();
 
-        long xp_to_11 = gameRegistry.getXpForNextLvl(10);
-
-        System.err.println(xp);
-        System.err.println(xp_to_11);
+        long xp_to_11 = registry.getXpForNextLvl(10);
 
         assertThat(xp).isPositive()
             .isGreaterThan((long) (xp_to_11 * 0.05))
@@ -259,16 +248,16 @@ public class ServerTests {
     }
     @Test
     void xp_requirement_make_sense() {
-        assertThat(gameRegistry.getXpForNextLvl(1)).isGreaterThanOrEqualTo(75);
+        assertThat(registry.getXpForNextLvl(1)).isGreaterThanOrEqualTo(75);
 
         for (int i = 1; i < 100; ++i)
-            assertThat(gameRegistry.getXpForNextLvl(i))
+            assertThat(registry.getXpForNextLvl(i))
                 .as("Xp requirement for lvl %d", i)
-                .isGreaterThan(gameRegistry.getXpForNextLvl(i-1));
+                .isGreaterThan(registry.getXpForNextLvl(i-1));
     }
     @Test
     void there_is_enemy_for_each_lvl() {
         for (int i = 1; i < 100; ++i)
-            assertThat(newEnemy(i, GeoRegistry.KRAKOW, new EnemyId(0))).isNotNull();
+            assertThat(newEnemy(i, Position.KRAKOW, new EnemyId(0))).isNotNull();
     }
 }

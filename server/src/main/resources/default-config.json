@@ -1,0 +1,406 @@
+{
+  "areas" : {
+    "EARTH" : {
+      "points" : [ {
+        "latitude" : -90.0,
+        "longitude" : -180.0
+      }, {
+        "latitude" : -90.0,
+        "longitude" : 180.0
+      }, {
+        "latitude" : 90.0,
+        "longitude" : 180.0
+      }, {
+        "latitude" : 90.0,
+        "longitude" : -180.0
+      } ]
+    },
+    "BOARS_SKOSNA" : {
+      "points" : [ {
+        "latitude" : 50.01186402713576,
+        "longitude" : 19.89900402230112
+      }, {
+        "latitude" : 50.01186402713576,
+        "longitude" : 19.899115977698877
+      }, {
+        "latitude" : 50.01193597286424,
+        "longitude" : 19.899115977698877
+      }, {
+        "latitude" : 50.01193597286424,
+        "longitude" : 19.89900402230112
+      } ]
+    },
+    "PRESENTATION_AREA" : {
+      "points" : [ {
+        "latitude" : 50.02665,
+        "longitude" : 19.9019
+      }, {
+        "latitude" : 50.02665,
+        "longitude" : 19.91845
+      }, {
+        "latitude" : 50.03977,
+        "longitude" : 19.91845
+      }, {
+        "latitude" : 50.03977,
+        "longitude" : 19.9019
+      } ]
+    },
+    "ZALEW_ZAKRZOWEK" : {
+      "points" : [ {
+        "latitude" : 50.03327,
+        "longitude" : 19.90802
+      }, {
+        "latitude" : 50.03327,
+        "longitude" : 19.91345
+      }, {
+        "latitude" : 50.03994,
+        "longitude" : 19.91345
+      }, {
+        "latitude" : 50.03994,
+        "longitude" : 19.90802
+      } ]
+    },
+    "KRAKOW_AREA" : {
+      "points" : [ {
+        "latitude" : 49.97,
+        "longitude" : 19.74
+      }, {
+        "latitude" : 49.97,
+        "longitude" : 20.09
+      }, {
+        "latitude" : 50.11,
+        "longitude" : 20.09
+      }, {
+        "latitude" : 50.11,
+        "longitude" : 19.74
+      } ]
+    },
+    "POLAND" : {
+      "points" : [ {
+        "latitude" : 49.15,
+        "longitude" : 13.7
+      }, {
+        "latitude" : 49.15,
+        "longitude" : 24.3
+      }, {
+        "latitude" : 55.85,
+        "longitude" : 24.3
+      }, {
+        "latitude" : 55.85,
+        "longitude" : 13.7
+      } ]
+    },
+    "BOARS_ZAKRZOWEK" : {
+      "points" : [ {
+        "latitude" : 50.03326,
+        "longitude" : 19.91327
+      }, {
+        "latitude" : 50.03326,
+        "longitude" : 19.91831
+      }, {
+        "latitude" : 50.04004,
+        "longitude" : 19.91831
+      }, {
+        "latitude" : 50.04004,
+        "longitude" : 19.91327
+      } ]
+    },
+    "JEDNOSTKA_NIL" : {
+      "points" : [ {
+        "latitude" : 50.03476135678817,
+        "longitude" : 19.90062967782543
+      }, {
+        "latitude" : 50.03476135678817,
+        "longitude" : 19.90623032217457
+      }, {
+        "latitude" : 50.038358643211836,
+        "longitude" : 19.90623032217457
+      }, {
+        "latitude" : 50.038358643211836,
+        "longitude" : 19.90062967782543
+      } ]
+    },
+    "WAWEL" : {
+      "points" : [ {
+        "latitude" : 50.053350407036454,
+        "longitude" : 19.933879599982024
+      }, {
+        "latitude" : 50.053350407036454,
+        "longitude" : 19.935560400017973
+      }, {
+        "latitude" : 50.05442959296355,
+        "longitude" : 19.935560400017973
+      }, {
+        "latitude" : 50.05442959296355,
+        "longitude" : 19.933879599982024
+      } ]
+    },
+    "TEST_SKOSNA" : {
+      "points" : [ {
+        "latitude" : 50.00534,
+        "longitude" : 19.890784999999997
+      }, {
+        "latitude" : 50.00534,
+        "longitude" : 19.907334999999996
+      }, {
+        "latitude" : 50.01846,
+        "longitude" : 19.907334999999996
+      }, {
+        "latitude" : 50.01846,
+        "longitude" : 19.890784999999997
+      } ]
+    },
+    "TCS_UJ" : {
+      "points" : [ {
+        "latitude" : 50.03069100678395,
+        "longitude" : 19.90696600009769
+      }, {
+        "latitude" : 50.03069100678395,
+        "longitude" : 19.906993999902312
+      }, {
+        "latitude" : 50.03070899321606,
+        "longitude" : 19.906993999902312
+      }, {
+        "latitude" : 50.03070899321606,
+        "longitude" : 19.90696600009769
+      } ]
+    },
+    "LESSER_POLAND" : {
+      "points" : [ {
+        "latitude" : 50.50812858130071,
+        "longitude" : 20.255125104573466
+      }, {
+        "latitude" : 50.20750425529613,
+        "longitude" : 20.398730949852816
+      }, {
+        "latitude" : 50.362348834058885,
+        "longitude" : 21.170612368229335
+      }, {
+        "latitude" : 49.44613941084548,
+        "longitude" : 21.399484184143304
+      }, {
+        "latitude" : 49.297109643317796,
+        "longitude" : 20.834036168355855
+      }, {
+        "latitude" : 49.428629944940944,
+        "longitude" : 20.72184410173136
+      }, {
+        "latitude" : 49.32344184733221,
+        "longitude" : 20.147420720613948
+      }, {
+        "latitude" : 49.17990729886884,
+        "longitude" : 20.093568528634194
+      }, {
+        "latitude" : 49.20630207678347,
+        "longitude" : 19.76596769409067
+      }, {
+        "latitude" : 49.41987286771423,
+        "longitude" : 19.788406107415568
+      }, {
+        "latitude" : 49.39359225804452,
+        "longitude" : 19.64031257947124
+      }, {
+        "latitude" : 49.98294988895987,
+        "longitude" : 19.09730297700868
+      }, {
+        "latitude" : 50.413851772647774,
+        "longitude" : 19.53260819551172
+      } ]
+    }
+  },
+  "gameAreaId" : "LESSER_POLAND",
+  "gameAreaSplitLvl" : 8,
+  "bannedAreas" : [ "JEDNOSTKA_NIL", "ZALEW_ZAKRZOWEK" ],
+  "fightingDistanceMaxInMeters" : 50,
+  "maxLvl" : 100,
+  "xpToLvl" : {
+    "add" : 100.0,
+    "mul" : 0.0,
+    "base" : 1.075
+  },
+  "xpLoot" : {
+    "add" : 50.0,
+    "mul" : 0.0,
+    "base" : 1.025
+  },
+  "statisticsPlayerBase" : {
+    "maxHp" : 100,
+    "attack" : 50,
+    "defense" : 50
+  },
+  "statisticsPlayerPerLvl" : {
+    "maxHp" : 100,
+    "attack" : 50,
+    "defense" : 50
+  },
+  "statisticsEnemyBase" : {
+    "maxHp" : 100,
+    "attack" : 50,
+    "defense" : 50
+  },
+  "statisticsEnemyPerLvl" : {
+    "maxHp" : 100,
+    "attack" : 50,
+    "defense" : 50
+  },
+  "items" : [ {
+    "itemId" : 0,
+    "name" : "Napierśnik smoka",
+    "type" : "ARMOR",
+    "statistics" : {
+      "maxHp" : 10,
+      "attack" : 10,
+      "defense" : 10
+    },
+    "gfxName" : "static/assets/armor/64x64/tile049.png"
+  }, {
+    "itemId" : 1,
+    "name" : "Buty smoka",
+    "type" : "BOOTS",
+    "statistics" : {
+      "maxHp" : 5,
+      "attack" : 2,
+      "defense" : 3
+    },
+    "gfxName" : "static/assets/armor/64x64/tile034.png"
+  } ],
+  "enemyTypes" : [ {
+    "typeId" : 0,
+    "name" : "Smok Wawelski",
+    "gfxName" : "static/assets/enemies/1 Portraits/Icons_34.png",
+    "minLvl" : 50,
+    "maxLvl" : 50,
+    "statisticsMul" : 1.0,
+    "totalCap" : 1,
+    "xpFactor" : 2.0,
+    "spawnAreas" : [ "WAWEL" ],
+    "ignoreAreaDifficulty" : true,
+    "ignoreAreaCap" : true,
+    "failChance" : 0.9,
+    "lootList" : [ 0, 1 ],
+    "lootChance" : 0.5
+  }, {
+    "typeId" : 1,
+    "name" : "Dzik",
+    "gfxName" : "static/assets/enemies/1 Portraits/Icons_30.png",
+    "minLvl" : 15,
+    "maxLvl" : 20,
+    "statisticsMul" : 1.1,
+    "totalCap" : 10,
+    "xpFactor" : 1.5,
+    "spawnAreas" : [ "BOARS_SKOSNA", "BOARS_ZAKRZOWEK" ],
+    "ignoreAreaDifficulty" : true,
+    "ignoreAreaCap" : false,
+    "failChance" : 0.5,
+    "lootList" : [ ],
+    "lootChance" : 0.0
+  }, {
+    "typeId" : 2,
+    "name" : "Student TCS",
+    "gfxName" : "static/assets/enemies/1 Portraits/Icons_17.png",
+    "minLvl" : 5,
+    "maxLvl" : 10,
+    "statisticsMul" : 1.0,
+    "totalCap" : 1,
+    "xpFactor" : 3.0,
+    "spawnAreas" : [ "TCS_UJ" ],
+    "ignoreAreaDifficulty" : true,
+    "ignoreAreaCap" : true,
+    "failChance" : 0.75,
+    "lootList" : [ ],
+    "lootChance" : 0.0
+  }, {
+    "typeId" : 10,
+    "name" : "Żaba",
+    "gfxName" : "static/assets/enemies/1 Portraits/Icons_05.png",
+    "minLvl" : 1,
+    "maxLvl" : 3,
+    "statisticsMul" : 1.0,
+    "totalCap" : -1,
+    "xpFactor" : 1.0,
+    "spawnAreas" : [ "EARTH" ],
+    "ignoreAreaDifficulty" : false,
+    "ignoreAreaCap" : false,
+    "failChance" : 0.0,
+    "lootList" : [ ],
+    "lootChance" : 0.0
+  }, {
+    "typeId" : 11,
+    "name" : "Żółw",
+    "gfxName" : "static/assets/enemies/1 Portraits/Icons_39.png",
+    "minLvl" : 3,
+    "maxLvl" : 10,
+    "statisticsMul" : 1.0,
+    "totalCap" : -1,
+    "xpFactor" : 1.0,
+    "spawnAreas" : [ "EARTH" ],
+    "ignoreAreaDifficulty" : false,
+    "ignoreAreaCap" : false,
+    "failChance" : 0.0,
+    "lootList" : [ ],
+    "lootChance" : 0.0
+  }, {
+    "typeId" : 12,
+    "name" : "Pająk",
+    "gfxName" : "static/assets/enemies/1 Portraits/Icons_22.png",
+    "minLvl" : 8,
+    "maxLvl" : 100,
+    "statisticsMul" : 1.0,
+    "totalCap" : -1,
+    "xpFactor" : 1.0,
+    "spawnAreas" : [ "EARTH" ],
+    "ignoreAreaDifficulty" : false,
+    "ignoreAreaCap" : false,
+    "failChance" : 0.0,
+    "lootList" : [ ],
+    "lootChance" : 0.0
+  }, {
+    "typeId" : 13,
+    "name" : "Niedźwiedź",
+    "gfxName" : "static/assets/enemies/1 Portraits/Icons_21.png",
+    "minLvl" : 12,
+    "maxLvl" : 100,
+    "statisticsMul" : 1.0,
+    "totalCap" : -1,
+    "xpFactor" : 1.0,
+    "spawnAreas" : [ "EARTH" ],
+    "ignoreAreaDifficulty" : false,
+    "ignoreAreaCap" : false,
+    "failChance" : 0.0,
+    "lootList" : [ ],
+    "lootChance" : 0.0
+  } ],
+  "cityThreshold" : 5000,
+  "difficultyConfiguration" : [ {
+    "radiusInMeters" : 500.0,
+    "minLvl" : 1,
+    "maxLvl" : 4
+  },{
+    "radiusInMeters" : 1000.0,
+    "minLvl" : 2,
+    "maxLvl" : 8
+  }, {
+    "radiusInMeters" : 2000.0,
+    "minLvl" : 3,
+    "maxLvl" : 12
+  }, {
+    "radiusInMeters" : 4000.0,
+    "minLvl" : 4,
+    "maxLvl" : 16
+  }, {
+    "radiusInMeters" : 8000.0,
+    "minLvl" : 5,
+    "maxLvl" : 20
+  }, {
+    "radiusInMeters" : -1,
+    "minLvl" : 6,
+    "maxLvl" : 100
+  } ],
+  "countryCodes" : [ "PL" ],
+  "giveFreeXpDelayInSeconds" : 0,
+  "giveFreeXpAmount" : 0,
+  "spawnEnemyDelayInSeconds" : 2,
+  "spawnEnemyFailChance" : 0.75,
+  "healDelayInSeconds" : 1,
+  "healFraction" : 0.1
+}

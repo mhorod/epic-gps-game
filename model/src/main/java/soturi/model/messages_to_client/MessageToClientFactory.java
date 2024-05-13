@@ -1,5 +1,6 @@
 package soturi.model.messages_to_client;
 
+import soturi.model.Config;
 import soturi.model.Enemy;
 import soturi.model.EnemyId;
 import soturi.model.Loot;
@@ -7,6 +8,7 @@ import soturi.model.Player;
 import soturi.model.Position;
 import soturi.model.Result;
 
+import java.util.List;
 import java.util.function.Consumer;
 
 public final class MessageToClientFactory implements MessageToClientHandler {
@@ -22,13 +24,13 @@ public final class MessageToClientFactory implements MessageToClientHandler {
     }
 
     @Override
-    public void enemyAppears(Enemy enemy) {
-        consumer.accept(new EnemyAppears(enemy));
+    public void enemiesAppear(List<Enemy> enemies) {
+        consumer.accept(new EnemiesAppear(enemies));
     }
 
     @Override
-    public void enemyDisappears(EnemyId enemyId) {
-        consumer.accept(new EnemyDisappears(enemyId));
+    public void enemiesDisappear(List<EnemyId> enemyIds) {
+        consumer.accept(new EnemiesDisappear(enemyIds));
     }
 
     @Override
@@ -64,5 +66,10 @@ public final class MessageToClientFactory implements MessageToClientHandler {
     @Override
     public void pong() {
         consumer.accept(new Pong());
+    }
+
+    @Override
+    public void setConfig(Config config) {
+        consumer.accept(new SetConfig(config));
     }
 }

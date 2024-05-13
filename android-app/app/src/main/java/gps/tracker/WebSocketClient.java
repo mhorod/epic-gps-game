@@ -23,12 +23,14 @@ public class WebSocketClient extends WebSocketListener {
     private final ObjectMapper objectMapper = new ObjectMapper()
             .registerModule(new AndroidRecordModule());
     private final MessageToClientHandler handler;
+    private final String urlPrefix;
     public volatile String userName = "helloall2", userPassword = "password";
     private volatile WebSocket webSocket = null;
     private volatile Position lastPosition = null;
 
-    public WebSocketClient(MessageToClientHandler handler, String userName, String userPassword) {
+    public WebSocketClient(MessageToClientHandler handler, String userName, String userPassword, boolean connectToDev) {
         this.handler = handler;
+        this.urlPrefix = connectToDev ? "dev." : "";
         this.userName = userName;
         this.userPassword = userPassword;
     }
@@ -54,7 +56,7 @@ public class WebSocketClient extends WebSocketListener {
                 .header("epic-password", userPassword)
                 .header("epic-latitude", String.valueOf(lastPosition.latitude()))
                 .header("epic-longitude", String.valueOf(lastPosition.longitude()))
-                .url("ws://soturi.online:8080/ws/game")
+                .url("wss://" + urlPrefix + "soturi.online/ws/game")
                 .build();
 
         System.err.println("dziem dobry2");

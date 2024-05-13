@@ -1,21 +1,17 @@
 package soturi;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.springframework.test.context.TestPropertySource;
+import org.junit.jupiter.api.Test;
+import soturi.model.Config;
 import soturi.model.EnemyId;
 import soturi.model.messages_to_server.AttackEnemy;
 import soturi.model.messages_to_server.MessageToServer;
-import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
+import soturi.server.DynamicConfig;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@TestPropertySource(locations = "classpath:application.yml", properties="spring.datasource.url=jdbc:h2:mem:")
-@SpringBootTest
 class SerializationTests {
-    @Autowired
-    ObjectMapper objectMapper;
+    ObjectMapper objectMapper = new ObjectMapper();
 
     @Test
     public void serializationCycle() throws Throwable {
@@ -28,9 +24,9 @@ class SerializationTests {
     @Test
     public void serializationCycle2() throws Throwable {
         ObjectMapper normalMapper = new ObjectMapper();
-        MessageToServer message = new AttackEnemy(new EnemyId(42));
-        String serial = normalMapper.writeValueAsString(message);
-        MessageToServer deserial = normalMapper.readValue(serial, MessageToServer.class);
-        assertThat(message).isEqualTo(deserial);
+        Config cfg = new DynamicConfig(objectMapper, null).getDefaultConfig();
+        String serial = normalMapper.writeValueAsString(cfg);
+        Config deserial = normalMapper.readValue(serial, Config.class);
+        assertThat(cfg).isEqualTo(deserial);
     }
 }

@@ -3,20 +3,16 @@ package soturi.server;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
-import soturi.content.EnemyRegistry;
+import soturi.common.Registry;
 import soturi.model.Enemy;
 import soturi.model.Loot;
 import soturi.model.Player;
 import soturi.model.Result;
-import org.springframework.stereotype.Component;
 import soturi.model.messages_to_client.FightResult;
 
-import java.util.Random;
-
-@Component
 @AllArgsConstructor
-public final class FightSimulator {
-    private final EnemyRegistry enemyRegistry = new EnemyRegistry(); // TODO get EnemyRegistry from somewhere else
+public class FightSimulator {
+    private final Registry registry;
 
     @Getter
     @AllArgsConstructor
@@ -33,20 +29,24 @@ public final class FightSimulator {
         }
 
         Fighter(Player player) {
-            this(player.hp(), player.attack(), player.defense(), player.lvl());
+            this(
+                player.hp(),
+                player.statistics().attack(),
+                player.statistics().defense(),
+                player.lvl()
+            );
         }
         Fighter(Enemy enemy) {
             this(
-                enemyRegistry.getEnemyHp(enemy),
-                enemyRegistry.getEnemyAttack(enemy),
-                enemyRegistry.getEnemyDefense(enemy),
+                registry.getEnemyStatistics(enemy.lvl()).maxHp(),
+                registry.getEnemyStatistics(enemy.lvl()).attack(),
+                registry.getEnemyStatistics(enemy.lvl()).defense(),
                 enemy.lvl()
             );
         }
     }
 
-    private final Random random = new Random();
-    private void simulateFight(Fighter left, Fighter right) {
+    private void simulateFightMutable(Fighter left, Fighter right) {
         long leftAttack = Math.max(left.getAttack() - right.getDefense(), 1);
         long rightAttack = Math.max(right.getAttack() - left.getDefense(), 1);
 
@@ -60,7 +60,7 @@ public final class FightSimulator {
 
     public FightResult simulateFight(Player player, Enemy enemy) {
         Fighter playerFighter = new Fighter(player), enemyFighter = new Fighter(enemy);
-        simulateFight(playerFighter, enemyFighter);
+        simulateFightMutable(playerFighter, enemyFighter);
 
         long lostHp = player.hp() - playerFighter.getHp();
         Result result = Result.LOST;
@@ -68,7 +68,7 @@ public final class FightSimulator {
 
         if (playerFighter.getHp() > 0) {
             result = Result.WON;
-            loot = enemyRegistry.lootFor(enemy);
+            loot = registry.getLootFor(enemy);
         }
 
         return new FightResult(result, lostHp, enemy.enemyId(), loot);

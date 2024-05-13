@@ -1,28 +1,22 @@
 package soturi;
 
 import org.junit.jupiter.api.Test;
-import soturi.content.GeoRegistry;
 import soturi.model.Position;
-import soturi.model.RectangularArea;
+import soturi.model.Rectangle;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.withinPercentage;
 
 public class GeoTests {
     @Test
-    void reflection_test() {
-        assertThat(GeoRegistry.KRAKOW).isEqualTo(GeoRegistry.KNOWN_POSITIONS.get("KRAKOW"));
-        assertThat(GeoRegistry.POLAND).isEqualTo(GeoRegistry.KNOWN_AREAS.get("POLAND"));
-    }
-    @Test
     void haversine_test() {
-        double krakow_to_warszawa = GeoRegistry.KRAKOW.distance(GeoRegistry.WARSZAWA);
+        double krakow_to_warszawa = Position.KRAKOW.distance(Position.WARSZAWA);
         assertThat(krakow_to_warszawa).isCloseTo(252.5 * 1000, withinPercentage(1));
     }
     @Test
     void centered_area_test() {
-        Position pos = GeoRegistry.KRAKOW;
-        RectangularArea area = pos.centeredArea(100);
+        Position pos = Position.KRAKOW;
+        Rectangle area = pos.centeredArea(100);
         Position[][] corners = area.getCorners();
 
         assertThat(area.getCenter().distance(pos)).isNotNegative().isLessThan(1);
