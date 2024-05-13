@@ -9,6 +9,8 @@ import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.handler.AbstractWebSocketHandler;
+import soturi.model.messages_to_client.EnemiesAppear;
+import soturi.model.messages_to_client.EnemiesDisappear;
 import soturi.model.messages_to_client.MessageToClient;
 import soturi.model.messages_to_client.MessageToClientFactory;
 import soturi.server.GameService;
@@ -27,7 +29,12 @@ public class DashboardWebSocketController extends AbstractWebSocketHandler {
             @Override
             @SneakyThrows
             public void accept(MessageToClient messageToClient) {
-                log.info("[DASH] {}", messageToClient);
+                if (messageToClient instanceof EnemiesAppear appear)
+                    log.info("[DASH] EnemiesAppear[#={}]", appear.enemies().size());
+                else if (messageToClient instanceof EnemiesDisappear disappear)
+                    log.info("[DASH] EnemiesDisappear[#={}]", disappear.enemyIds().size());
+                else
+                    log.info("[DASH] {}", messageToClient);
 
                 String asText = mapper.writeValueAsString(messageToClient);
                 session.sendMessage(new TextMessage(asText));

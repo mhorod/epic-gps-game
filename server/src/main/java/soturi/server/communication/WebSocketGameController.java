@@ -13,7 +13,7 @@ import soturi.server.GameService;
 @Slf4j
 @AllArgsConstructor
 @Component
-public final class WebSocketGameController extends TextWebSocketHandler {
+public class WebSocketGameController extends TextWebSocketHandler {
     private final ObjectMapper mapper;
     private final GameService gameService;
 
