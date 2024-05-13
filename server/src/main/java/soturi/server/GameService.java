@@ -358,7 +358,6 @@ public class GameService {
         if (observers.put(id, observer) != null)
             throw new RuntimeException();
 
-        observer.setConfig(registry.getConfig());
         for (var kv : sessions.entrySet())
             observer.playerUpdate(
                 getPlayerFromEntity(repository.findByName(kv.getKey()).orElseThrow()),

@@ -27,7 +27,7 @@ import java.util.concurrent.LinkedBlockingQueue;
  * This class is thread safe
  */
 @Slf4j
-public final class Connection {
+public class Connection {
     private final WebSocketSession session;
     private final GameService gameService;
     private final ObjectMapper objectMapper;

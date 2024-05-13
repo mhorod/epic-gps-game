@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 import soturi.common.Registry;
 import soturi.model.Config;
@@ -79,8 +80,15 @@ public class DashboardApiController {
         setConfig(newConfig);
     }
 
+    @PostMapping
+    public void reloadConfigFile() {
+        if (!dynamicConfig.tryToLoad())
+            throw new RuntimeException();
+        setConfig(dynamicConfig.getRegistry().getConfig());
+    }
+
     @PostMapping("/v1/set-config")
-    public void setConfig(Config config) {
+    public void setConfig(@RequestBody Config config) {
         gameService.setConfig(config);
         dynamicConfig.tryToDump();
     }
