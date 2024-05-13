@@ -39,16 +39,4 @@ public record Config(
 
     int healDelayInSeconds,
     double healFraction
-) {
-    public boolean geoEquals(Config other) {
-        return other != null &&
-               areas.equals(other.areas) &&
-               gameAreaId.equals(other.gameAreaId) &&
-               gameAreaSplitLvl == other.gameAreaSplitLvl &&
-               bannedAreas.equals(other.bannedAreas) &&
-               enemyTypes.equals(other.enemyTypes) &&
-               cityThreshold == other.cityThreshold &&
-               difficultyConfiguration.equals(other.difficultyConfiguration) &&
-               countryCodes.equals(other.countryCodes);
-    }
-}
+) { }

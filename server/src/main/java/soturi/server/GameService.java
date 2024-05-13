@@ -65,12 +65,10 @@ public class GameService {
 
     public synchronized void setConfig(Config config) {
         dynamicConfig.setConfigWithoutReloading(config);
-        if (!registry.getConfig().geoEquals(config)) {
-            unregisterAllEnemies();
-            monsterManager = new MonsterManager(cityProvider, registry, this::nextEnemyId);
-        }
-
+        unregisterAllEnemies();
         registry = dynamicConfig.getRegistry();
+        monsterManager = new MonsterManager(cityProvider, registry, this::nextEnemyId);
+
         for (PlayerSession session : sessions.values())
             session.getSender().setConfig(config);
         for (MessageToClientHandler obs : observers.values())
