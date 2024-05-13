@@ -8,6 +8,7 @@ import SpawnAreas from "./SpawnAreas";
 
 import enableMocking from "./mocks/server";
 import Players from "./Players";
+import configManager from "./Config";
 
 const router = createBrowserRouter([
   {

@@ -1,8 +1,8 @@
-import { Enemy, EnemyId, PlayerWithPosition } from "../model/model";
+import { Enemy, PlayerWithPosition } from "../model/model";
 
 class Entities {
   players: Map<string, PlayerWithPosition> = new Map();
-  enemies: Map<string, Enemy> = new Map();
+  enemies: Map<number, Enemy> = new Map();
 
   constructor(old?: Entities) {
     if (old !== undefined) {
@@ -19,11 +19,12 @@ class Entities {
   }
 
   addEnemy(enemy: Enemy) {
-    this.enemies.set(enemy.enemyId.id, enemy);
+    console.log(enemy, enemy.enemyId);
+    this.enemies.set(enemy.enemyId, enemy);
   }
 
-  removeEnemy(enemyId: EnemyId) {
-    this.enemies.delete(enemyId.id);
+  removeEnemy(enemyId: number) {
+    this.enemies.delete(enemyId);
   }
 }
 

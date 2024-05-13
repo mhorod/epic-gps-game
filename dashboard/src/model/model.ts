@@ -3,13 +3,9 @@ export type Position = {
   longitude: number;
 };
 
-export type EnemyId = {
-  id: string;
-};
-
 export type Enemy = {
-  enemyTypeId: EnemyTypeId;
-  enemyId: EnemyId;
+  typeId: number;
+  enemyId: number;
   lvl: number;
   position: Position;
 };
@@ -60,10 +56,8 @@ export type PolygonWithDifficulty = {
   difficulty: number;
 };
 
-export type EnemyTypeId = { id: number };
-
 export type EnemyType = {
-  enemyTypeId: EnemyTypeId;
+  typeId: number;
   name: string;
   gfxName: string;
 };
