@@ -7,24 +7,29 @@ import MapView from "./map/MapView";
 import SpawnAreas from "./SpawnAreas";
 
 import enableMocking from "./mocks/server";
+import Players from "./Players";
 
 const router = createBrowserRouter([
   {
     path: "/dashboard",
-    element: <Main></Main>,
+    element: <Main title="Dashboard"></Main>,
   },
   {
     path: "/dashboard/players",
-    element: <Main></Main>,
+    element: (
+      <Main title="Players">
+        <Players />
+      </Main>
+    ),
   },
   {
     path: "/dashboard/enemies",
-    element: <Main></Main>,
+    element: <Main title="Enemies"></Main>,
   },
   {
     path: "/dashboard/map-view",
     element: (
-      <Main>
+      <Main title="Map View">
         <MapView />
       </Main>
     ),
@@ -32,7 +37,7 @@ const router = createBrowserRouter([
   {
     path: "/dashboard/spawn-areas",
     element: (
-      <Main>
+      <Main title="Spawn Areas">
         <SpawnAreas />
       </Main>
     ),

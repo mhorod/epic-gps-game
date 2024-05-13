@@ -8,6 +8,7 @@ import SearchSettings from "./SearchSettings";
 import { Position } from "../model/model";
 import "./MapSearch.css";
 import Entities from "./Entities";
+import configManager from "../Config";
 
 type MapSearchProps = {
   entities: Entities;
@@ -87,7 +88,10 @@ class MapSearch extends Component<MapSearchProps, MapSearchState> {
     }
 
     const enemyResults = Array.from(this.props.entities.enemies.values())
-      .filter((e) => re.test(e.name))
+      .filter((e) => {
+        const t = configManager.getEnemyTypeById(e.enemyTypeId);
+        return re.test(t?.name || "undefined");
+      })
       .map((e) => SearchResult.ofEnemy(e));
 
     const playerResults = Array.from(this.props.entities.players.values())

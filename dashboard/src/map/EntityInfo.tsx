@@ -4,6 +4,7 @@ import { Enemy, PlayerWithPosition } from "../model/model";
 import { Close, Heart, Star, Flash, Shield } from "react-ionicons";
 
 import "./EntityInfo.css";
+import configManager from "../Config";
 
 type EntityInfoProps = {
   type: string;
@@ -13,11 +14,12 @@ type EntityInfoProps = {
 
 function EnemyInfo(props: EntityInfoProps) {
   const enemy = props.entity as Enemy;
+  const t = configManager.getEnemyTypeById(enemy.enemyTypeId);
   return (
     <div className="entity-info-wrapper">
       <div className="entity-info">
         <div className="card-header">
-          <h1> {enemy.name} </h1>
+          <h1> {t?.name} </h1>
           <span className="card-close-icon" onClick={props.onClose}>
             <IconWrapper icon=<Close /> />
           </span>
@@ -49,7 +51,7 @@ function PlayerInfo(props: EntityInfoProps) {
               <IconWrapper icon=<Heart /> />{" "}
               <div>
                 {" "}
-                Health: {player.hp}/{player.maxHp}{" "}
+                Health: {player.hp}/{player.statistics.maxHp}{" "}
               </div>
             </li>
             <li>
@@ -57,11 +59,11 @@ function PlayerInfo(props: EntityInfoProps) {
             </li>
             <li>
               <IconWrapper icon=<Flash /> />{" "}
-              <div> Attack: {player.attack} </div>
+              <div> Attack: {player.statistics.attack} </div>
             </li>
             <li>
               <IconWrapper icon=<Shield /> />{" "}
-              <div> Defense: {player.defense} </div>
+              <div> Defense: {player.statistics.defense} </div>
             </li>
           </ul>
         </div>

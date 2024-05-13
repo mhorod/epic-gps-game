@@ -8,15 +8,20 @@ export type EnemyId = {
 };
 
 export type Enemy = {
-  name: string;
+  enemyTypeId: EnemyTypeId;
+  enemyId: EnemyId;
   lvl: number;
   position: Position;
-  enemyId: EnemyId;
-  gfxName: string;
 };
 
 export type ItemId = {
   id: string;
+};
+
+export type Statistics = {
+  maxHp: number;
+  attack: number;
+  defense: number;
 };
 
 export type Player = {
@@ -24,9 +29,7 @@ export type Player = {
   lvl: number;
   xp: number;
   hp: number;
-  maxHp: number;
-  attack: number;
-  defense: number;
+  statistics: Statistics;
   equipped: Array<ItemId>;
   inventory: Array<ItemId>;
 };
@@ -46,4 +49,25 @@ export type RectangularArea = {
 export type Area = {
   dimensions: RectangularArea;
   difficulty: number;
+};
+
+export type Polygon = {
+  points: Position[];
+};
+
+export type PolygonWithDifficulty = {
+  polygon: Polygon;
+  difficulty: number;
+};
+
+export type EnemyTypeId = { id: number };
+
+export type EnemyType = {
+  enemyTypeId: EnemyTypeId;
+  name: string;
+  gfxName: string;
+};
+
+export type Config = {
+  enemyTypes: EnemyType[];
 };

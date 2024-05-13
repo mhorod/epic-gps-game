@@ -2,10 +2,12 @@ import { PersonCircle } from "react-ionicons";
 
 import "./TopNav.css";
 
-function TopNav() {
+type TopNavProps = { title: string };
+
+function TopNav(props: TopNavProps) {
   return (
     <div className="top-nav">
-      <h1> Dashboard </h1>
+      <h1> {props.title} </h1>
       <div className="user-info">
         <div className="user-name-info">
           <span className="username"> Gigachad </span>

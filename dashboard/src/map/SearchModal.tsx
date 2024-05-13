@@ -6,6 +6,7 @@ import { Enemy, PlayerWithPosition, Position } from "../model/model";
 import IconWrapper from "../IconWrapper";
 import SearchResult from "./SearchResult";
 import SearchResultView from "./SearchResultView";
+import configManager from "../Config";
 
 type SearchModalProps = {
   active: boolean;
@@ -17,11 +18,12 @@ type SearchModalProps = {
 function resultView(r: SearchResult, zoomOn: (p: Position) => void) {
   if (r.kind === "Enemy") {
     const enemy = r.value as Enemy;
+    const t = configManager.getEnemyTypeById(enemy.enemyTypeId);
     return (
       <SearchResultView
         key={"enemy-" + enemy.enemyId.id}
         icon=<Skull />
-        name={enemy.name}
+        name={t?.name || "undefined"}
         type={"Enemy lvl " + enemy.lvl}
         onClick={() => zoomOn(enemy.position)}
       />
