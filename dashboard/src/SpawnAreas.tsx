@@ -1,14 +1,15 @@
-import { LatLngExpression } from "leaflet";
+import { LatLngBoundsExpression, LatLngExpression } from "leaflet";
 import { MapContainer, TileLayer, Polygon } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
-import { useState } from "react";
+import { Component, useState } from "react";
 
-import { Area } from "./model/model";
+import { Area, PolygonWithDifficulty } from "./model/model";
+import { http_path } from "./backend";
 
 const position: LatLngExpression = [50.03028264463553, 19.907693170114893];
 
 type MapComponentProps = {
-  areas: Area[];
+  areas: PolygonWithDifficulty[];
 };
 
 const colors = ["#90be6d", "#f9c74f", "#f3722c", "#f94144"];
@@ -23,13 +24,10 @@ function MapComponent(props: MapComponentProps) {
       />
       <>
         {props.areas.map((area) => {
-          const d = area.dimensions;
-          const latLongs: LatLngExpression[] = [
-            [d.lowerLatitude, d.lowerLongitude],
-            [d.lowerLatitude, d.upperLongitude],
-            [d.upperLatitude, d.upperLongitude],
-            [d.upperLatitude, d.lowerLongitude],
-          ];
+          const latLongs: LatLngExpression[] = [];
+          for (const point of area.polygon.points) {
+            latLongs.push([point.latitude, point.longitude]);
+          }
 
           const color = colors[area.difficulty - 1];
           return <Polygon positions={latLongs} color={color} />;
@@ -39,18 +37,30 @@ function MapComponent(props: MapComponentProps) {
   );
 }
 
-function SpawnAreas() {
-  const [areas, setAreas] = useState([]);
+type SpawnAreasState = { areas: PolygonWithDifficulty[] };
+type SpawnAreasProps = {};
 
-  fetch(window.location.origin + "/v1/areas")
-    .then((res) => res.json())
-    .then((data) => setAreas(data));
+class SpawnAreas extends Component<SpawnAreasProps, SpawnAreasState> {
+  constructor(props: SpawnAreasProps) {
+    super(props);
+    this.state = { areas: [] };
 
-  return (
-    <div className="map-wrapper">
-      <MapComponent areas={areas} />
-    </div>
-  );
+    fetch(http_path("/v1/areas"))
+      .then((res) => res.json())
+      .then((data) => this.setAreas(data));
+  }
+
+  setAreas(areas: PolygonWithDifficulty[]) {
+    this.setState({ areas: areas });
+  }
+
+  render() {
+    return (
+      <div className="map-wrapper">
+        <MapComponent areas={this.state.areas} />
+      </div>
+    );
+  }
 }
 
 export default SpawnAreas;

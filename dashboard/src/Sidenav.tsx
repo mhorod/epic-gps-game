@@ -12,6 +12,18 @@ import IconWrapper from "./IconWrapper";
 
 import "./SideNav.css";
 
+function link(to: string, icon: any, text: string) {
+  const path = window.location.pathname;
+  const className = path === to ? "active" : "";
+  return (
+    <li className={className}>
+      <Link to={to}>
+        <IconWrapper icon={icon} /> {text}
+      </Link>
+    </li>
+  );
+}
+
 function SideNav() {
   return (
     <div className="sidenav">
@@ -20,44 +32,14 @@ function SideNav() {
         className="logo"
         alt="Soturi Online"
       />
-
       <ul>
-        <li>
-          <Link to="/dashboard">
-            <IconWrapper icon=<Grid /> /> Dashboard
-          </Link>
-        </li>
-        <li>
-          <Link to="/dashboard/enemies">
-            <IconWrapper icon=<Skull /> /> Enemies
-          </Link>
-        </li>
-        <li>
-          <Link to="/dashboard/players">
-            <IconWrapper icon=<People /> /> Players
-          </Link>
-        </li>
-        <li>
-          <Link to="/dashboard/spawn-areas">
-            <IconWrapper icon=<Disc /> /> Spawn Areas
-          </Link>
-        </li>
-        <li>
-          <Link to="/dashboard/map-view">
-            <IconWrapper icon=<Map /> /> Map View
-          </Link>
-        </li>
-        <li>
-          <a href="/swagger-ui/index.html">
-            <IconWrapper icon=<Code /> /> API
-          </a>
-        </li>
-
-        <li>
-          <a href="/static/app.apk">
-            <IconWrapper icon=<LogoAndroid /> /> Android App
-          </a>
-        </li>
+        {link("/dashboard", <Grid />, "Dashboard")}
+        {link("/dashboard/enemies", <Skull />, "Enemies")}
+        {link("/dashboard/players", <People />, "Players")}
+        {link("/dashboard/spawn-areas", <Disc />, "Spawn Areas")}
+        {link("/dashboard/map-view", <Map />, "Map View")}
+        {link("/swagger-ui/index.html", <Code />, "API")}
+        {link("/static/app.apk", <LogoAndroid />, "Android App")}
       </ul>
     </div>
   );

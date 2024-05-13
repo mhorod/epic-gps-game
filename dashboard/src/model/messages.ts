@@ -4,8 +4,16 @@ export type EnemyAppears = {
   enemy: Enemy;
 };
 
+export type EnemiesAppear = {
+  enemies: Enemy[];
+};
+
 export type EnemyDisappears = {
   enemyId: EnemyId;
+};
+
+export type EnemiesDisppear = {
+  enemies: EnemyId[];
 };
 
 export type PlayerUpdate = {

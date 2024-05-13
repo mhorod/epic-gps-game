@@ -1,26 +1,29 @@
-import { Icon, LatLngExpression, Map } from "leaflet";
-import {
-  MapContainer,
-  TileLayer,
-  Marker,
-  Popup,
-  useMap,
-  useMapEvents,
-} from "react-leaflet";
+import { Icon, LatLngExpression, Map as LeafletMap } from "leaflet";
+import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 
 import "./MapView.css";
 import MapSearch from "./MapSearch";
 import { Component } from "react";
-import { Enemy, PlayerWithPosition, Position } from "../model/model";
+import {
+  Enemy,
+  EnemyTypeId,
+  EnemyType,
+  PlayerWithPosition,
+  Position,
+} from "../model/model";
 import Entities from "./Entities";
 import {
+  EnemiesAppear,
+  EnemiesDisppear,
   EnemyAppears,
   EnemyDisappears,
   PlayerDisappears,
   PlayerUpdate,
 } from "../model/messages";
 import EntityInfo from "./EntityInfo";
+import { ws_path } from "../backend";
+import configManager from "../Config";
 
 const warriorIcon = new Icon({
   iconUrl: "/dashboard/img/warrior.png",
@@ -29,7 +32,7 @@ const warriorIcon = new Icon({
 
 type MapComponentProps = {
   entities: Entities;
-  setMap: (m: Map) => void;
+  setMap: (m: LeafletMap) => void;
   selectEnemy: (e: Enemy) => void;
   selectPlayer: (p: PlayerWithPosition) => void;
 };
@@ -38,7 +41,7 @@ function mapPosition(position: Position): LatLngExpression {
   return [position.latitude, position.longitude];
 }
 
-const MapAccess = ({ setMap }: { setMap: (m: Map) => void }) => {
+const MapAccess = ({ setMap }: { setMap: (m: LeafletMap) => void }) => {
   const map = useMap();
   setMap(map);
   return null;
@@ -46,7 +49,7 @@ const MapAccess = ({ setMap }: { setMap: (m: Map) => void }) => {
 
 function enemyIcon(gfxName: string) {
   return new Icon({
-    iconUrl: "/static/" + gfxName,
+    iconUrl: "/" + gfxName,
     iconSize: [32, 32],
   });
 }
@@ -65,11 +68,12 @@ function MapComponent(props: MapComponentProps) {
       />
       <div>
         {Array.from(props.entities.enemies.values()).map((e) => {
+          const t = configManager.getEnemyTypeById(e.enemyTypeId);
           return (
             <Marker
               key={"enemy-" + e.enemyId.id}
               position={mapPosition(e.position)}
-              icon={enemyIcon(e.gfxName)}
+              icon={enemyIcon(t?.gfxName || "undefined")}
               eventHandlers={{
                 click: () => props.selectEnemy(e),
               }}
@@ -109,9 +113,10 @@ type MapViewState = {
 };
 
 class MapView extends Component<MapViewProps, MapViewState> {
-  map: Map | undefined = undefined;
+  map: LeafletMap | undefined = undefined;
   constructor(props: {}) {
     super(props);
+
     this.state = {
       entities: new Entities(),
       searchActive: false,
@@ -120,10 +125,7 @@ class MapView extends Component<MapViewProps, MapViewState> {
   }
 
   componentDidMount(): void {
-    const protocol = window.location.protocol === "https:" ? "wss" : "ws";
-    const websocket = new WebSocket(
-      protocol + "://" + window.location.host + "/ws/dashboard",
-    );
+    const websocket = new WebSocket(ws_path("/dashboard"));
 
     websocket.onmessage = (e) => {
       let obj = JSON.parse(e.data);
@@ -135,8 +137,12 @@ class MapView extends Component<MapViewProps, MapViewState> {
         this.playerDisappears(obj);
       } else if (obj.type === ".EnemyAppears") {
         this.enemyAppears(obj);
+      } else if (obj.type === ".EnemiesAppear") {
+        this.enemiesAppear(obj);
       } else if (obj.type === ".EnemyDisappears") {
         this.enemyDisappears(obj);
+      } else if (obj.type === ".EnemiesDisappear") {
+        this.enemiesDisappear(obj);
       } else {
         console.log("Unknown event: ", obj);
       }
@@ -163,6 +169,22 @@ class MapView extends Component<MapViewProps, MapViewState> {
     this.setState((state) => {
       let newEntities = new Entities(state.entities);
       newEntities.addEnemy(e.enemy);
+      return { entities: newEntities };
+    });
+  }
+
+  enemiesAppear(e: EnemiesAppear) {
+    this.setState((state) => {
+      let newEntities = new Entities(state.entities);
+      for (const enemy of e.enemies) newEntities.addEnemy(enemy);
+      return { entities: newEntities };
+    });
+  }
+
+  enemiesDisappear(e: EnemiesDisppear) {
+    this.setState((state) => {
+      let newEntities = new Entities(state.entities);
+      for (const enemyId of e.enemies) newEntities.removeEnemy(enemyId);
       return { entities: newEntities };
     });
   }
@@ -202,7 +224,7 @@ class MapView extends Component<MapViewProps, MapViewState> {
     );
   }
 
-  setMap(m: Map) {
+  setMap(m: LeafletMap) {
     this.map = m;
   }
 

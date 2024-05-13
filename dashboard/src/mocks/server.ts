@@ -10,6 +10,9 @@ async function enableMocking() {
 
   return worker.start({
     onUnhandledRequest: "bypass",
+    serviceWorker: {
+      url: "/dashboard/mockServiceWorker.js",
+    },
   });
 }
 

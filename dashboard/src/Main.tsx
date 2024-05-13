@@ -6,6 +6,7 @@ import "./Main.css";
 
 type MainProps = {
   children?: ReactNode;
+  title: string;
 };
 
 function Main(props: MainProps) {
@@ -13,7 +14,7 @@ function Main(props: MainProps) {
     <div className="main">
       <SideNav />
       <div className="main-right">
-        <TopNav />
+        <TopNav title={props.title} />
         {props.children}
       </div>
     </div>
