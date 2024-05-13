@@ -18,10 +18,10 @@ type SearchModalProps = {
 function resultView(r: SearchResult, zoomOn: (p: Position) => void) {
   if (r.kind === "Enemy") {
     const enemy = r.value as Enemy;
-    const t = configManager.getEnemyTypeById(enemy.enemyTypeId);
+    const t = configManager.getEnemyTypeById(enemy.typeId);
     return (
       <SearchResultView
-        key={"enemy-" + enemy.enemyId.id}
+        key={"enemy-" + enemy.enemyId}
         icon=<Skull />
         name={t?.name || "undefined"}
         type={"Enemy lvl " + enemy.lvl}

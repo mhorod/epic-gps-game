@@ -5,24 +5,16 @@ import "leaflet/dist/leaflet.css";
 import "./MapView.css";
 import MapSearch from "./MapSearch";
 import { Component } from "react";
-import {
-  Enemy,
-  EnemyTypeId,
-  EnemyType,
-  PlayerWithPosition,
-  Position,
-} from "../model/model";
+import { Enemy, EnemyType, PlayerWithPosition, Position } from "../model/model";
 import Entities from "./Entities";
 import {
   EnemiesAppear,
   EnemiesDisppear,
-  EnemyAppears,
-  EnemyDisappears,
   PlayerDisappears,
   PlayerUpdate,
 } from "../model/messages";
 import EntityInfo from "./EntityInfo";
-import { ws_path } from "../backend";
+import { http_path, ws_path } from "../backend";
 import configManager from "../Config";
 
 const warriorIcon = new Icon({
@@ -49,7 +41,7 @@ const MapAccess = ({ setMap }: { setMap: (m: LeafletMap) => void }) => {
 
 function enemyIcon(gfxName: string) {
   return new Icon({
-    iconUrl: "/" + gfxName,
+    iconUrl: http_path("/" + gfxName),
     iconSize: [32, 32],
   });
 }
@@ -68,10 +60,11 @@ function MapComponent(props: MapComponentProps) {
       />
       <div>
         {Array.from(props.entities.enemies.values()).map((e) => {
-          const t = configManager.getEnemyTypeById(e.enemyTypeId);
+          const t = configManager.getEnemyTypeById(e.typeId);
+          console.log(t);
           return (
             <Marker
-              key={"enemy-" + e.enemyId.id}
+              key={"enemy-" + e.enemyId}
               position={mapPosition(e.position)}
               icon={enemyIcon(t?.gfxName || "undefined")}
               eventHandlers={{
@@ -135,12 +128,8 @@ class MapView extends Component<MapViewProps, MapViewState> {
         this.playerUpdate(obj);
       } else if (obj.type === ".PlayerDisappears") {
         this.playerDisappears(obj);
-      } else if (obj.type === ".EnemyAppears") {
-        this.enemyAppears(obj);
       } else if (obj.type === ".EnemiesAppear") {
         this.enemiesAppear(obj);
-      } else if (obj.type === ".EnemyDisappears") {
-        this.enemyDisappears(obj);
       } else if (obj.type === ".EnemiesDisappear") {
         this.enemiesDisappear(obj);
       } else {
@@ -165,14 +154,6 @@ class MapView extends Component<MapViewProps, MapViewState> {
     });
   }
 
-  enemyAppears(e: EnemyAppears) {
-    this.setState((state) => {
-      let newEntities = new Entities(state.entities);
-      newEntities.addEnemy(e.enemy);
-      return { entities: newEntities };
-    });
-  }
-
   enemiesAppear(e: EnemiesAppear) {
     this.setState((state) => {
       let newEntities = new Entities(state.entities);
@@ -185,14 +166,6 @@ class MapView extends Component<MapViewProps, MapViewState> {
     this.setState((state) => {
       let newEntities = new Entities(state.entities);
       for (const enemyId of e.enemies) newEntities.removeEnemy(enemyId);
-      return { entities: newEntities };
-    });
-  }
-
-  enemyDisappears(e: EnemyDisappears) {
-    this.setState((state) => {
-      let newEntities = new Entities(state.entities);
-      newEntities.removeEnemy(e.enemyId);
       return { entities: newEntities };
     });
   }

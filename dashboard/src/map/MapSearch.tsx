@@ -89,7 +89,7 @@ class MapSearch extends Component<MapSearchProps, MapSearchState> {
 
     const enemyResults = Array.from(this.props.entities.enemies.values())
       .filter((e) => {
-        const t = configManager.getEnemyTypeById(e.enemyTypeId);
+        const t = configManager.getEnemyTypeById(e.typeId);
         return re.test(t?.name || "undefined");
       })
       .map((e) => SearchResult.ofEnemy(e));

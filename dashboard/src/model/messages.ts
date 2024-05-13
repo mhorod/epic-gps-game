@@ -1,19 +1,11 @@
-import { Enemy, EnemyId, Player, Position } from "./model";
-
-export type EnemyAppears = {
-  enemy: Enemy;
-};
+import { Enemy, Player, Position } from "./model";
 
 export type EnemiesAppear = {
   enemies: Enemy[];
 };
 
-export type EnemyDisappears = {
-  enemyId: EnemyId;
-};
-
 export type EnemiesDisppear = {
-  enemies: EnemyId[];
+  enemies: number[];
 };
 
 export type PlayerUpdate = {

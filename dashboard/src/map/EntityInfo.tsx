@@ -14,7 +14,7 @@ type EntityInfoProps = {
 
 function EnemyInfo(props: EntityInfoProps) {
   const enemy = props.entity as Enemy;
-  const t = configManager.getEnemyTypeById(enemy.enemyTypeId);
+  const t = configManager.getEnemyTypeById(enemy.typeId);
   return (
     <div className="entity-info-wrapper">
       <div className="entity-info">

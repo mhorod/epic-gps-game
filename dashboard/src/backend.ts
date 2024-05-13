@@ -1,9 +1,12 @@
 function get_url(): [string, string] {
-  if (process.env.REACT_APP_SOTURI_BACKEND === "localhost") {
+  const backend = process.env.REACT_APP_SOTURI_BACKEND;
+  if (backend === "localhost") {
     return [
       `http://${window.location.hostname}:8080`,
       `ws://${window.location.hostname}:8080`,
     ];
+  } else if (backend === "production") {
+    return [`https://soturi.online`, `wss://soturi.online`];
   } else {
     const protocol = window.location.protocol || "http:";
     const host = window.location.host;

@@ -12,3 +12,6 @@ spring:
   config:
     activate:
       on-profile: dev
+
+
+enable-cors: true
