@@ -80,7 +80,7 @@ public class DashboardApiController {
         setConfig(newConfig);
     }
 
-    @PostMapping
+    @PostMapping("/v1/reload-config")
     public void reloadConfigFile() {
         if (!dynamicConfig.tryToLoad())
             throw new RuntimeException();
