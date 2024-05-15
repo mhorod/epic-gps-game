@@ -24,6 +24,18 @@ function link(to: string, icon: any, text: string) {
   );
 }
 
+function a(to: string, icon: any, text: string) {
+  const path = window.location.pathname;
+  const className = path === to ? "active" : "";
+  return (
+    <li className={className}>
+      <Link to={to}>
+        <IconWrapper icon={icon} /> {text}
+      </Link>
+    </li>
+  );
+}
+
 function SideNav() {
   return (
     <div className="sidenav">
@@ -38,8 +50,8 @@ function SideNav() {
         {link("/dashboard/players", <People />, "Players")}
         {link("/dashboard/spawn-areas", <Disc />, "Spawn Areas")}
         {link("/dashboard/map-view", <Map />, "Map View")}
-        {link("/swagger-ui/index.html", <Code />, "API")}
-        {link("/static/app.apk", <LogoAndroid />, "Android App")}
+        {a("/swagger-ui/index.html", <Code />, "API")}
+        {a("/static/app.apk", <LogoAndroid />, "Android App")}
       </ul>
     </div>
   );
