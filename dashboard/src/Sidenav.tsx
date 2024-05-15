@@ -29,9 +29,9 @@ function a(to: string, icon: any, text: string) {
   const className = path === to ? "active" : "";
   return (
     <li className={className}>
-      <Link to={to}>
+      <a href={to}>
         <IconWrapper icon={icon} /> {text}
-      </Link>
+      </a>
     </li>
   );
 }
