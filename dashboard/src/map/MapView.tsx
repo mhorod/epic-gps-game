@@ -1,5 +1,5 @@
-import { Icon, LatLngExpression, Map as LeafletMap } from "leaflet";
-import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
+import L, { Icon, LatLngExpression, Map as LeafletMap, Marker } from "leaflet";
+import { MapContainer, TileLayer, Popup, useMap } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 
 import "./MapView.css";
@@ -16,6 +16,7 @@ import {
 import EntityInfo from "./EntityInfo";
 import { http_path, ws_path } from "../backend";
 import configManager from "../Config";
+import MarkerCluster from "./MarkerCluster";
 
 const warriorIcon = new Icon({
   iconUrl: "/dashboard/img/warrior.png",
@@ -47,6 +48,16 @@ function enemyIcon(gfxName: string) {
 }
 
 function MapComponent(props: MapComponentProps) {
+  const markers: Marker[] = [];
+  props.entities.enemies.forEach((enemy, _) => {
+    const t = configManager.getEnemyTypeById(enemy.typeId);
+    const marker = L.marker(mapPosition(enemy.position), {
+      icon: enemyIcon(t?.gfxName || "undefined"),
+    }).on("mouseover", () => props.selectEnemy(enemy));
+    markers.push(marker);
+  });
+  console.log("RENDER");
+
   return (
     <MapContainer
       center={[50.03028264463553, 19.907693170114893]}
@@ -58,36 +69,7 @@ function MapComponent(props: MapComponentProps) {
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
-      <div>
-        {Array.from(props.entities.enemies.values()).map((e) => {
-          const t = configManager.getEnemyTypeById(e.typeId);
-          console.log(t);
-          return (
-            <Marker
-              key={"enemy-" + e.enemyId}
-              position={mapPosition(e.position)}
-              icon={enemyIcon(t?.gfxName || "undefined")}
-              eventHandlers={{
-                click: () => props.selectEnemy(e),
-              }}
-            ></Marker>
-          );
-        })}
-        {Array.from(props.entities.players.values())
-          .filter((p) => p.position != null)
-          .map((p) => {
-            return (
-              <Marker
-                key={"player-" + p.player.name}
-                position={mapPosition(p.position!)}
-                icon={warriorIcon}
-                eventHandlers={{
-                  click: () => props.selectPlayer(p),
-                }}
-              ></Marker>
-            );
-          })}
-      </div>
+      <MarkerCluster markers={markers} />
     </MapContainer>
   );
 }

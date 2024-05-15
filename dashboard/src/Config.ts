@@ -10,7 +10,6 @@ class ConfigManager {
       for (const enemyType of cfg.enemyTypes) {
         this.enemyTypes.set(enemyType.typeId, enemyType);
       }
-      console.log("CONFIG LOADED");
     });
   }
 
