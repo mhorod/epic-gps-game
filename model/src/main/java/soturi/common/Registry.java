@@ -197,7 +197,7 @@ public class Registry {
     }
 
     public Item getItemById(ItemId itemId) {
-        return itemMap.get(itemId);
+        return itemMap.getOrDefault(itemId, Item.UNKNOWN);
     }
     public List<Item> getAllItems() {
         return config.items();

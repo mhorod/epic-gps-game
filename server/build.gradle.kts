@@ -5,7 +5,7 @@ plugins {
     id("io.freefair.lombok") version "8.6"
 }
 
-version = "0.0.5-SNAPSHOT"
+version = "0.0.6-SNAPSHOT"
 
 java {
     sourceCompatibility = JavaVersion.VERSION_21
@@ -35,6 +35,8 @@ dependencies {
     implementation("com.auth0:java-jwt:2.0.1")
 
     compileOnly("org.springframework.boot:spring-boot-devtools")
+
+    implementation("com.squareup.okhttp3:okhttp:4.12.0")
 
     runtimeOnly("com.h2database:h2:2.2.224")
     compileOnly("org.projectlombok:lombok:1.18.30")

@@ -2,6 +2,7 @@ package soturi.web;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -11,6 +12,7 @@ import soturi.model.Config;
 import soturi.model.Enemy;
 import soturi.model.EnemyId;
 import soturi.model.EnemyType;
+import soturi.model.FightRecord;
 import soturi.model.Player;
 import soturi.model.PlayerWithPosition;
 import soturi.model.Polygon;
@@ -20,10 +22,13 @@ import soturi.model.Position;
 import soturi.model.Statistics;
 import soturi.server.DynamicConfig;
 import soturi.server.GameService;
+import soturi.server.database.FightEntity;
+import soturi.server.database.FightRepository;
 
 import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 @RequiredArgsConstructor
@@ -31,6 +36,7 @@ public class DashboardApiController {
     private final GameService gameService;
     private final DynamicConfig dynamicConfig;
     private final ObjectMapper mapper;
+    private final FightRepository fightRepository;
 
     @GetMapping("/v1/enemies")
     public List<Enemy> getEnemies() {
@@ -48,6 +54,11 @@ public class DashboardApiController {
             return List.of(new PlayerWithPosition(player, new Position(49, 27)));
         else
             return players;
+    }
+
+    @GetMapping("/v1/registered-players")
+    public List<Player> getRegisteredPlayers() {
+        return gameService.getRegisteredPlayers();
     }
 
     @GetMapping("/v1/areas")
@@ -96,6 +107,16 @@ public class DashboardApiController {
     @GetMapping("/v1/config")
     public Config getConfig() {
         return dynamicConfig.getRegistry().getConfig();
+    }
+
+    @GetMapping("/v1/fight-list")
+    public List<FightRecord> getFightList(int limit) {
+        return fightRepository
+            .findAllByOrderByIdDesc(PageRequest.of(0, limit))
+            .stream()
+            .map(FightEntity::getFightRecord)
+            .flatMap(Optional::stream)
+            .toList();
     }
 
     @PostMapping("/v1/kill-all-enemies")
