@@ -36,6 +36,8 @@ public class Connection {
 
     private volatile String authorizedUser = null;
     private volatile boolean closed = false;
+
+    private volatile Instant lastPing = Instant.now();
     private volatile Instant lastReceived = Instant.now();
 
     private static Position positionFromStrings(String latitude, String longitude) {
@@ -115,51 +117,65 @@ public class Connection {
         }
     }
 
-    private boolean timeoutExceeded() {
-        return Duration.between(lastReceived, Instant.now()).getSeconds() > 6;
-    }
-
-    private void work() {
-        while (!closed) {
-            MessageToClient messageToClient;
-            try {
-                messageToClient = BlockingQueuePoll.poll(queue, 4);
-                if (messageToClient == null)
-                    messageToClient = new Ping();
-            }
-            catch (InterruptedException interruptedException) {
-                log.error("this should not happen", interruptedException);
+    private void doSendMessage(MessageToClient messageToClient) {
+        synchronized (session) {
+            if (closed || messageToClient instanceof Disconnect) {
                 close();
-                break;
+                return;
             }
-            synchronized (session) {
-                if (closed || timeoutExceeded() || messageToClient instanceof Disconnect) {
-                    close();
-                    break;
-                }
 
-                if (messageToClient instanceof EnemiesAppear appear)
-                    log.info("[ TO ] {} [MSG] EnemiesAppear[#={}]", authorizedUser, appear.enemies().size());
-                else if (messageToClient instanceof EnemiesDisappear disappear)
-                    log.info("[ TO ] {} [MSG] EnemiesDisappear[#={}]", authorizedUser, disappear.enemyIds().size());
-                else
-                    log.info("[ TO ] {} [MSG] {}", authorizedUser, messageToClient);
+            if (messageToClient instanceof Ping)
+                lastPing = Instant.now();
 
-                try {
-                    String payload = objectMapper.writeValueAsString(messageToClient);
-                    session.sendMessage(new TextMessage(payload));
-                }
-                catch (JsonProcessingException jsonProcessingException) {
-                    log.error("this should not happen", jsonProcessingException);
-                    close();
-                    break;
-                }
-                catch (IOException | IllegalStateException exception) {
-                    close();
-                    break;
-                }
+            if (messageToClient instanceof EnemiesAppear appear)
+                log.info("[ TO ] {} [MSG] EnemiesAppear[#={}]", authorizedUser, appear.enemies().size());
+            else if (messageToClient instanceof EnemiesDisappear disappear)
+                log.info("[ TO ] {} [MSG] EnemiesDisappear[#={}]", authorizedUser, disappear.enemyIds().size());
+            else
+                log.info("[ TO ] {} [MSG] {}", authorizedUser, messageToClient);
+
+            try {
+                String payload = objectMapper.writeValueAsString(messageToClient);
+                session.sendMessage(new TextMessage(payload));
+            }
+            catch (JsonProcessingException jsonProcessingException) {
+                log.error("this should not happen", jsonProcessingException);
+                close();
+            }
+            catch (IOException | IllegalStateException exception) {
+                close();
             }
         }
     }
 
+    private void workOnce() {
+        MessageToClient messageToClient;
+        try {
+            messageToClient = BlockingQueuePoll.poll(queue, 2);
+        }
+        catch (InterruptedException interruptedException) {
+            log.error("this should not happen", interruptedException);
+            close();
+            return;
+        }
+        synchronized (session) {
+            long millisSinceLastReceived = Duration.between(lastReceived, Instant.now()).toMillis();
+            long millisSinceLastPing = Duration.between(lastPing, Instant.now()).toMillis();
+
+            if (millisSinceLastReceived > 2000 && millisSinceLastPing > 2000)
+                doSendMessage(new Ping());
+            if (millisSinceLastReceived > 4000) {
+                close();
+                return;
+            }
+
+            if (messageToClient != null)
+                doSendMessage(messageToClient);
+        }
+    }
+
+    private void work() {
+        while (!closed)
+            workOnce();
+    }
 }
