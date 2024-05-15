@@ -5,7 +5,7 @@ export type EnemiesAppear = {
 };
 
 export type EnemiesDisppear = {
-  enemies: number[];
+  enemyIds: number[];
 };
 
 export type PlayerUpdate = {

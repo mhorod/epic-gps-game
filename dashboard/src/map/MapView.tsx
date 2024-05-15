@@ -165,7 +165,7 @@ class MapView extends Component<MapViewProps, MapViewState> {
   enemiesDisappear(e: EnemiesDisppear) {
     this.setState((state) => {
       let newEntities = new Entities(state.entities);
-      for (const enemyId of e.enemies) newEntities.removeEnemy(enemyId);
+      for (const enemyId of e.enemyIds) newEntities.removeEnemy(enemyId);
       return { entities: newEntities };
     });
   }
