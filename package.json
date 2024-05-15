@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "color-convert": "^2.0.1"
+  },
+  "devDependencies": {
+    "@types/color-convert": "^2.0.3"
+  }
+}
