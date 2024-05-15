@@ -75,6 +75,10 @@ public class Registry {
                 if (getPolygonById(spawn) == null)
                     throw new RuntimeException(spawn + " polygon not found");
 
+        // validate geoSplit
+        if (getGameAreaSplitLvl() < 0) throw new RuntimeException("SplitLvl cannot be negative");
+        if (getGameAreaSplitLvl() > 10) throw new RuntimeException("SplitLvl can be at most 10");
+
         // validate that there is enemy for each lvl
         for (int i = 1; i <= getMaxLvl(); ++i)
             if (getEnemyTypesPerLvl(i).isEmpty())
@@ -246,7 +250,9 @@ public class Registry {
     public Loot getLootFor(Enemy enemy) {
         EnemyType type = getEnemyType(enemy);
         double xp = config.xpLoot().eval(enemy.lvl()) * type.xpFactor();
-        return new Loot((long) xp, List.of()); // TODO items
+        List<ItemId> loot = rnd.nextDouble() < type.lootChance() ?
+            List.of(getRandomElement(type.lootList())) : List.of();
+        return new Loot((long) xp, loot);
     }
 
     public int getGiveFreeXpDelayInSeconds() {
