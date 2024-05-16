@@ -48,7 +48,7 @@ public class LoginFragment extends Fragment {
 
                     mainActivity.runOnUiThread(
                             () -> {
-                                mainActivity.login(lambdaUsername, lambdaPassword);
+                                mainActivity.login(lambdaUsername, lambdaPassword, false);
                                 NavHostFragment.findNavController(LoginFragment.this).navigate(R.id.action_loginFragment_to_gameMap);
                             }
                     );
@@ -66,7 +66,7 @@ public class LoginFragment extends Fragment {
 
                     mainActivity.runOnUiThread(
                             () -> {
-                                mainActivity.devLogin(lambdaUsername, lambdaPassword);
+                                mainActivity.login(lambdaUsername, lambdaPassword, true);
                                 NavHostFragment.findNavController(LoginFragment.this).navigate(R.id.action_loginFragment_to_gameMap);
                             }
                     );

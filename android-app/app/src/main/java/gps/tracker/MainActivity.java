@@ -263,12 +263,8 @@ public class MainActivity extends AppCompatActivity {
         return webSocketClient;
     }
 
-    public void login(String userName, String userPassword) {
-        webSocketClient = new WebSocketClient(new MainActivityHandler(), userName, userPassword, false);
-    }
-
-    public void devLogin(String userName, String userPassword) {
-        webSocketClient = new WebSocketClient(new MainActivityHandler(), userName, userPassword, true);
+    public void login(String userName, String userPassword, boolean dev) {
+        webSocketClient = new WebSocketClient(new MainActivityHandler(), userName, userPassword, dev);
     }
 
     public void logout() {
