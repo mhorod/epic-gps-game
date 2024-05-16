@@ -1,14 +1,15 @@
 package soturi.server;
 
+import jakarta.servlet.annotation.WebInitParam;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 import soturi.common.Registry;
 import soturi.model.Enemy;
+import soturi.model.FightResult;
 import soturi.model.Loot;
 import soturi.model.Player;
 import soturi.model.Result;
-import soturi.model.messages_to_client.FightResult;
 
 @AllArgsConstructor
 public class FightSimulator {
@@ -58,19 +59,32 @@ public class FightSimulator {
         }
     }
 
+    private record FightResultInternal(Result attackerResult, long lostHpAttacker, long lostHpDefender) { }
+
+    private FightResultInternal simulateFightInternal(Fighter attacker, Fighter defender) {
+        long initHpAttacker = attacker.getHp();
+        long initHpDefender = defender.getHp();
+
+        simulateFightMutable(attacker, defender);
+
+        long lostHpAttacker = initHpAttacker - attacker.getHp();
+        long lostHpDefender = initHpDefender - defender.getHp();
+
+        return new FightResultInternal(
+            initHpAttacker == lostHpAttacker ? Result.LOST : Result.WON,
+            lostHpAttacker,
+            lostHpDefender
+        );
+    }
+
     public FightResult simulateFight(Player player, Enemy enemy) {
-        Fighter playerFighter = new Fighter(player), enemyFighter = new Fighter(enemy);
-        simulateFightMutable(playerFighter, enemyFighter);
+        FightResultInternal fri = simulateFightInternal(new Fighter(player), new Fighter(enemy));
+        Loot loot = fri.attackerResult() == Result.WON ? registry.getLootFor(enemy) : new Loot();
 
-        long lostHp = player.hp() - playerFighter.getHp();
-        Result result = Result.LOST;
-        Loot loot = new Loot();
-
-        if (playerFighter.getHp() > 0) {
-            result = Result.WON;
-            loot = registry.getLootFor(enemy);
-        }
-
-        return new FightResult(result, lostHp, enemy.enemyId(), loot);
+        return new FightResult(
+            fri.attackerResult(),
+            fri.lostHpAttacker(),
+            loot
+        );
     }
 }

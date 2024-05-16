@@ -1,4 +1,4 @@
-package soturi.server;
+package soturi.server.database;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.ElementCollection;
@@ -9,8 +9,8 @@ import jakarta.persistence.Id;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
+import soturi.model.FightResult;
 import soturi.model.ItemId;
-import soturi.model.messages_to_client.FightResult;
 
 import java.util.List;
 import java.util.stream.Stream;
@@ -43,22 +43,27 @@ public class PlayerEntity {
         setHashedPassword(hashedPassword);
     }
 
-    void addXp(long xp) {
+    public void addXp(long xp) {
         setXp(Math.max(0, xp) + getXp());
     }
 
-    void addHp(long hp) {
+    public void addHp(long hp) {
         setHp(Math.max(0, getHp() + hp));
     }
 
-    void applyFightResult(FightResult fightDamage) {
+    public void applyFightResult(FightResult result) {
         List<Long> newInventory = Stream.concat(
             getInventory().stream(),
-            fightDamage.loot().items().stream().map(ItemId::id)
+            result.loot().items().stream().map(ItemId::id)
         ).toList();
 
-        addHp(-fightDamage.lostHp());
-        addXp(fightDamage.loot().xp());
+        addHp(-result.lostHp());
+        addXp(result.loot().xp());
         setInventory(newInventory);
+    }
+
+    public void setEquipment(List<ItemId> equipped, List<ItemId> inventory) {
+        setEquipped(equipped.stream().map(ItemId::id).toList());
+        setInventory(inventory.stream().map(ItemId::id).toList());
     }
 }

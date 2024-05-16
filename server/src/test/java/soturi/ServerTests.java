@@ -2,6 +2,7 @@ package soturi;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentMatcher;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.TestPropertySource;
@@ -10,6 +11,9 @@ import soturi.model.Config;
 import soturi.model.Enemy;
 import soturi.model.EnemyId;
 import soturi.model.EnemyType;
+import soturi.model.FightResult;
+import soturi.model.Item;
+import soturi.model.ItemId;
 import soturi.model.Loot;
 import soturi.model.Player;
 import soturi.model.PolygonId;
@@ -18,18 +22,22 @@ import soturi.model.Result;
 import soturi.model.messages_to_client.Disconnect;
 import soturi.model.messages_to_client.EnemiesDisappear;
 import soturi.model.messages_to_client.Error;
-import soturi.model.messages_to_client.FightResult;
+import soturi.model.messages_to_client.FightInfo;
 import soturi.model.messages_to_client.MessageToClient;
 import soturi.model.messages_to_client.MessageToClientFactory;
 import soturi.model.messages_to_client.MessageToClientHandler;
 import soturi.server.DynamicConfig;
 import soturi.server.FightSimulator;
 import soturi.server.GameService;
-import soturi.server.PlayerRepository;
+import soturi.server.database.PlayerEntity;
+import soturi.server.database.PlayerRepository;
 import soturi.server.geo.CityProvider;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.IntStream;
+import java.util.stream.LongStream;
+import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -83,6 +91,18 @@ public class ServerTests {
     private void healPlayers() {
         for (int i = 0; i < 100; ++i)
             gameService.healPlayers();
+    }
+
+    private void giveItem(String playerName, ItemId itemId) {
+        PlayerEntity entity = repository.findByName(playerName).orElseThrow();
+        entity.applyFightResult(new FightResult(Result.WON, 0, new Loot(0, List.of(itemId))));
+        repository.save(entity);
+    }
+
+    private void setLvl(String playerName, int lvl) {
+        PlayerEntity entity = repository.findByName(playerName).orElseThrow();
+        entity.setXp(registry.getXpForLvlCumulative(lvl));
+        repository.save(entity);
     }
 
     @Test
@@ -143,7 +163,7 @@ public class ServerTests {
         assertThat(received)
             .anyMatch(Error.class::isInstance)
             .noneMatch(Disconnect.class::isInstance)
-            .noneMatch(FightResult.class::isInstance)
+            .noneMatch(FightInfo.class::isInstance)
             .noneMatch(EnemiesDisappear.class::isInstance);
     }
     @Test
@@ -159,7 +179,7 @@ public class ServerTests {
         assertThat(received)
             .anyMatch(Error.class::isInstance)
             .noneMatch(Disconnect.class::isInstance)
-            .noneMatch(FightResult.class::isInstance)
+            .noneMatch(FightInfo.class::isInstance)
             .noneMatch(EnemiesDisappear.class::isInstance);
         assertThat(gameService.getEnemies()).containsExactly(enemy);
     }
@@ -173,7 +193,7 @@ public class ServerTests {
         gameService.registerEnemy(enemy);
 
         gameService.receiveFrom("p").attackEnemy(enemy.enemyId());
-        verify(received).fightResult(eq(Result.WON), anyLong(), eq(enemy.enemyId()), any());
+        verify(received).fightInfo(eq(enemy.enemyId()), argThat(f -> f.result() == Result.WON));
         verify(received).enemiesDisappear(List.of(enemy.enemyId()));
         verify(received, never()).disconnect();
     }
@@ -187,7 +207,7 @@ public class ServerTests {
         gameService.registerEnemy(enemy);
 
         gameService.receiveFrom("p").attackEnemy(enemy.enemyId());
-        verify(received).fightResult(eq(Result.LOST), anyLong(), eq(enemy.enemyId()), eq(new Loot()));
+        verify(received).fightInfo(eq(enemy.enemyId()), argThat(f -> f.result() == Result.LOST));
         verify(received, never()).enemiesDisappear(any());
         verify(received, never()).disconnect();
     }
@@ -259,5 +279,72 @@ public class ServerTests {
     void there_is_enemy_for_each_lvl() {
         for (int i = 1; i < 100; ++i)
             assertThat(newEnemy(i, Position.KRAKOW, new EnemyId(0))).isNotNull();
+    }
+    @Test
+    void item_id_0_exists() {
+        assertThat(registry.getItemById(new ItemId(0))).isNotNull().isNotEqualTo(Item.UNKNOWN);
+    }
+    @Test
+    void player_item_persist() {
+        gameService.login("a", "", Position.KRAKOW, mock());
+        gameService.logout("a");
+        giveItem("a", new ItemId(0));
+
+        MessageToClientHandler received = mock();
+        gameService.login("a", "", Position.KRAKOW, received);
+        verify(received).meUpdate(argThat(p -> p.inventory().equals(List.of(new ItemId(0)))));
+    }
+    @Test
+    void player_double_equip() {
+        gameService.login("a", "", Position.KRAKOW, mock());
+        gameService.logout("a");
+        giveItem("a", new ItemId(0));
+        giveItem("a", new ItemId(0));
+        gameService.login("a", "", Position.KRAKOW, mock());
+
+        gameService.receiveFrom("a").equipItem(new ItemId(0));
+        assertThat(gameService.getPlayers()).first().matches(
+            x -> x.player().equipped().equals(List.of(new ItemId(0))) &&
+                 x.player().inventory().equals(List.of(new ItemId(0)))
+        );
+
+        gameService.logout("a");
+        gameService.login("a", "", Position.KRAKOW, mock());
+
+        assertThat(gameService.getPlayers()).first().matches(
+            x -> x.player().equipped().equals(List.of(new ItemId(0))) &&
+                 x.player().inventory().equals(List.of(new ItemId(0)))
+        );
+    }
+    @Test
+    void player_unequips_nonexistent_item() {
+        MessageToClientHandler received = mock();
+        gameService.login("a", "", Position.KRAKOW, received);
+        gameService.receiveFrom("a").equipItem(new ItemId(0));
+
+        verify(received).error(any());
+        assertThat(gameService.getPlayers()).first().matches(
+            x -> x.player().equipped().isEmpty() && x.player().inventory().isEmpty()
+        );
+
+        gameService.logout("a");
+        gameService.login("a", "", Position.KRAKOW, mock());
+
+        assertThat(gameService.getPlayers()).first().matches(
+            x -> x.player().equipped().isEmpty() && x.player().inventory().isEmpty()
+        );
+    }
+    @Test
+    void some_enemy_drops_item() {
+        EnemyType type = registry.getAllEnemyTypes().stream()
+            .filter(x -> x.lootChance() >= 0.01).findFirst().orElseThrow();
+
+        List<ItemId> loot = LongStream.range(0, 100 * 100)
+            .mapToObj(EnemyId::new)
+            .map(id -> new Enemy(type.typeId(), id, type.minLvl(), Position.KRAKOW))
+            .flatMap(e -> registry.getLootFor(e).items().stream()).toList();
+
+        System.err.println(loot.size());
+        assertThat(loot).isNotEmpty();
     }
 }

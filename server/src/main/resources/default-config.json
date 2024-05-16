@@ -209,7 +209,7 @@
     }
   },
   "gameAreaId" : "LESSER_POLAND",
-  "gameAreaSplitLvl" : 8,
+  "gameAreaSplitLvl" : 6,
   "bannedAreas" : [ "JEDNOSTKA_NIL", "ZALEW_ZAKRZOWEK" ],
   "fightingDistanceMaxInMeters" : 50,
   "maxLvl" : 100,
@@ -224,12 +224,12 @@
     "base" : 1.025
   },
   "statisticsPlayerBase" : {
-    "maxHp" : 100,
+    "maxHp" : 200,
     "attack" : 50,
     "defense" : 50
   },
   "statisticsPlayerPerLvl" : {
-    "maxHp" : 100,
+    "maxHp" : 200,
     "attack" : 50,
     "defense" : 50
   },
@@ -372,27 +372,27 @@
   } ],
   "cityThreshold" : 5000,
   "difficultyConfiguration" : [ {
-    "radiusInMeters" : 500.0,
+    "radiusInMeters" : 2000.0,
     "minLvl" : 1,
     "maxLvl" : 4
-  },{
-    "radiusInMeters" : 1000.0,
+  }, {
+    "radiusInMeters" : 4000.0,
     "minLvl" : 2,
     "maxLvl" : 8
   }, {
-    "radiusInMeters" : 2000.0,
+    "radiusInMeters" : 6000.0,
     "minLvl" : 3,
     "maxLvl" : 12
   }, {
-    "radiusInMeters" : 4000.0,
+    "radiusInMeters" : 8000.0,
     "minLvl" : 4,
     "maxLvl" : 16
   }, {
-    "radiusInMeters" : 8000.0,
+    "radiusInMeters" : 10000.0,
     "minLvl" : 5,
     "maxLvl" : 20
   }, {
-    "radiusInMeters" : -1,
+    "radiusInMeters" : -1.0,
     "minLvl" : 6,
     "maxLvl" : 100
   } ],

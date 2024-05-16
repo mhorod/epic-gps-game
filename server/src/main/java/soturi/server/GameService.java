@@ -8,20 +8,27 @@ import soturi.common.Registry;
 import soturi.model.Config;
 import soturi.model.Enemy;
 import soturi.model.EnemyId;
+import soturi.model.FightRecord;
+import soturi.model.FightResult;
 import soturi.model.ItemId;
 import soturi.model.Player;
 import soturi.model.PlayerWithPosition;
 import soturi.model.PolygonWithDifficulty;
 import soturi.model.Position;
 import soturi.model.Result;
-import soturi.model.messages_to_client.FightResult;
 import soturi.model.messages_to_client.MessageToClientHandler;
 import soturi.model.messages_to_server.MessageToServerHandler;
+import soturi.server.database.FightEntity;
+import soturi.server.database.FightRepository;
+import soturi.server.database.PlayerEntity;
+import soturi.server.database.PlayerRepository;
 import soturi.server.geo.CityProvider;
 import soturi.server.geo.MonsterManager;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -31,14 +38,16 @@ import java.util.Optional;
 @Component
 public class GameService {
     private final PlayerRepository repository;
+    private final FightRepository fightRepository;
     private final DynamicConfig dynamicConfig;
     private final CityProvider cityProvider;
 
     private Registry registry;
     private MonsterManager monsterManager;
 
-    public GameService(PlayerRepository repository, DynamicConfig dynamicConfig, CityProvider cityProvider) {
+    public GameService(PlayerRepository repository, FightRepository fightRepository, DynamicConfig dynamicConfig, CityProvider cityProvider) {
         this.repository = repository;
+        this.fightRepository = fightRepository;
         this.dynamicConfig = dynamicConfig;
         this.cityProvider = cityProvider;
         registry = dynamicConfig.getRegistry();
@@ -89,6 +98,15 @@ public class GameService {
             .flatMap(Optional::stream)
             .map(this::getPlayerFromEntity)
             .map(p -> new PlayerWithPosition(p, sessions.get(p.name()).getPosition()))
+            .toList();
+    }
+
+    public synchronized List<Player> getRegisteredPlayers() {
+        return repository
+            .findAll()
+            .stream()
+            .sorted(Comparator.comparingLong(PlayerEntity::getXp))
+            .map(this::getPlayerFromEntity)
             .toList();
     }
 
@@ -197,8 +215,8 @@ public class GameService {
             entity.getXp(),
             entity.getHp(),
             registry.getPlayerStatistics(lvl),
-            List.of(), // TODO list of items
-            List.of()
+            entity.getEquipped().stream().map(ItemId::new).toList(),
+            entity.getInventory().stream().map(ItemId::new).toList()
         );
     }
 
@@ -223,6 +241,11 @@ public class GameService {
         PlayerSession playerSession = sessions.get(playerName);
         Position playerPosition = playerSession.getPosition();
 
+        if (playerData.hp() <= 0) {
+            playerSession.getSender().error("You do not have any hp");
+            return;
+        }
+
         Enemy enemy = monsterManager.getEnemyMap().get(enemyId);
         if (enemy == null) {
             playerSession.getSender().error("this enemy does not exist");
@@ -234,12 +257,23 @@ public class GameService {
         }
 
         FightResult result = new FightSimulator(registry).simulateFight(playerData, enemy);
-        playerSession.getSender().fightResult(result.result(), result.lostHp(), result.enemyId(), result.loot());
+        playerSession.getSender().fightInfo(enemy.enemyId(), result);
         playerEntity.applyFightResult(result);
         repository.save(playerEntity);
 
         if (result.result() == Result.WON)
             unregisterEnemy(enemyId);
+
+        FightRecord fightRecord = new FightRecord(
+            new PlayerWithPosition(playerData, playerPosition),
+            enemy,
+            result,
+            Instant.now()
+        );
+
+        fightRepository.save(new FightEntity(fightRecord));
+        for (var sender : observers.values())
+            sender.fightDashboardInfo(fightRecord);
     }
 
     public synchronized MessageToServerHandler receiveFrom(@NonNull String playerName) {
@@ -264,14 +298,49 @@ public class GameService {
             @Override
             public void equipItem(ItemId itemId) {
                 synchronized (GameService.this) {
-                    sender.error("not supported");
+                    PlayerEntity playerEntity = repository.findByName(playerName).orElseThrow();
+                    Player playerData = getPlayerFromEntity(playerEntity);
+
+                    List<ItemId> equipped = new ArrayList<>(playerData.equipped());
+                    List<ItemId> inventory = new ArrayList<>(playerData.inventory());
+
+                    if (!inventory.remove(itemId)) {
+                        sender.error("you do not have this item in inventory");
+                        return;
+                    }
+
+                    for (ItemId otherItemId : playerData.equipped()) {
+                        if (registry.getItemById(otherItemId).type() == registry.getItemById(itemId).type()) {
+                            equipped.remove(otherItemId);
+                            inventory.add(otherItemId);
+                        }
+                    }
+
+                    equipped.add(itemId);
+                    playerEntity.setEquipment(equipped, inventory);
+                    repository.save(playerEntity);
+                    sendUpdatesFor(playerName);
                 }
             }
 
             @Override
             public void unequipItem(ItemId itemId) {
                 synchronized (GameService.this) {
-                    sender.error("not supported");
+                    PlayerEntity playerEntity = repository.findByName(playerName).orElseThrow();
+                    Player playerData = getPlayerFromEntity(playerEntity);
+
+                    List<ItemId> equipped = new ArrayList<>(playerData.equipped());
+                    List<ItemId> inventory = new ArrayList<>(playerData.inventory());
+
+                    if (!equipped.remove(itemId)) {
+                        sender.error("you do not have this item equipped");
+                        return;
+                    }
+
+                    inventory.add(itemId);
+                    playerEntity.setEquipment(equipped, inventory);
+                    repository.save(playerEntity);
+                    sendUpdatesFor(playerName);
                 }
             }
 

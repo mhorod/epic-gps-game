@@ -38,10 +38,10 @@ public class Registry {
 
         itemMap = getAllItems().stream().collect(Collectors.toMap(Item::itemId, i -> i));
         enemyMap = getAllEnemyTypes().stream().collect(Collectors.toMap(EnemyType::typeId, e -> e));
-        bannedAreas = getBanedAreaIds().stream().map(this::getPolygonById).toList();
+        bannedAreas = getBanedAreaIds().stream().map(this::getPolygonById).collect(Collectors.toList());
         spawnAreasPerType = getAllEnemyTypes().stream().collect(Collectors.toMap(
             EnemyType::typeId,
-            e -> e.spawnAreas().stream().map(this::getPolygonById).toList()
+            e -> e.spawnAreas().stream().map(this::getPolygonById).collect(Collectors.toList())
         ));
 
         cumulativeXpForLvl = new long[getMaxLvl() + 1];
@@ -52,7 +52,9 @@ public class Registry {
             if (i > 1)
                 cumulativeXpForLvl[i] = cumulativeXpForLvl[i - 1] + (long) config.xpToLvl().eval(i);
             int finalI = i;
-            enemiesPerLvl.add(getAllEnemyTypes().stream().filter(type -> type.lvlInRange(finalI)).toList());
+            enemiesPerLvl.add(
+                    getAllEnemyTypes().stream().filter(type -> type.lvlInRange(finalI)).collect(Collectors.toList())
+            );
         }
         validate();
     }
@@ -82,7 +84,7 @@ public class Registry {
         // validate that there is enemy for each lvl
         for (int i = 1; i <= getMaxLvl(); ++i)
             if (getEnemyTypesPerLvl(i).isEmpty())
-                throw new RuntimeException("there is no enemy for %d lvl".formatted(i));
+                throw new RuntimeException("there is no enemy for" + i + "lvl");
 
         // validate that each enemy has a spawn location
         for (EnemyType enemyType : getAllEnemyTypes())
@@ -197,7 +199,7 @@ public class Registry {
     }
 
     public Item getItemById(ItemId itemId) {
-        return itemMap.get(itemId);
+        return itemMap.getOrDefault(itemId, Item.UNKNOWN);
     }
     public List<Item> getAllItems() {
         return config.items();
