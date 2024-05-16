@@ -295,6 +295,7 @@ public class MainActivity extends AppCompatActivity {
 
     public void onDisconnect() {
         this.webSocketClient = null;
+        enemyList.clear();
 
         if (onDisconnectRunnable != null) {
             onDisconnectRunnable.run();

@@ -9,6 +9,8 @@ import androidx.fragment.app.Fragment;
 
 import com.google.android.material.button.MaterialButton;
 
+import java.util.List;
+
 import gps.tracker.databinding.FragmentInventoryBinding;
 import soturi.model.Item;
 
@@ -26,15 +28,18 @@ public class InventoryFragment extends Fragment {
         mainActivity = (MainActivity) getActivity();
         itemManager = mainActivity.getItemManager();
 
+        List<Item> items = itemManager.getItems();
+
 
         for (Item.ItemType type : Item.ItemType.values()) {
             MaterialButton button = new MaterialButton(mainActivity);
             button.setText(type.name());
-
+            boolean itemExists = itemManager.thereExistsItemWithType(type);
 
             mainActivity.runOnUiThread(
                     () -> {
                         binding.itemTypeLayout.addView(button);
+                        button.setEnabled(itemExists);
                     }
             );
         }

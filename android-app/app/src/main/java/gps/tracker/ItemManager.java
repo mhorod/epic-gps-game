@@ -40,4 +40,9 @@ public class ItemManager {
         this.inventoryItemIDs = inventoryItems;
     }
 
+    public boolean thereExistsItemWithType(Item.ItemType type) {
+        return itemIDsToItems(inventoryItemIDs).stream()
+                .anyMatch(item -> item.type().equals(type));
+    }
+
 }
