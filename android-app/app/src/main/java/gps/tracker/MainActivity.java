@@ -43,6 +43,8 @@ import soturi.common.Registry;
 import soturi.model.Config;
 import soturi.model.Enemy;
 import soturi.model.EnemyId;
+import soturi.model.FightRecord;
+import soturi.model.FightResult;
 import soturi.model.Loot;
 import soturi.model.Player;
 import soturi.model.Position;
@@ -369,11 +371,16 @@ public class MainActivity extends AppCompatActivity {
         }
 
         @Override
-        public void fightResult(Result result, long lostHp, EnemyId enemyId, Loot loot) {
+        public void fightDashboardInfo(FightRecord fightRecord) {
+            throw new RuntimeException();
+        }
+
+        @Override
+        public void fightInfo(EnemyId enemyId, FightResult fightResult) {
             runOnUiThread(() -> {
                 AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
 
-                if (result == Result.WON) {
+                if (fightResult.result() == Result.WON) {
                     builder.setMessage("You won!");
                     builder.setPositiveButton("Yay!", (dialog, id) -> {
                     });
