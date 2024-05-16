@@ -218,17 +218,21 @@ public class GameMap extends Fragment {
                     String atkString = String.valueOf(me.statistics().attack());
                     String defString = String.valueOf(me.statistics().defense());
 
+                    String playerDescString = me.name() + ", lvl " + me.lvl();
+
                     mainActivity.runOnUiThread(() -> {
                         binding.hpLevel.setText(hpString);
                         binding.atkLevel.setText(atkString);
                         binding.defLevel.setText(defString);
+                        binding.playerDesc.setText(playerDescString);
 
-                        binding.imageView.setVisibility(View.VISIBLE);
-                        binding.imageView2.setVisibility(View.VISIBLE);
-                        binding.imageView3.setVisibility(View.VISIBLE);
+                        binding.atkIcon.setVisibility(View.VISIBLE);
+                        binding.hpIcon.setVisibility(View.VISIBLE);
+                        binding.defIcon.setVisibility(View.VISIBLE);
                         binding.hpLevel.setVisibility(View.VISIBLE);
                         binding.atkLevel.setVisibility(View.VISIBLE);
                         binding.defLevel.setVisibility(View.VISIBLE);
+                        binding.playerDesc.setVisibility(View.VISIBLE);
 
                     });
                 }
