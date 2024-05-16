@@ -52,6 +52,8 @@ public class MainActivity extends AppCompatActivity {
 
     public final Notifier locationChangeRequestNotifier = new Notifier();
     private final List<LocationListener> sublisteners = new ArrayList<>();
+    private final ItemManager itemManager = new ItemManager(this);
+    private final EnemyList enemyList = new EnemyList();
     public Registry gameRegistry;
     private WebSocketClient webSocketClient;
     private AppBarConfiguration appBarConfiguration;
@@ -290,7 +292,7 @@ public class MainActivity extends AppCompatActivity {
     public void showLocationKey() {
         binding.findMeButton.setVisibility(View.VISIBLE);
     }
-    
+
     public void onDisconnect() {
         this.webSocketClient = null;
 
@@ -306,6 +308,18 @@ public class MainActivity extends AppCompatActivity {
 
     public void setOnMeUpdate(Consumer<Player> consumer) {
         this.playerConsumer = consumer;
+    }
+
+    public Registry getGameRegistry() {
+        return gameRegistry;
+    }
+
+    public ItemManager getItemManager() {
+        return itemManager;
+    }
+
+    public EnemyList getEnemyList() {
+        return enemyList;
     }
 
     class MainActivityHandler implements MessageToClientHandler {
@@ -390,6 +404,9 @@ public class MainActivity extends AppCompatActivity {
             if (enemyDisappearsConsumer != null) {
                 cleanBacklog(enemyAppearsConsumer);
             }
+
+            itemManager.setInventoryItemIDs(me.inventory());
+            itemManager.setEquippedItemIDs(me.equipped());
 
             if (playerConsumer != null) {
                 playerConsumer.accept(me);

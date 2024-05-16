@@ -24,6 +24,7 @@ import org.osmdroid.views.overlay.mylocation.IMyLocationProvider;
 import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay;
 
 import java.io.InputStream;
+import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -41,11 +42,12 @@ public class GameMap extends Fragment {
     private MapView mapView;
     private MainActivity mainActivity;
     private Timer timer;
-    private EnemyList enemyList;
     private MapEventsReceiver mapEventsReceiver;
     private Timer refreshLocationTimer;
     private MyLocationNewOverlay myLocationOverlay;
     private Timer areWeLoggedInTimer;
+    private EnemyList enemyList;
+
 
     @Override
     public View onCreateView(
@@ -55,13 +57,12 @@ public class GameMap extends Fragment {
 
 
         binding = GameMapFragmentBinding.inflate(inflater, container, false);
+        mainActivity = (MainActivity) getActivity();
+        enemyList = mainActivity.getEnemyList();
 
         MapTileProviderBasic tileProvider = new MapTileProviderBasic(inflater.getContext());
         mapView = new MapView(inflater.getContext(), tileProvider, null);
 
-        mainActivity = (MainActivity) getActivity();
-
-        enemyList = new EnemyList();
 
         binding.mapLayout.addView(mapView);
 
@@ -152,6 +153,16 @@ public class GameMap extends Fragment {
     public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
+        System.out.println("GameMap onViewCreated");
+
+        // We don't allow for any funny business when it comes to the map
+        List<Enemy> enemies = mainActivity.getEnemyList().getAllEnemies();
+        mainActivity.getEnemyList().clear();
+
+        for (Enemy e : enemies) {
+            enemyAppearsConsumer(e);
+        }
+
         IMapController controller = mapView.getController();
         controller.setZoom(19.0);
 
@@ -222,6 +233,7 @@ public class GameMap extends Fragment {
         centerMapOncePossible();
 
         mainActivity.locationChangeRequestNotifier.registerListener(this::centerMapOncePossible);
+
         mainActivity.setEnemyAppearsConsumer(this::enemyAppearsConsumer);
         mainActivity.setEnemyDisappearsConsumer(this::enemyDisappearsConsumer);
 
@@ -245,6 +257,10 @@ public class GameMap extends Fragment {
                 }
         );
 
+
+        binding.inventoryButton.setOnClickListener(v -> {
+            NavHostFragment.findNavController(GameMap.this).navigate(R.id.action_gameMap_to_inventoryFragment);
+        });
     }
 
     @Override
@@ -259,11 +275,14 @@ public class GameMap extends Fragment {
     @Override
     public void onDestroyView() {
         super.onDestroyView();
+        mainActivity.setOnMeUpdate(null);
+        mainActivity.setEnemyAppearsConsumer(null);
+        mainActivity.setEnemyDisappearsConsumer(null);
         binding = null;
         timer.cancel();
     }
 
-    private void enemyAppearsConsumer(Enemy e) {
+    private synchronized void enemyAppearsConsumer(Enemy e) {
         Drawable d = ResourcesCompat.getDrawable(getResources(), R.mipmap.ic_launcher, null);
         try {
             EnemyType type = mainActivity.gameRegistry.getEnemyType(e);

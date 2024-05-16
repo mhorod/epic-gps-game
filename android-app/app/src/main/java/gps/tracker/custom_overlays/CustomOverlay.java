@@ -16,8 +16,11 @@ import soturi.model.Position;
 
 // Works like a human overlay, but is less annoying to deal with
 public class CustomOverlay extends MyLocationNewOverlay {
+    private final MapView theMapView;
+
     public CustomOverlay(MapView mapView, Position position, Drawable drawable) {
         super(mapView);
+        theMapView = mapView;
         Bitmap bitmap = getBitmapFromDrawable(drawable);
         bitmap = Bitmap.createScaledBitmap(bitmap, 64, 64, true);
         setPersonIcon(bitmap);
@@ -63,6 +66,10 @@ public class CustomOverlay extends MyLocationNewOverlay {
 
             }
         };
+    }
+
+    public MapView getMapView() {
+        return theMapView;
     }
 
 }

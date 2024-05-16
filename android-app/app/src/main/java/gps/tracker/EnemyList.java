@@ -1,7 +1,9 @@
 package gps.tracker;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import gps.tracker.custom_overlays.EnemyOverlay;
 import soturi.model.Enemy;
@@ -15,13 +17,13 @@ public class EnemyList {
         this.enemies = new HashMap<>();
     }
 
-    public void addEnemy(Enemy enemy, EnemyOverlay overlay) {
+    public synchronized void addEnemy(Enemy enemy, EnemyOverlay overlay) {
         EnemyInstance instance = new EnemyInstance(enemy, overlay);
 
         enemies.put(enemy.enemyId(), instance);
     }
 
-    public EnemyOverlay getOverlay(EnemyId enemy) {
+    public synchronized EnemyOverlay getOverlay(EnemyId enemy) {
         if (!enemies.containsKey(enemy)) {
             return null;
         }
@@ -31,11 +33,11 @@ public class EnemyList {
         return instance.overlay();
     }
 
-    public void removeEnemy(EnemyId enemy) {
+    public synchronized void removeEnemy(EnemyId enemy) {
         enemies.remove(enemy);
     }
 
-    public Enemy getClosestEnemy(Position position) {
+    public synchronized Enemy getClosestEnemy(Position position) {
         Enemy closestEnemy = null;
         double closestDistance = Double.MAX_VALUE;
         for (EnemyInstance instance : enemies.values()) {
@@ -47,6 +49,26 @@ public class EnemyList {
             }
         }
         return closestEnemy;
+    }
+
+    public synchronized List<EnemyOverlay> getAllEnemyOverlays() {
+        return enemies.values().stream()
+                .map(EnemyInstance::overlay)
+                .collect(Collectors.toList());
+    }
+
+    public synchronized List<Enemy> getAllEnemies() {
+        return enemies.values().stream()
+                .map(EnemyInstance::enemy)
+                .collect(Collectors.toList());
+    }
+
+    public synchronized void clear() {
+        enemies.clear();
+    }
+
+    public synchronized boolean empty() {
+        return enemies.isEmpty();
     }
 
     private record EnemyInstance(Enemy enemy, EnemyOverlay overlay) {
