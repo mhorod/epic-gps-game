@@ -23,7 +23,6 @@ import org.osmdroid.views.overlay.mylocation.IMyLocationConsumer;
 import org.osmdroid.views.overlay.mylocation.IMyLocationProvider;
 import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay;
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -33,6 +32,7 @@ import gps.tracker.databinding.GameMapFragmentBinding;
 import soturi.model.Enemy;
 import soturi.model.EnemyId;
 import soturi.model.EnemyType;
+import soturi.model.Player;
 import soturi.model.Position;
 
 public class GameMap extends Fragment {
@@ -63,7 +63,9 @@ public class GameMap extends Fragment {
 
         enemyList = new EnemyList();
 
-        return mapView;
+        binding.mapLayout.addView(mapView);
+
+        return binding.getRoot();
 
     }
 
@@ -96,7 +98,7 @@ public class GameMap extends Fragment {
             mainActivity.runOnUiThread(() -> {
                 try {
                     NavHostFragment.findNavController(GameMap.this).navigate(R.id.action_gameMap_to_loginFragment);
-                } catch(Exception e) {
+                } catch (Exception e) {
                     // It happens
                 }
             });
@@ -210,6 +212,28 @@ public class GameMap extends Fragment {
         mainActivity.setEnemyAppearsConsumer(this::enemyAppearsConsumer);
         mainActivity.setEnemyDisappearsConsumer(this::enemyDisappearsConsumer);
 
+        mainActivity.setOnMeUpdate(
+                (Player me) -> {
+                    String hpString = me.hp() + "/" + me.statistics().maxHp();
+                    String atkString = String.valueOf(me.statistics().attack());
+                    String defString = String.valueOf(me.statistics().defense());
+
+                    mainActivity.runOnUiThread(() -> {
+                        binding.hpLevel.setText(hpString);
+                        binding.atkLevel.setText(atkString);
+                        binding.defLevel.setText(defString);
+
+                        binding.imageView.setVisibility(View.VISIBLE);
+                        binding.imageView2.setVisibility(View.VISIBLE);
+                        binding.imageView3.setVisibility(View.VISIBLE);
+                        binding.hpLevel.setVisibility(View.VISIBLE);
+                        binding.atkLevel.setVisibility(View.VISIBLE);
+                        binding.defLevel.setVisibility(View.VISIBLE);
+
+                    });
+                }
+        );
+
     }
 
     @Override
@@ -236,8 +260,7 @@ public class GameMap extends Fragment {
             Drawable draw = Drawable.createFromStream(stream, null);
             if (draw != null)
                 d = draw;
-        }
-        catch (Exception exc) {
+        } catch (Exception exc) {
             exc.printStackTrace();
         }
         EnemyOverlay overlay = new EnemyOverlay(mapView, new DrawableEnemy(d, e));

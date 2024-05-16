@@ -86,7 +86,5 @@ public class LoginFragment extends Fragment {
         super.onResume();
         mainActivity.logout();
         mainActivity.hideLocationKey();
-        mainActivity.hidePlayerStats();
-
     }
 }

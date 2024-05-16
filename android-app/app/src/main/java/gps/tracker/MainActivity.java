@@ -63,6 +63,7 @@ public class MainActivity extends AppCompatActivity {
     private Consumer<EnemyId> enemyDisappearsConsumer = null;
     private FragmentManager fragmentManager;
     private Runnable onDisconnectRunnable = null;
+    private Consumer<Player> playerConsumer = null;
 
     public void saveString(String key, String value) {
         try {
@@ -278,7 +279,6 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-
     public boolean loggedIn() {
         return webSocketClient != null;
     }
@@ -290,12 +290,7 @@ public class MainActivity extends AppCompatActivity {
     public void showLocationKey() {
         binding.findMeButton.setVisibility(View.VISIBLE);
     }
-
-    public void hidePlayerStats() {
-        binding.hpCounter.setVisibility(View.GONE);
-        binding.levelCounter.setVisibility(View.GONE);
-    }
-
+    
     public void onDisconnect() {
         this.webSocketClient = null;
 
@@ -307,6 +302,10 @@ public class MainActivity extends AppCompatActivity {
 
     public void setOnDisconnect(Runnable runnable) {
         this.onDisconnectRunnable = runnable;
+    }
+
+    public void setOnMeUpdate(Consumer<Player> consumer) {
+        this.playerConsumer = consumer;
     }
 
     class MainActivityHandler implements MessageToClientHandler {
@@ -392,14 +391,9 @@ public class MainActivity extends AppCompatActivity {
                 cleanBacklog(enemyAppearsConsumer);
             }
 
-            runOnUiThread(
-                    () -> {
-                        binding.hpCounter.setText("HP: " + me.hp() + "/" + me.statistics().maxHp());
-                        binding.levelCounter.setText("Lvl: " + me.lvl());
-                        binding.hpCounter.setVisibility(View.VISIBLE);
-                        binding.levelCounter.setVisibility(View.VISIBLE);
-                    }
-            );
+            if (playerConsumer != null) {
+                playerConsumer.accept(me);
+            }
         }
 
         @Override
