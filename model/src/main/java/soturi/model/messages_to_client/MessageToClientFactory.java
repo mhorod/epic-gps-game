@@ -3,10 +3,10 @@ package soturi.model.messages_to_client;
 import soturi.model.Config;
 import soturi.model.Enemy;
 import soturi.model.EnemyId;
-import soturi.model.Loot;
+import soturi.model.FightRecord;
+import soturi.model.FightResult;
 import soturi.model.Player;
 import soturi.model.Position;
-import soturi.model.Result;
 
 import java.util.List;
 import java.util.function.Consumer;
@@ -39,8 +39,13 @@ public final class MessageToClientFactory implements MessageToClientHandler {
     }
 
     @Override
-    public void fightResult(Result result, long lostHp, EnemyId enemyId, Loot loot) {
-        consumer.accept(new FightResult(result, lostHp, enemyId, loot));
+    public void fightDashboardInfo(FightRecord fightRecord) {
+        consumer.accept(new FightDashboardInfo(fightRecord));
+    }
+
+    @Override
+    public void fightInfo(EnemyId enemyId, FightResult fightResult) {
+        consumer.accept(new FightInfo(enemyId, fightResult));
     }
 
     @Override

@@ -1,12 +1,17 @@
 package soturi;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.junit.jupiter.api.Test;
 import soturi.model.Config;
 import soturi.model.EnemyId;
+import soturi.model.FightRecord;
 import soturi.model.messages_to_server.AttackEnemy;
 import soturi.model.messages_to_server.MessageToServer;
 import soturi.server.DynamicConfig;
+
+import java.time.Instant;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
