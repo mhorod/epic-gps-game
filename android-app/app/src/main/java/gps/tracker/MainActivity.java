@@ -27,7 +27,6 @@ import org.osmdroid.config.IConfigurationProvider;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
@@ -53,8 +52,8 @@ public class MainActivity extends AppCompatActivity {
 
     public final Notifier locationChangeRequestNotifier = new Notifier();
     private final List<LocationListener> sublisteners = new ArrayList<>();
+    public Registry gameRegistry;
     private WebSocketClient webSocketClient;
-
     private AppBarConfiguration appBarConfiguration;
     private ActivityMainBinding binding;
     private LocationListener locationListener;
@@ -64,7 +63,6 @@ public class MainActivity extends AppCompatActivity {
     private Consumer<EnemyId> enemyDisappearsConsumer = null;
     private FragmentManager fragmentManager;
     private Runnable onDisconnectRunnable = null;
-    public Registry gameRegistry;
 
     public void saveString(String key, String value) {
         try {
@@ -269,6 +267,10 @@ public class MainActivity extends AppCompatActivity {
         webSocketClient = new WebSocketClient(new MainActivityHandler(), userName, userPassword, false);
     }
 
+    public void devLogin(String userName, String userPassword) {
+        webSocketClient = new WebSocketClient(new MainActivityHandler(), userName, userPassword, true);
+    }
+
     public void logout() {
         if (webSocketClient != null) {
             try {
@@ -301,7 +303,7 @@ public class MainActivity extends AppCompatActivity {
     public void onDisconnect() {
         this.webSocketClient = null;
 
-        if(onDisconnectRunnable != null) {
+        if (onDisconnectRunnable != null) {
             onDisconnectRunnable.run();
             onDisconnectRunnable = null;
         }

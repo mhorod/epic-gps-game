@@ -12,16 +12,31 @@
         android:layout_height="match_parent">
 
         <Button
-            android:id="@+id/button"
+            android:id="@+id/loginButton"
             android:layout_width="153dp"
             android:layout_height="60dp"
             android:layout_marginStart="130dp"
-            android:layout_marginEnd="128dp"
-            android:layout_marginBottom="68dp"
+            android:layout_marginEnd="130dp"
+            android:layout_marginBottom="50dp"
+            android:foregroundGravity="center"
             android:text="Login"
+            app:layout_constraintBottom_toTopOf="@+id/devLoginButton"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.555"
+            app:layout_constraintStart_toStartOf="parent" />
+
+        <Button
+            android:id="@+id/devLoginButton"
+            android:layout_width="153dp"
+            android:layout_height="60dp"
+            android:layout_marginStart="130dp"
+            android:layout_marginEnd="130dp"
+            android:layout_marginBottom="100dp"
+            android:foregroundGravity="center"
+            android:text="Dev Login"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="1.0"
+            app:layout_constraintHorizontal_bias="0.555"
             app:layout_constraintStart_toStartOf="parent" />
 
         <EditText
@@ -32,6 +47,7 @@
             android:layout_marginTop="60dp"
             android:layout_marginEnd="101dp"
             android:ems="10"
+            android:foregroundGravity="center"
             android:hint="Password"
             android:inputType="textPassword"
             app:layout_constraintEnd_toEndOf="parent"
@@ -47,6 +63,7 @@
             android:layout_marginTop="84dp"
             android:layout_marginEnd="101dp"
             android:ems="10"
+            android:foregroundGravity="center"
             android:hint="Login"
             android:inputType="text"
             app:layout_constraintEnd_toEndOf="parent"
