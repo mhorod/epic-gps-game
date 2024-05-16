@@ -65,8 +65,21 @@ public class GameMap extends Fragment {
 
         binding.mapLayout.addView(mapView);
 
+        changeStatsVisibility(View.GONE);
+
         return binding.getRoot();
 
+    }
+
+    private void changeStatsVisibility(int visibility) {
+        binding.atkIcon.setVisibility(visibility);
+        binding.hpIcon.setVisibility(visibility);
+        binding.defIcon.setVisibility(visibility);
+        binding.hpLevel.setVisibility(visibility);
+        binding.atkLevel.setVisibility(visibility);
+        binding.defLevel.setVisibility(visibility);
+        binding.playerDesc.setVisibility(visibility);
+        binding.inventoryButton.setVisibility(visibility);
     }
 
     private void centerMapOncePossible() {
@@ -226,13 +239,7 @@ public class GameMap extends Fragment {
                         binding.defLevel.setText(defString);
                         binding.playerDesc.setText(playerDescString);
 
-                        binding.atkIcon.setVisibility(View.VISIBLE);
-                        binding.hpIcon.setVisibility(View.VISIBLE);
-                        binding.defIcon.setVisibility(View.VISIBLE);
-                        binding.hpLevel.setVisibility(View.VISIBLE);
-                        binding.atkLevel.setVisibility(View.VISIBLE);
-                        binding.defLevel.setVisibility(View.VISIBLE);
-                        binding.playerDesc.setVisibility(View.VISIBLE);
+                        changeStatsVisibility(View.VISIBLE);
 
                     });
                 }
