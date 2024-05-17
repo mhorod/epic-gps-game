@@ -161,9 +161,13 @@ public class GameMap extends Fragment {
         List<Enemy> enemies = mainActivity.getEnemyList().getAllEnemies();
         mainActivity.getEnemyList().clear();
 
-        for (Enemy e : enemies) {
-            enemyAppearsConsumer(e);
-        }
+        new Thread(
+                () -> {
+                    for (Enemy e : enemies) {
+                        enemyAppearsConsumer(e);
+                    }
+                }
+        ).start();
 
         IMapController controller = mapView.getController();
         controller.setZoom(19.0);
@@ -319,7 +323,7 @@ public class GameMap extends Fragment {
         });
     }
 
-    private void enemyDisappearsConsumer(EnemyId e) {
+    private synchronized void enemyDisappearsConsumer(EnemyId e) {
         EnemyOverlay overlay = enemyList.getOverlay(e);
         enemyList.removeEnemy(e);
 
