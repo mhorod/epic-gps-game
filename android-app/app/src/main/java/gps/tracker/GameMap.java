@@ -243,7 +243,14 @@ public class GameMap extends Fragment {
                     String hpString = me.hp() + "/" + me.statistics().maxHp();
                     String atkString = String.valueOf(me.statistics().attack());
                     String defString = String.valueOf(me.statistics().defense());
-                    String levelString = String.valueOf(me.lvl());
+
+                    long xpInCurrentLevel = me.xp() - mainActivity.gameRegistry.getXpForLvlCumulative(me.lvl());
+                    long xpForNextLevel = mainActivity.gameRegistry.getXpForNextLvl(me.lvl());
+
+                    double xpPercentage = (double) xpInCurrentLevel / xpForNextLevel;
+                    int percentage = (int) (xpPercentage * 100);
+
+                    String levelString = me.lvl() + " (" + percentage + "%)";
 
                     mainActivity.runOnUiThread(() -> {
                         binding.hpLevel.setText(hpString);

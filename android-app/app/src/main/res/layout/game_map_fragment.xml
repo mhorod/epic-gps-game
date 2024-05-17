@@ -147,6 +147,12 @@
             android:layout_height="match_parent"
             android:orientation="vertical">
 
+            <Space
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:minHeight="10dp" />
+
             <Button
                 android:id="@+id/inventoryButton"
                 android:layout_width="198dp"
