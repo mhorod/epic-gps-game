@@ -261,6 +261,10 @@ public class GameMap extends Fragment {
         binding.inventoryButton.setOnClickListener(v -> {
             NavHostFragment.findNavController(GameMap.this).navigate(R.id.action_gameMap_to_inventoryFragment);
         });
+
+        binding.findMeButton.setOnClickListener(v -> {
+            centerMapOncePossible();
+        });
     }
 
     @Override
@@ -269,7 +273,6 @@ public class GameMap extends Fragment {
         startRefreshingLocation();
 
         mainActivity.setOnDisconnect(this::onDisconnect);
-        mainActivity.showLocationKey();
     }
 
     @Override

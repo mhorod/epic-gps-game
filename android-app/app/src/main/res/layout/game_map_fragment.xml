@@ -7,6 +7,16 @@
     tools:context=".GameMap">
 
 
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/findMeButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|right"
+        android:layout_marginRight="16dp"
+        android:layout_marginBottom="16dp"
+        android:clickable="true"
+        android:src="@drawable/osm_ic_center_map" />
+
     <LinearLayout
         android:id="@+id/mapLayout"
         android:layout_width="match_parent"

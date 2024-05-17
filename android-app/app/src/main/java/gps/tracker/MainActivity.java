@@ -10,7 +10,6 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.View;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
@@ -44,7 +43,6 @@ import soturi.model.Enemy;
 import soturi.model.EnemyId;
 import soturi.model.FightRecord;
 import soturi.model.FightResult;
-import soturi.model.Loot;
 import soturi.model.Player;
 import soturi.model.Position;
 import soturi.model.Result;
@@ -121,10 +119,6 @@ public class MainActivity extends AppCompatActivity {
         mapConfig.setOsmdroidBasePath(basePath);
         mapConfig.setOsmdroidTileCache(tileCache);
 
-
-        binding.findMeButton.setOnClickListener(view -> {
-            locationChangeRequestNotifier.notifyListeners();
-        });
     }
 
     private void requestPermissions() {
@@ -285,14 +279,6 @@ public class MainActivity extends AppCompatActivity {
 
     public boolean loggedIn() {
         return webSocketClient != null;
-    }
-
-    public void hideLocationKey() {
-        binding.findMeButton.setVisibility(View.GONE);
-    }
-
-    public void showLocationKey() {
-        binding.findMeButton.setVisibility(View.VISIBLE);
     }
 
     public void onDisconnect() {
