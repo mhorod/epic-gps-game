@@ -168,7 +168,7 @@
                 android:layout_gravity="center_horizontal"
                 android:layout_weight="1"
                 android:text="Inventory"
-                app:icon="@drawable/hoodie"
+                app:icon="@drawable/soturi_dragon"
                 tools:visibility="visible" />
         </LinearLayout>
     </LinearLayout>
