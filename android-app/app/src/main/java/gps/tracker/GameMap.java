@@ -82,6 +82,7 @@ public class GameMap extends Fragment {
         binding.inventoryButton.setVisibility(visibility);
         binding.levelImageView.setVisibility(visibility);
         binding.levelLevel.setVisibility(visibility);
+        binding.progressBar.setVisibility(visibility);
     }
 
     private void centerMapOncePossible() {
@@ -247,16 +248,19 @@ public class GameMap extends Fragment {
                     long xpInCurrentLevel = me.xp() - mainActivity.gameRegistry.getXpForLvlCumulative(me.lvl());
                     long xpForNextLevel = mainActivity.gameRegistry.getXpForNextLvl(me.lvl());
 
-                    double xpPercentage = (double) xpInCurrentLevel / xpForNextLevel;
-                    int percentage = (int) (xpPercentage * 100);
+                    double progress = me.lvl() == mainActivity.gameRegistry.getMaxLvl() ?
+                            1.0 : ((double) xpInCurrentLevel) / xpForNextLevel;
 
-                    String levelString = me.lvl() + " (" + percentage + "%)";
+                    String levelString = me.lvl() + "";
 
                     mainActivity.runOnUiThread(() -> {
                         binding.hpLevel.setText(hpString);
                         binding.atkLevel.setText(atkString);
                         binding.defLevel.setText(defString);
                         binding.levelLevel.setText(levelString);
+
+                        binding.progressBar.setMax(10000);
+                        binding.progressBar.setProgress((int) (progress * 10000));
 
                         changeStatsVisibility(View.VISIBLE);
 
