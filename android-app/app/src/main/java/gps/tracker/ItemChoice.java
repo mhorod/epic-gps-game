@@ -1,5 +1,6 @@
 package gps.tracker;
 
+import android.app.AlertDialog;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
@@ -202,7 +203,14 @@ public class ItemChoice extends Fragment {
                     v -> {
                         mainActivity.getWebSocketClient().send().equipItem(item.itemId());
                         mainActivity.runOnUiThread(
-                                () -> NavHostFragment.findNavController(ItemChoice.this).popBackStack()
+                                () -> {
+                                    NavHostFragment.findNavController(ItemChoice.this).popBackStack();
+                                    AlertDialog.Builder builder = new AlertDialog.Builder(mainActivity);
+                                    builder.setMessage("You have equipped " + item.name() + "!");
+                                    builder.setPositiveButton("Splendid!", (ignore, ignore2) -> {
+                                    });
+                                    builder.show();
+                                }
                         );
                     }
             );
