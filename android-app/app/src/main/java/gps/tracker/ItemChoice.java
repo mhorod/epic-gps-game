@@ -183,7 +183,7 @@ public class ItemChoice extends Fragment {
             ObjectWithDescription attackDescription = new ObjectWithDescription(
                     context,
                     String.valueOf(item.statistics().attack()),
-                    R.drawable.sword,
+                    R.drawable.sword2,
                     20
             );
 
