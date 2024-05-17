@@ -74,7 +74,7 @@ public class ItemChoice extends Fragment {
             verticalSpace.setMinimumHeight(50);
 
             Item currentlyEquippedItem = equippedItems.get(0);
-            CurrentlyOwnedItemSegment currentlyOwnedItemSegment = new CurrentlyOwnedItemSegment(mainActivity, currentlyEquippedItem);
+            FullItemInfoSegment currentlyOwnedItemSegment = new FullItemInfoSegment(mainActivity, currentlyEquippedItem);
             Space verticalSpace2 = new Space(mainActivity);
             verticalSpace2.setMinimumHeight(100);
 
@@ -89,7 +89,7 @@ public class ItemChoice extends Fragment {
         }
 
         TextView unequippedItemsText = new TextView(mainActivity);
-        unequippedItemsText.setText("Currently unequipped items:");
+        unequippedItemsText.setText("Inventory:");
         unequippedItemsText.setGravity(Gravity.CENTER_HORIZONTAL);
 
         Space verticalSpace3 = new Space(mainActivity);
@@ -105,7 +105,7 @@ public class ItemChoice extends Fragment {
         List<Item> items = itemManager.getItemsOfType(type);
 
         for (Item item : items) {
-            ItemChoiceSegment choiceSegment = new ItemChoiceSegment(mainActivity, item);
+            FullItemInfoWithEquipButton choiceSegment = new FullItemInfoWithEquipButton(mainActivity, item);
             Space verticalSpace = new Space(mainActivity);
             verticalSpace.setMinimumHeight(20);
 
@@ -126,38 +126,9 @@ public class ItemChoice extends Fragment {
         return binding.getRoot();
     }
 
-    private class ItemChoiceSegment extends LinearLayout {
+    private class FullItemInfoSegment extends LinearLayout {
 
-        public ItemChoiceSegment(Context context, @NonNull Item item) {
-            super(context);
-
-            this.setOrientation(LinearLayout.HORIZONTAL);
-
-
-            ObjectWithDescription objectWithDescription = new ObjectWithDescription(
-                    context,
-                    item.name(),
-                    getBitmapFromItem(item),
-                    20
-            );
-
-            Space horizontalSpace = new Space(context);
-            horizontalSpace.setMinimumWidth(50);
-
-            MaterialButton infoButton = new MaterialButton(context);
-            infoButton.setText("Info");
-
-            this.addView(objectWithDescription);
-            this.addView(horizontalSpace);
-            this.addView(infoButton);
-
-            this.setGravity(Gravity.CENTER_HORIZONTAL);
-        }
-    }
-
-    private class CurrentlyOwnedItemSegment extends LinearLayout {
-
-        public CurrentlyOwnedItemSegment(Context context, @NonNull Item item) {
+        public FullItemInfoSegment(Context context, @NonNull Item item) {
             super(context);
 
             this.setOrientation(LinearLayout.HORIZONTAL);
@@ -216,4 +187,28 @@ public class ItemChoice extends Fragment {
         }
     }
 
+    private class FullItemInfoWithEquipButton extends FullItemInfoSegment {
+
+        public FullItemInfoWithEquipButton(Context context, @NonNull Item item) {
+            super(context, item);
+
+            Space horizontalSpace = new Space(context);
+            horizontalSpace.setMinimumWidth(50);
+
+            MaterialButton equipButton = new MaterialButton(context);
+            equipButton.setText("Equip");
+
+            equipButton.setOnClickListener(
+                    v -> {
+                        mainActivity.getWebSocketClient().send().equipItem(item.itemId());
+                        mainActivity.runOnUiThread(
+                                () -> NavHostFragment.findNavController(ItemChoice.this).popBackStack()
+                        );
+                    }
+            );
+
+            this.addView(horizontalSpace);
+            this.addView(equipButton);
+        }
+    }
 }
