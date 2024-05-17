@@ -17,39 +17,9 @@
         <com.google.android.material.appbar.MaterialToolbar
             android:id="@+id/toolbar"
             android:layout_width="match_parent"
-            android:layout_height="?attr/actionBarSize">
-
-            <TextView
-                android:id="@+id/hp_counter"
-                android:layout_width="100dp"
-                android:layout_height="match_parent"
-                android:layout_gravity="end"
-                android:layout_margin="20dp"
-                android:text="Lvl: 200"
-                android:visibility="gone" />
-
-            <TextView
-                android:id="@+id/level_counter"
-                android:layout_width="100dp"
-                android:layout_height="match_parent"
-                android:layout_gravity="end"
-                android:layout_margin="20dp"
-                android:text="HP: 200"
-                android:visibility="gone" />
-
-        </com.google.android.material.appbar.MaterialToolbar>
+            android:layout_height="?attr/actionBarSize" />
     </com.google.android.material.appbar.AppBarLayout>
 
     <include layout="@layout/content_main" />
-
-    <com.google.android.material.floatingactionbutton.FloatingActionButton
-        android:id="@+id/find_me_button"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="bottom|end"
-        android:layout_margin="16dp"
-        android:contextClickable="false"
-        android:src="@android:drawable/ic_menu_mylocation"
-        android:visibility="gone" />
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

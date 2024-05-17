@@ -36,7 +36,7 @@ public class LoginFragment extends Fragment {
         }
 
 
-        binding.button.setOnClickListener(
+        binding.loginButton.setOnClickListener(
                 (e) -> {
                     String lambdaUsername = binding.editTextText.getText().toString();
                     String lambdaPassword = binding.editTextTextPassword.getText().toString();
@@ -48,7 +48,25 @@ public class LoginFragment extends Fragment {
 
                     mainActivity.runOnUiThread(
                             () -> {
-                                mainActivity.login(lambdaUsername, lambdaPassword);
+                                mainActivity.login(lambdaUsername, lambdaPassword, false);
+                                NavHostFragment.findNavController(LoginFragment.this).navigate(R.id.action_loginFragment_to_gameMap);
+                            }
+                    );
+                }
+        );
+
+        binding.devLoginButton.setOnClickListener(
+                (e) -> {
+                    String lambdaUsername = binding.editTextText.getText().toString();
+                    String lambdaPassword = binding.editTextTextPassword.getText().toString();
+
+
+                    mainActivity.saveString("username", lambdaUsername);
+                    mainActivity.saveString("password", lambdaPassword);
+
+                    mainActivity.runOnUiThread(
+                            () -> {
+                                mainActivity.login(lambdaUsername, lambdaPassword, true);
                                 NavHostFragment.findNavController(LoginFragment.this).navigate(R.id.action_loginFragment_to_gameMap);
                             }
                     );
@@ -67,8 +85,5 @@ public class LoginFragment extends Fragment {
     public void onResume() {
         super.onResume();
         mainActivity.logout();
-        mainActivity.hideLocationKey();
-        mainActivity.hidePlayerStats();
-
     }
 }

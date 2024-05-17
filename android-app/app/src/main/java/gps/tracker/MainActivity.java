@@ -10,7 +10,6 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.View;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
@@ -27,7 +26,6 @@ import org.osmdroid.config.IConfigurationProvider;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
@@ -45,7 +43,6 @@ import soturi.model.Enemy;
 import soturi.model.EnemyId;
 import soturi.model.FightRecord;
 import soturi.model.FightResult;
-import soturi.model.Loot;
 import soturi.model.Player;
 import soturi.model.Position;
 import soturi.model.Result;
@@ -55,8 +52,10 @@ public class MainActivity extends AppCompatActivity {
 
     public final Notifier locationChangeRequestNotifier = new Notifier();
     private final List<LocationListener> sublisteners = new ArrayList<>();
+    private final ItemManager itemManager = new ItemManager(this);
+    private final EnemyList enemyList = new EnemyList();
+    public Registry gameRegistry;
     private WebSocketClient webSocketClient;
-
     private AppBarConfiguration appBarConfiguration;
     private ActivityMainBinding binding;
     private LocationListener locationListener;
@@ -66,7 +65,7 @@ public class MainActivity extends AppCompatActivity {
     private Consumer<EnemyId> enemyDisappearsConsumer = null;
     private FragmentManager fragmentManager;
     private Runnable onDisconnectRunnable = null;
-    public Registry gameRegistry;
+    private Consumer<Player> playerConsumer = null;
 
     public void saveString(String key, String value) {
         try {
@@ -120,10 +119,6 @@ public class MainActivity extends AppCompatActivity {
         mapConfig.setOsmdroidBasePath(basePath);
         mapConfig.setOsmdroidTileCache(tileCache);
 
-
-        binding.findMeButton.setOnClickListener(view -> {
-            locationChangeRequestNotifier.notifyListeners();
-        });
     }
 
     private void requestPermissions() {
@@ -267,8 +262,8 @@ public class MainActivity extends AppCompatActivity {
         return webSocketClient;
     }
 
-    public void login(String userName, String userPassword) {
-        webSocketClient = new WebSocketClient(new MainActivityHandler(), userName, userPassword, false);
+    public void login(String userName, String userPassword, boolean dev) {
+        webSocketClient = new WebSocketClient(new MainActivityHandler(), userName, userPassword, dev);
     }
 
     public void logout() {
@@ -282,28 +277,15 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-
     public boolean loggedIn() {
         return webSocketClient != null;
     }
 
-    public void hideLocationKey() {
-        binding.findMeButton.setVisibility(View.GONE);
-    }
-
-    public void showLocationKey() {
-        binding.findMeButton.setVisibility(View.VISIBLE);
-    }
-
-    public void hidePlayerStats() {
-        binding.hpCounter.setVisibility(View.GONE);
-        binding.levelCounter.setVisibility(View.GONE);
-    }
-
     public void onDisconnect() {
         this.webSocketClient = null;
+        enemyList.clear();
 
-        if(onDisconnectRunnable != null) {
+        if (onDisconnectRunnable != null) {
             onDisconnectRunnable.run();
             onDisconnectRunnable = null;
         }
@@ -311,6 +293,22 @@ public class MainActivity extends AppCompatActivity {
 
     public void setOnDisconnect(Runnable runnable) {
         this.onDisconnectRunnable = runnable;
+    }
+
+    public void setOnMeUpdate(Consumer<Player> consumer) {
+        this.playerConsumer = consumer;
+    }
+
+    public Registry getGameRegistry() {
+        return gameRegistry;
+    }
+
+    public ItemManager getItemManager() {
+        return itemManager;
+    }
+
+    public EnemyList getEnemyList() {
+        return enemyList;
     }
 
     class MainActivityHandler implements MessageToClientHandler {
@@ -401,14 +399,12 @@ public class MainActivity extends AppCompatActivity {
                 cleanBacklog(enemyAppearsConsumer);
             }
 
-            runOnUiThread(
-                    () -> {
-                        binding.hpCounter.setText("HP: " + me.hp() + "/" + me.statistics().maxHp());
-                        binding.levelCounter.setText("Lvl: " + me.lvl());
-                        binding.hpCounter.setVisibility(View.VISIBLE);
-                        binding.levelCounter.setVisibility(View.VISIBLE);
-                    }
-            );
+            itemManager.setInventoryItemIDs(me.inventory());
+            itemManager.setEquippedItemIDs(me.equipped());
+
+            if (playerConsumer != null) {
+                playerConsumer.accept(me);
+            }
         }
 
         @Override
