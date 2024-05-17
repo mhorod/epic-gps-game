@@ -79,8 +79,9 @@ public class GameMap extends Fragment {
         binding.hpLevel.setVisibility(visibility);
         binding.atkLevel.setVisibility(visibility);
         binding.defLevel.setVisibility(visibility);
-        binding.playerDesc.setVisibility(visibility);
         binding.inventoryButton.setVisibility(visibility);
+        binding.levelImageView.setVisibility(visibility);
+        binding.levelLevel.setVisibility(visibility);
     }
 
     private void centerMapOncePossible() {
@@ -242,14 +243,13 @@ public class GameMap extends Fragment {
                     String hpString = me.hp() + "/" + me.statistics().maxHp();
                     String atkString = String.valueOf(me.statistics().attack());
                     String defString = String.valueOf(me.statistics().defense());
-
-                    String playerDescString = me.name() + ", lvl " + me.lvl();
+                    String levelString = String.valueOf(me.lvl());
 
                     mainActivity.runOnUiThread(() -> {
                         binding.hpLevel.setText(hpString);
                         binding.atkLevel.setText(atkString);
                         binding.defLevel.setText(defString);
-                        binding.playerDesc.setText(playerDescString);
+                        binding.levelLevel.setText(levelString);
 
                         changeStatsVisibility(View.VISIBLE);
 
@@ -278,6 +278,7 @@ public class GameMap extends Fragment {
         mainActivity.setOnMeUpdate(null);
         mainActivity.setEnemyAppearsConsumer(null);
         mainActivity.setEnemyDisappearsConsumer(null);
+
         binding = null;
         timer.cancel();
     }

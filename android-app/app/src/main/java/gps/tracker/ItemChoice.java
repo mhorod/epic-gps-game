@@ -1,30 +1,43 @@
 package gps.tracker;
 
+import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.Space;
 import android.widget.TextView;
 
+import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 import androidx.navigation.fragment.NavHostFragment;
 
 import com.google.android.material.button.MaterialButton;
 
+import java.io.InputStream;
 import java.util.List;
 
 import gps.tracker.databinding.FragmentItemChoiceBinding;
+import gps.tracker.views.ObjectWithDescription;
 import soturi.model.Item;
-import soturi.model.messages_to_server.EquipItem;
 
 public class ItemChoice extends Fragment {
 
     FragmentItemChoiceBinding binding;
     MainActivity mainActivity;
     ItemManager itemManager;
+
+    private Bitmap getBitmapFromItem(@NonNull Item item) {
+        InputStream stream = getClass().getClassLoader().getResourceAsStream(item.gfxName());
+        Drawable draw = Drawable.createFromStream(stream, null);
+        BitmapDrawable bitmapDrawable = (BitmapDrawable) draw;
+        return bitmapDrawable.getBitmap();
+    }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -44,136 +57,65 @@ public class ItemChoice extends Fragment {
             );
         }
 
+        List<Item> equippedItems = itemManager.getEquippedItemsOfType(type);
+
+        if (equippedItems.isEmpty()) {
+            TextView textView = new TextView(mainActivity);
+            textView.setText("No items of this type are currently equipped.");
+            textView.setGravity(Gravity.CENTER_HORIZONTAL);
+
+            binding.itemChoiceLayout.addView(textView);
+        } else {
+            TextView textView = new TextView(mainActivity);
+            textView.setText("Currently equipped item:");
+            textView.setGravity(Gravity.CENTER_HORIZONTAL);
+
+            Space verticalSpace = new Space(mainActivity);
+            verticalSpace.setMinimumHeight(50);
+
+            Item currentlyEquippedItem = equippedItems.get(0);
+            CurrentlyOwnedItemSegment currentlyOwnedItemSegment = new CurrentlyOwnedItemSegment(mainActivity, currentlyEquippedItem);
+            Space verticalSpace2 = new Space(mainActivity);
+            verticalSpace2.setMinimumHeight(100);
+
+            mainActivity.runOnUiThread(
+                    () -> {
+                        binding.itemChoiceLayout.addView(textView);
+                        binding.itemChoiceLayout.addView(verticalSpace);
+                        binding.itemChoiceLayout.addView(currentlyOwnedItemSegment);
+                        binding.itemChoiceLayout.addView(verticalSpace2);
+                    }
+            );
+        }
+
+        TextView unequippedItemsText = new TextView(mainActivity);
+        unequippedItemsText.setText("Currently unequipped items:");
+        unequippedItemsText.setGravity(Gravity.CENTER_HORIZONTAL);
+
+        Space verticalSpace3 = new Space(mainActivity);
+        verticalSpace3.setMinimumHeight(50);
+
+        mainActivity.runOnUiThread(
+                () -> {
+                    binding.itemChoiceLayout.addView(unequippedItemsText);
+                    binding.itemChoiceLayout.addView(verticalSpace3);
+                }
+        );
+
         List<Item> items = itemManager.getItemsOfType(type);
 
         for (Item item : items) {
-            int spaceWidth = 10;
-            int maxImageWidth = 16;
-            // Time for some perfectly normal UI code with no issues whatsoever
+            ItemChoiceSegment choiceSegment = new ItemChoiceSegment(mainActivity, item);
+            Space verticalSpace = new Space(mainActivity);
+            verticalSpace.setMinimumHeight(20);
 
-            LinearLayout layout = new LinearLayout(mainActivity);
-            layout.setOrientation(LinearLayout.HORIZONTAL);
-
-            LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(
-                    LinearLayout.LayoutParams.MATCH_PARENT,
-                    LinearLayout.LayoutParams.WRAP_CONTENT
-            );
-            layoutParams.setMargins(spaceWidth, 2 * spaceWidth, spaceWidth, 2 * spaceWidth);
-
-            layout.setLayoutParams(layoutParams);
-
-            TextView name = new TextView(mainActivity);
-            name.setText(item.name());
-            name.setGravity(View.TEXT_ALIGNMENT_CENTER);
-            name.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
-            layout.addView(name);
-
-            Space space1 = new Space(mainActivity);
-            space1.setMinimumWidth(spaceWidth);
-            layout.addView(space1);
-
-            ImageView hpImage = new ImageView(mainActivity);
-            hpImage.setImageResource(R.drawable.heart);
-            hpImage.setForegroundGravity(View.TEXT_ALIGNMENT_CENTER);
-            hpImage.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
-            hpImage.setMaxWidth(maxImageWidth);
-            layout.addView(hpImage);
-
-            Space space2 = new Space(mainActivity);
-            space2.setMinimumWidth(spaceWidth);
-            layout.addView(space2);
-
-            TextView hp = new TextView(mainActivity);
-            hp.setText(String.valueOf(item.statistics().maxHp()));
-            hp.setGravity(View.TEXT_ALIGNMENT_CENTER);
-            hp.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
-            layout.addView(hp);
-
-            Space space3 = new Space(mainActivity);
-            space3.setMinimumWidth(spaceWidth);
-            layout.addView(space3);
-
-            ImageView attackImage = new ImageView(mainActivity);
-            attackImage.setImageResource(R.drawable.sword);
-            attackImage.setForegroundGravity(View.TEXT_ALIGNMENT_CENTER);
-            attackImage.setMaxWidth(maxImageWidth);
-            layout.addView(attackImage);
-
-            Space space4 = new Space(mainActivity);
-            space4.setMinimumWidth(spaceWidth);
-            layout.addView(space4);
-
-
-            TextView attack = new TextView(mainActivity);
-            attack.setText(String.valueOf(item.statistics().attack()));
-            attack.setGravity(View.TEXT_ALIGNMENT_CENTER);
-            attack.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
-            layout.addView(attack);
-
-            Space space5 = new Space(mainActivity);
-            space5.setMinimumWidth(spaceWidth);
-            layout.addView(space5);
-
-            ImageView defenseImage = new ImageView(mainActivity);
-            defenseImage.setImageResource(R.drawable.shield);
-            defenseImage.setForegroundGravity(View.TEXT_ALIGNMENT_CENTER);
-            defenseImage.setMaxWidth(maxImageWidth);
-            layout.addView(defenseImage);
-
-            Space space6 = new Space(mainActivity);
-            space6.setMinimumWidth(spaceWidth);
-            layout.addView(space6);
-
-            TextView defense = new TextView(mainActivity);
-            defense.setText(String.valueOf(item.statistics().defense()));
-            defense.setGravity(View.TEXT_ALIGNMENT_CENTER);
-            layout.addView(defense);
-
-            Space space7 = new Space(mainActivity);
-            space7.setMinimumWidth(spaceWidth);
-            layout.addView(space7);
-
-            MaterialButton equipButton = new MaterialButton(mainActivity);
-            equipButton.setText("Equip");
-            equipButton.setGravity(View.TEXT_ALIGNMENT_CENTER);
-            layout.addView(equipButton);
-
-            equipButton.setOnClickListener(
-                    v -> {
-                        mainActivity.getWebSocketClient().sendMessage(new EquipItem(item.itemId()));
-
-                        System.out.println("Layout has " + layout.getChildCount() + " children.");
-
-                        for (int i = 0; i < layout.getChildCount(); i++) {
-                            View child = layout.getChildAt(i);
-                            if (child instanceof LinearLayout linlayout) {
-                                System.out.println("LinearLayout found.");
-                                for (int j = 0; j < linlayout.getChildCount(); j++) {
-                                    View grandchild = linlayout.getChildAt(j);
-                                    if (grandchild instanceof MaterialButton button) {
-                                        System.out.println("Button found.");
-                                        mainActivity.runOnUiThread(
-                                                () -> {
-                                                    button.setIcon(null);
-                                                    button.invalidate();
-                                                }
-                                        );
-                                    }
-                                }
-                            }
-                        }
-
-                        mainActivity.runOnUiThread(
-                                () -> {
-                                    equipButton.setIcon(getResources().getDrawable(R.drawable.checkmark));
-                                }
-                        );
+            mainActivity.runOnUiThread(
+                    () -> {
+                        binding.itemChoiceLayout.addView(choiceSegment);
+                        binding.itemChoiceLayout.addView(verticalSpace);
                     }
             );
 
-            mainActivity.runOnUiThread(
-                    () -> binding.itemChoiceLayout.addView(layout)
-            );
         }
     }
 
@@ -184,5 +126,94 @@ public class ItemChoice extends Fragment {
         return binding.getRoot();
     }
 
+    private class ItemChoiceSegment extends LinearLayout {
+
+        public ItemChoiceSegment(Context context, @NonNull Item item) {
+            super(context);
+
+            this.setOrientation(LinearLayout.HORIZONTAL);
+
+
+            ObjectWithDescription objectWithDescription = new ObjectWithDescription(
+                    context,
+                    item.name(),
+                    getBitmapFromItem(item),
+                    20
+            );
+
+            Space horizontalSpace = new Space(context);
+            horizontalSpace.setMinimumWidth(50);
+
+            MaterialButton infoButton = new MaterialButton(context);
+            infoButton.setText("Info");
+
+            this.addView(objectWithDescription);
+            this.addView(horizontalSpace);
+            this.addView(infoButton);
+
+            this.setGravity(Gravity.CENTER_HORIZONTAL);
+        }
+    }
+
+    private class CurrentlyOwnedItemSegment extends LinearLayout {
+
+        public CurrentlyOwnedItemSegment(Context context, @NonNull Item item) {
+            super(context);
+
+            this.setOrientation(LinearLayout.HORIZONTAL);
+
+            Bitmap itemBitmap = getBitmapFromItem(item);
+            itemBitmap = Bitmap.createScaledBitmap(itemBitmap, 89, 89, false);
+
+
+            ObjectWithDescription objectWithDescription = new ObjectWithDescription(
+                    context,
+                    item.name(),
+                    itemBitmap,
+                    20
+            );
+
+            ObjectWithDescription hpDescription = new ObjectWithDescription(
+                    context,
+                    String.valueOf(item.statistics().maxHp()),
+                    R.drawable.heart,
+                    20
+            );
+
+            ObjectWithDescription attackDescription = new ObjectWithDescription(
+                    context,
+                    String.valueOf(item.statistics().attack()),
+                    R.drawable.sword,
+                    20
+            );
+
+            ObjectWithDescription defenseDescription = new ObjectWithDescription(
+                    context,
+                    String.valueOf(item.statistics().defense()),
+                    R.drawable.shield,
+                    20
+            );
+
+
+            Space horizontalSpace = new Space(context);
+            horizontalSpace.setMinimumWidth(50);
+
+            Space horizontalSpace2 = new Space(context);
+            horizontalSpace2.setMinimumWidth(50);
+
+            Space horizontalSpace3 = new Space(context);
+            horizontalSpace3.setMinimumWidth(50);
+
+            this.addView(objectWithDescription);
+            this.addView(horizontalSpace);
+            this.addView(hpDescription);
+            this.addView(horizontalSpace2);
+            this.addView(attackDescription);
+            this.addView(horizontalSpace3);
+            this.addView(defenseDescription);
+
+            this.setGravity(Gravity.CENTER_HORIZONTAL);
+        }
+    }
 
 }

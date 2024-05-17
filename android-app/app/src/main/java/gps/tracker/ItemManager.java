@@ -21,6 +21,12 @@ public class ItemManager {
         this.activity = activity;
     }
 
+    public List<Item> getEquippedItemsOfType(Item.ItemType type) {
+        return itemIDsToItems(equippedItemIDs).stream()
+                .filter(item -> item.type().equals(type))
+                .collect(Collectors.toList());
+    }
+
     public List<Item> getEquippedItems() {
         return itemIDsToItems(equippedItemIDs);
     }

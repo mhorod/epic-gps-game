@@ -28,7 +28,7 @@
     <fragment
         android:id="@+id/inventoryFragment"
         android:name="gps.tracker.InventoryFragment"
-        android:label="fragment_inventory"
+        android:label="Choose the item category"
         tools:layout="@layout/fragment_inventory">
         <action
             android:id="@+id/action_inventoryFragment_to_itemChoice"
@@ -37,6 +37,6 @@
     <fragment
         android:id="@+id/itemChoice"
         android:name="gps.tracker.ItemChoice"
-        android:label="fragment_item_choice"
+        android:label="Choose an item"
         tools:layout="@layout/fragment_item_choice" />
 </navigation>
