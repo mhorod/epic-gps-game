@@ -35,7 +35,7 @@ function MarkerCluster(props: MarkerClusterProps) {
     L.geoJson(null, { pointToLayer: createClusterIcon }).addTo(map),
   );
 
-  const index = new Supercluster({ radius: 100, maxZoom: 16 });
+  const index = new Supercluster({ radius: 100, maxZoom: 14 });
   const features: GeoJSON.Feature<geojson.Point, PointProperties>[] =
     props.markers.map((m) => {
       return {
