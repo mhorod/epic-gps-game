@@ -19,7 +19,6 @@ class Entities {
   }
 
   addEnemy(enemy: Enemy) {
-    console.log(enemy, enemy.enemyId);
     this.enemies.set(enemy.enemyId, enemy);
   }
 

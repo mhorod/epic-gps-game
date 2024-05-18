@@ -1,11 +1,14 @@
-import { MouseEventHandler } from "react";
+import { CSSProperties, MouseEventHandler } from "react";
 import { Skull, Close, Person } from "react-ionicons";
 
 import { Enemy, PlayerWithPosition, Position } from "../model/model";
 
+import { FixedSizeList as List, ListChildComponentProps } from "react-window";
+
 import IconWrapper from "../IconWrapper";
 import SearchResult from "./SearchResult";
 import SearchResultView from "./SearchResultView";
+
 import configManager from "../Config";
 
 type SearchModalProps = {
@@ -15,7 +18,11 @@ type SearchModalProps = {
   zoomOn: (p: Position) => void;
 };
 
-function resultView(r: SearchResult, zoomOn: (p: Position) => void) {
+function resultView(
+  r: SearchResult,
+  zoomOn: (p: Position) => void,
+  style: CSSProperties,
+) {
   if (r.kind === "Enemy") {
     const enemy = r.value as Enemy;
     const t = configManager.getEnemyTypeById(enemy.typeId);
@@ -26,6 +33,7 @@ function resultView(r: SearchResult, zoomOn: (p: Position) => void) {
         name={t?.name || "undefined"}
         type={"Enemy lvl " + enemy.lvl}
         onClick={() => zoomOn(enemy.position)}
+        style={style}
       />
     );
   } else if (r.kind === "Player") {
@@ -39,15 +47,26 @@ function resultView(r: SearchResult, zoomOn: (p: Position) => void) {
         onClick={() => {
           if (player.position !== null) zoomOn(player.position);
         }}
+        style={style}
       />
     );
   } else {
     console.log("???");
+    return <div> </div>;
   }
 }
 
 function SearchModal(props: SearchModalProps) {
   const className = props.active ? "active" : "";
+  const Element: React.FC<ListChildComponentProps> = ({
+    index,
+    style,
+  }: {
+    index: number;
+    style: CSSProperties;
+  }) => {
+    return resultView(props.searchResults[index], props.zoomOn, style);
+  };
   return (
     <div id="search-modal-wrapper">
       <div id="search-modal" className={className}>
@@ -62,9 +81,14 @@ function SearchModal(props: SearchModalProps) {
           </span>
         </div>
         <div id="search-bar-space"></div>
-        <div id="search-results">
-          {props.searchResults.map((r) => resultView(r, props.zoomOn))}
-        </div>
+        <List
+          width={460}
+          height={400}
+          itemCount={props.searchResults.length}
+          itemSize={50}
+        >
+          {Element}
+        </List>
       </div>
     </div>
   );

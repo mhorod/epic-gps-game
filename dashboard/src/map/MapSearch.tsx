@@ -11,7 +11,7 @@ import Entities from "./Entities";
 import configManager from "../Config";
 
 type MapSearchProps = {
-  entities: Entities;
+  search: (settings: SearchSettings) => SearchResult[];
   zoomOn: (p: Position) => void;
   active: boolean;
   openSearch: () => void;
@@ -80,27 +80,10 @@ class MapSearch extends Component<MapSearchProps, MapSearchState> {
       });
       return;
     }
-    let re: RegExp;
-    try {
-      re = new RegExp(this.searchSettings.searchValue);
-    } catch {
-      return;
-    }
-
-    const enemyResults = Array.from(this.props.entities.enemies.values())
-      .filter((e) => {
-        const t = configManager.getEnemyTypeById(e.typeId);
-        return re.test(t?.name || "undefined");
-      })
-      .map((e) => SearchResult.ofEnemy(e));
-
-    const playerResults = Array.from(this.props.entities.players.values())
-      .filter((p) => re.test(p.player.name))
-      .map((p) => SearchResult.ofPlayer(p));
 
     this.setState({
       ...this.state,
-      searchResults: [...playerResults, ...enemyResults],
+      searchResults: this.props.search(this.searchSettings),
     });
   }
 }

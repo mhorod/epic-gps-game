@@ -10,13 +10,10 @@ class ConfigManager {
       for (const enemyType of cfg.enemyTypes) {
         this.enemyTypes.set(enemyType.typeId, enemyType);
       }
-      console.log("CONFIG LOADED");
     });
   }
 
   getEnemyTypeById(id: number): EnemyType | undefined {
-    console.log(this.enemyTypes);
-    console.log(id, this.enemyTypes.get(id));
     return this.enemyTypes.get(id);
   }
 }
