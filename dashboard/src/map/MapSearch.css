@@ -61,7 +61,7 @@
     padding: 10px;
 }
 
-#search-results {
+.search-results {
     border-top: 1px solid #666;
     padding: 10px;
     display: flex;
@@ -78,6 +78,7 @@
     display: flex;
     justify-content: space-between;
     border: 1px solid #ddd;
+    margin-bottom: 10px;
 }
 
 .search-result:hover {

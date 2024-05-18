@@ -74,7 +74,13 @@ function MapComponent(props: MapComponentProps) {
           }
 
           const color = colorMap.color(area.difficulty);
-          return <Polygon positions={latLongs} color={color} />;
+          return (
+            <Polygon
+              key={latLongs.toString()}
+              positions={latLongs}
+              color={color}
+            />
+          );
         })}
       </>
     </MapContainer>

@@ -1,10 +1,16 @@
-import L, { Icon, LatLngExpression, Map as LeafletMap, Marker } from "leaflet";
+import L, { Icon, LatLngExpression, Map as LeafletMap } from "leaflet";
 import { MapContainer, TileLayer, Popup, useMap } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 
 import "./MapView.css";
 import MapSearch from "./MapSearch";
-import { Component } from "react";
+import {
+  Component,
+  ComponentType,
+  MemoExoticComponent,
+  memo,
+  useMemo,
+} from "react";
 import { Enemy, EnemyType, PlayerWithPosition, Position } from "../model/model";
 import Entities from "./Entities";
 import {
@@ -16,7 +22,9 @@ import {
 import EntityInfo from "./EntityInfo";
 import { http_path, ws_path } from "../backend";
 import configManager from "../Config";
-import MarkerCluster from "./MarkerCluster";
+import MarkerCluster, { Marker } from "./MarkerCluster";
+import SearchSettings from "./SearchSettings";
+import SearchResult from "./SearchResult";
 
 const warriorIcon = new Icon({
   iconUrl: "/dashboard/img/warrior.png",
@@ -51,12 +59,12 @@ function MapComponent(props: MapComponentProps) {
   const markers: Marker[] = [];
   props.entities.enemies.forEach((enemy, _) => {
     const t = configManager.getEnemyTypeById(enemy.typeId);
-    const marker = L.marker(mapPosition(enemy.position), {
-      icon: enemyIcon(t?.gfxName || "undefined"),
-    }).on("mouseover", () => props.selectEnemy(enemy));
-    markers.push(marker);
+    markers.push({
+      position: enemy.position,
+      gfxName: t?.gfxName || "undefined",
+      onClick: () => props.selectEnemy(enemy),
+    });
   });
-  console.log("RENDER");
 
   return (
     <MapContainer
@@ -87,8 +95,18 @@ type MapViewState = {
   selectedEntity: SelectedEntity | null;
 };
 
+type MapComponentMemoProps = {
+  entities: Entities;
+};
+
+type MapSearchMemoProps = {
+  active: boolean;
+};
+
 class MapView extends Component<MapViewProps, MapViewState> {
   map: LeafletMap | undefined = undefined;
+  MapComponent: MemoExoticComponent<ComponentType<MapComponentMemoProps>>;
+  MapSearch: MemoExoticComponent<ComponentType<MapSearchMemoProps>>;
   constructor(props: {}) {
     super(props);
 
@@ -97,6 +115,29 @@ class MapView extends Component<MapViewProps, MapViewState> {
       searchActive: false,
       selectedEntity: null,
     };
+
+    this.MapComponent = memo(({ entities }: { entities: Entities }) => {
+      return (
+        <MapComponent
+          entities={entities}
+          setMap={(m) => this.setMap(m)}
+          selectEnemy={(e) => this.selectEnemy(e)}
+          selectPlayer={(p) => this.selectPlayer(p)}
+        />
+      );
+    });
+
+    this.MapSearch = memo(({ active }: { active: boolean }) => {
+      return (
+        <MapSearch
+          search={(settings) => this.search(settings)}
+          zoomOn={(p) => this.zoomOn(p)}
+          active={this.state.searchActive}
+          openSearch={() => this.openSearch()}
+          closeSearch={() => this.closeSearch()}
+        />
+      );
+    });
   }
 
   componentDidMount(): void {
@@ -104,7 +145,6 @@ class MapView extends Component<MapViewProps, MapViewState> {
 
     websocket.onmessage = (e) => {
       let obj = JSON.parse(e.data);
-      console.log("RECEIVED: ", obj);
 
       if (obj.type === ".PlayerUpdate") {
         this.playerUpdate(obj);
@@ -139,7 +179,9 @@ class MapView extends Component<MapViewProps, MapViewState> {
   enemiesAppear(e: EnemiesAppear) {
     this.setState((state) => {
       let newEntities = new Entities(state.entities);
-      for (const enemy of e.enemies) newEntities.addEnemy(enemy);
+      for (const enemy of e.enemies) {
+        newEntities.addEnemy(enemy);
+      }
       return { entities: newEntities };
     });
   }
@@ -152,22 +194,33 @@ class MapView extends Component<MapViewProps, MapViewState> {
     });
   }
 
+  search(settings: SearchSettings) {
+    let re: RegExp;
+    try {
+      re = new RegExp(settings.searchValue);
+    } catch {
+      return [];
+    }
+
+    const enemyResults = Array.from(this.state.entities.enemies.values())
+      .filter((e) => {
+        const t = configManager.getEnemyTypeById(e.typeId);
+        return re.test(t?.name || "undefined");
+      })
+      .map((e) => SearchResult.ofEnemy(e));
+
+    const playerResults = Array.from(this.state.entities.players.values())
+      .filter((p) => re.test(p.player.name))
+      .map((p) => SearchResult.ofPlayer(p));
+
+    return [...enemyResults, ...playerResults];
+  }
+
   render() {
     return (
       <div className="map-wrapper">
-        <MapSearch
-          entities={this.state.entities}
-          zoomOn={(p) => this.zoomOn(p)}
-          active={this.state.searchActive}
-          openSearch={() => this.openSearch()}
-          closeSearch={() => this.closeSearch()}
-        />
-        <MapComponent
-          entities={this.state.entities}
-          setMap={(m) => this.setMap(m)}
-          selectEnemy={(e) => this.selectEnemy(e)}
-          selectPlayer={(p) => this.selectPlayer(p)}
-        />
+        <this.MapSearch active={this.state.searchActive} />
+        <this.MapComponent entities={this.state.entities} />
         {this.state.selectedEntity && (
           <EntityInfo
             type={this.state.selectedEntity.type}
@@ -184,6 +237,7 @@ class MapView extends Component<MapViewProps, MapViewState> {
   }
 
   openSearch() {
+    if (this.state.searchActive) return;
     this.setState({
       ...this.state,
       searchActive: true,
@@ -191,6 +245,7 @@ class MapView extends Component<MapViewProps, MapViewState> {
   }
 
   closeSearch() {
+    if (!this.state.searchActive) return;
     this.setState({
       ...this.state,
       searchActive: false,
@@ -199,18 +254,13 @@ class MapView extends Component<MapViewProps, MapViewState> {
 
   zoomOn(position: Position) {
     if (this.map !== undefined) {
-      this.map.setView([position.latitude, position.longitude]);
-      this.map.setZoom(20);
+      this.map.setView([position.latitude, position.longitude], 20);
     }
 
-    this.setState({
-      ...this.state,
-      searchActive: false,
-    });
+    this.closeSearch();
   }
 
   selectEnemy(e: Enemy) {
-    console.log(e);
     this.setState({
       ...this.state,
       selectedEntity: { type: "Enemy", entity: e },
@@ -218,7 +268,6 @@ class MapView extends Component<MapViewProps, MapViewState> {
   }
 
   selectPlayer(p: PlayerWithPosition) {
-    console.log(p);
     this.setState({
       ...this.state,
       selectedEntity: { type: "Player", entity: p },
@@ -226,6 +275,7 @@ class MapView extends Component<MapViewProps, MapViewState> {
   }
 
   unselectEntity() {
+    if (this.state.selectedEntity === null) return;
     this.setState({
       ...this.state,
       selectedEntity: null,

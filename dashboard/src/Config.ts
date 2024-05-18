@@ -14,8 +14,6 @@ class ConfigManager {
   }
 
   getEnemyTypeById(id: number): EnemyType | undefined {
-    console.log(this.enemyTypes);
-    console.log(id, this.enemyTypes.get(id));
     return this.enemyTypes.get(id);
   }
 }
