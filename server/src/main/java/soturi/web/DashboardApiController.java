@@ -3,10 +3,12 @@ package soturi.web;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
+import soturi.JacksonConfig;
 import soturi.common.Registry;
 import soturi.model.Config;
 import soturi.model.Enemy;
@@ -26,6 +28,7 @@ import soturi.server.database.FightEntity;
 import soturi.server.database.FightRepository;
 
 import java.lang.reflect.Method;
+import java.time.Instant;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
@@ -110,7 +113,8 @@ public class DashboardApiController {
     }
 
     @GetMapping("/v1/fight-list")
-    public List<FightRecord> getFightList(int limit) {
+    public List<FightRecord> getFightList(int limit) throws  Exception {
+        System.out.println(mapper.writeValueAsString(Instant.now()));
         return fightRepository
             .findAllByOrderByIdDesc(PageRequest.of(0, limit))
             .stream()

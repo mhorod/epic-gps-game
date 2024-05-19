@@ -78,7 +78,7 @@ export type FightRecord = {
   attacker: PlayerWithPosition;
   defender: Enemy;
   result: FightResult;
-  time: number;
+  time: string;
 };
 
 export type ItemType =

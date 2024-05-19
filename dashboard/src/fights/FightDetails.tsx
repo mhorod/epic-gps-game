@@ -10,7 +10,7 @@ type FightDetailsProps = {
 
 function FightDetails(props: FightDetailsProps) {
   const detailsClass = props.collapsed ? "collapsed" : "";
-  const date = new Date(props.record.time * 1000);
+  const date = new Date(props.record.time);
 
   return (
     <div className={"fight-record-details " + detailsClass}>
