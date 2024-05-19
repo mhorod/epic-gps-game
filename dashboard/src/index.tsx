@@ -9,6 +9,8 @@ import SpawnAreas from "./SpawnAreas";
 import enableMocking from "./mocks/server";
 import Players from "./Players";
 import configManager from "./Config";
+import { Enemies } from "./enemies/Enemies";
+import FightHistory from "./fights/FightHistory";
 
 const router = createBrowserRouter([
   {
@@ -25,13 +27,25 @@ const router = createBrowserRouter([
   },
   {
     path: "/dashboard/enemies",
-    element: <Main title="Enemies"></Main>,
+    element: (
+      <Main title="Enemies">
+        <Enemies />
+      </Main>
+    ),
   },
   {
     path: "/dashboard/map-view",
     element: (
       <Main title="Map View">
         <MapView />
+      </Main>
+    ),
+  },
+  {
+    path: "/dashboard/fight-history",
+    element: (
+      <Main title="Fight History">
+        <FightHistory />
       </Main>
     ),
   },

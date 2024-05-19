@@ -10,10 +10,6 @@ export type Enemy = {
   position: Position;
 };
 
-export type ItemId = {
-  id: string;
-};
-
 export type Statistics = {
   maxHp: number;
   attack: number;
@@ -26,8 +22,8 @@ export type Player = {
   xp: number;
   hp: number;
   statistics: Statistics;
-  equipped: Array<ItemId>;
-  inventory: Array<ItemId>;
+  equipped: Array<number>;
+  inventory: Array<number>;
 };
 
 export type PlayerWithPosition = {
@@ -64,4 +60,39 @@ export type EnemyType = {
 
 export type Config = {
   enemyTypes: EnemyType[];
+  items: Item[];
+};
+
+export type Loot = {
+  xp: number;
+  items: number[];
+};
+
+export type FightResult = {
+  result: string;
+  lostHp: number;
+  loot: Loot;
+};
+
+export type FightRecord = {
+  attacker: PlayerWithPosition;
+  defender: Enemy;
+  result: FightResult;
+  time: number;
+};
+
+export type ItemType =
+  | "WEAPON"
+  | "SHIELD"
+  | "HELMET"
+  | "ARMOR"
+  | "BOOTS"
+  | "GAUNTLETS";
+
+export type Item = {
+  itemId: number;
+  name: string;
+  type: ItemType;
+  statistics: Statistics;
+  gfxName: string;
 };

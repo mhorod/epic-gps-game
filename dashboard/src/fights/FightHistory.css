@@ -1,0 +1,124 @@
+.fight-history {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    padding: 20px;
+}
+
+.fight-record-view {
+    padding: 10px;
+    border: 2px solid #eee;
+    width: 400px;
+    display: flex;
+    border-radius: 5px;
+    display: flex;
+    flex-direction: column;
+}
+
+.fight-summary {
+    display: flex;
+    gap: 5px;
+}
+
+.fight-record-header {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.fight-details-wrapper {
+    display: grid;
+    grid-template-rows: 1fr;
+    transition: all 0.5s ease;
+}
+
+.fight-details-wrapper.collapsed {
+    grid-template-rows: 0fr;
+    transition: all 0.5s ease;
+}
+
+.fight-record-details {
+    transition: all ease-out 0.4s;
+    padding-top: 10px;
+    box-sizing: content-box;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    overflow: hidden;
+}
+
+.fight-record-details.collapsed {
+    padding: 0px;
+    transition: all ease-in 0.4s;
+}
+
+.fight-record-details > hr {
+    border: 1px #eee solid;
+}
+
+.header-outer {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.header-name {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.header-type {
+    color: #555;
+}
+
+.item-image {
+    width: 20px;
+}
+
+.item-short {
+    display: flex;
+    gap: 5px;
+    align-items: center;
+}
+
+.result-stats-entry {
+    display: flex;
+    gap: 5px;
+}
+
+.attacker-details {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.attacker-stats-list {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+}
+
+.attacker-stats-list > div {
+    display: flex;
+    flex-direction: row;
+    gap: 10px;
+}
+
+.fight-result-summary {
+    display: flex;
+    gap: 5px;
+    font-weight: bold;
+}
+
+.result-details {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.attacker-equipped-items {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}

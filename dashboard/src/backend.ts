@@ -1,25 +1,34 @@
-function get_url(): [string, string] {
+function get_url(): [string, string, string] {
   const backend = process.env.REACT_APP_SOTURI_BACKEND;
   if (backend === "localhost") {
     return [
       `http://${window.location.hostname}:8080`,
       `ws://${window.location.hostname}:8080`,
+      `http://${window.location.hostname}:8080`,
     ];
   } else if (backend === "production") {
-    return [`https://soturi.online`, `wss://soturi.online`];
+    return [
+      `https://soturi.online`,
+      `wss://soturi.online`,
+      `https://soturi.online`,
+    ];
   } else {
     const protocol = window.location.protocol || "http:";
     const host = window.location.host;
 
     const ws_protocol = protocol === "http:" ? "ws" : "wss";
-    return [`${protocol}//${host}`, `${ws_protocol}://${host}`];
+    return [`${protocol}//${host}`, `${ws_protocol}://${host}`, ""];
   }
 }
 
-const [HTTP_URL, WS_URL] = get_url();
+const [HTTP_URL, WS_URL, REL_URL] = get_url();
 
 export function http_path(path: string) {
   return HTTP_URL + path;
+}
+
+export function rel_path(path: string) {
+  return REL_URL + path;
 }
 
 export function ws_path(path: string) {

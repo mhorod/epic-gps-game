@@ -1,0 +1,22 @@
+.enemies-wrapper {
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.enemies-wrapper > h1 {
+    font-size: 20px;
+}
+
+.enemy-type-view {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    padding: 5px;
+    border: 2px solid #eee;
+    border-radius: 5px;
+    width: 200px;
+    font-size: 16px;
+    gap: 10px;
+}

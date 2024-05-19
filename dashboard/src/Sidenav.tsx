@@ -6,6 +6,7 @@ import {
   Map,
   Code,
   LogoAndroid,
+  StatsChart,
 } from "react-ionicons";
 import { Link } from "react-router-dom";
 import IconWrapper from "./IconWrapper";
@@ -50,6 +51,7 @@ function SideNav() {
         {link("/dashboard/players", <People />, "Players")}
         {link("/dashboard/spawn-areas", <Disc />, "Spawn Areas")}
         {link("/dashboard/map-view", <Map />, "Map View")}
+        {link("/dashboard/fight-history", <StatsChart />, "Fight History")}
         {a("/swagger-ui/index.html", <Code />, "API")}
         {a("/static/app.apk", <LogoAndroid />, "Android App")}
       </ul>
