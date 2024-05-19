@@ -9,9 +9,5 @@ spring:
     resources:
       static-locations: file:src/main/resources/static/
 
-  config:
-    activate:
-      on-profile: dev
-
-
-enable-cors: true
+soturi:
+  enable-cors: true
