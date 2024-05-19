@@ -61,9 +61,19 @@ function MapComponent(props: MapComponentProps) {
     const t = configManager.getEnemyTypeById(enemy.typeId);
     markers.push({
       position: enemy.position,
-      gfxName: t?.gfxName || "undefined",
+      gfxName: "/" + t?.gfxName || "undefined",
       onClick: () => props.selectEnemy(enemy),
     });
+  });
+
+  props.entities.players.forEach((player) => {
+    if (player.position !== null) {
+      markers.push({
+        position: player.position,
+        gfxName: "/dashboard/img/warrior.png",
+        onClick: () => props.selectPlayer(player),
+      });
+    }
   });
 
   return (
@@ -132,7 +142,7 @@ class MapView extends Component<MapViewProps, MapViewState> {
         <MapSearch
           search={(settings) => this.search(settings)}
           zoomOn={(p) => this.zoomOn(p)}
-          active={this.state.searchActive}
+          active={active}
           openSearch={() => this.openSearch()}
           closeSearch={() => this.closeSearch()}
         />
@@ -144,6 +154,7 @@ class MapView extends Component<MapViewProps, MapViewState> {
     const websocket = new WebSocket(ws_path("/dashboard"));
 
     websocket.onmessage = (e) => {
+      console.log("RECEIVED: ", e);
       let obj = JSON.parse(e.data);
 
       if (obj.type === ".PlayerUpdate") {

@@ -24,7 +24,7 @@ type MarkerClusterProps = {
 
 function getIcon(gfxName: string) {
   return new Icon({
-    iconUrl: http_path("/" + gfxName),
+    iconUrl: http_path(gfxName),
     iconSize: [32, 32],
   });
 }
