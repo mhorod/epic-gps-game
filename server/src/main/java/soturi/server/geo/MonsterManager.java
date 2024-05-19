@@ -158,6 +158,7 @@ public class MonsterManager {
 
             cities.forEach(this::processCity);
             registerRegion(recursive(0, n, 0, n, fullEnvelope));
+            log.info("Generated {} regions", generatedRegions.size());
         }
     }
 
@@ -262,8 +263,10 @@ public class MonsterManager {
             }
 
             // area based algo
-            for (Region region : regions) {
-                if (rnd.nextDouble() < registry.getSpawnEnemyFailChance())
+            List<Region> shuffledRegions = new ArrayList<>(Arrays.asList(regions));
+            Collections.shuffle(shuffledRegions);
+            for (Region region : shuffledRegions) {
+                if (rnd.nextDouble() < registry.getSpawnEnemyFailChance() || generated.size() >= 2000)
                     continue;
                 Position position = region.rectangle.randomPosition(rnd);
                 int lvl = rnd.nextInt(minLvl(region), maxLvl(region) + 1);
