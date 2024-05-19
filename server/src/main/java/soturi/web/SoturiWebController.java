@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 public class SoturiWebController {
 
     // Rendering is done in React which also handles these paths
-    @GetMapping(value = {"/dashboard", "/dashboard/map-view", "/dashboard/spawn-areas", "/dashboard/players", "/dashboard/enemies"})
+    @GetMapping(value = {"/dashboard", "/dashboard/map-view", "/dashboard/spawn-areas", "/dashboard/players", "/dashboard/enemies", "/dashboard/fight-history"})
     public String dashboardIndex() {
         return "dashboard/index";
     }
