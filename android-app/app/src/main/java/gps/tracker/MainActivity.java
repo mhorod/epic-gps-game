@@ -2,6 +2,7 @@ package gps.tracker;
 
 import android.annotation.SuppressLint;
 import android.app.AlertDialog;
+import android.content.AbstractThreadedSyncAdapter;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.location.LocationListener;
@@ -348,7 +349,10 @@ public class MainActivity extends AppCompatActivity {
                 return;
             }
 
-            cleanBacklog(enemyAppearsConsumer);
+            new Thread(() -> {
+                cleanBacklog(enemyAppearsConsumer);
+            }).start();
+
             enemyAppearsConsumer.accept(enemy);
 
         }
