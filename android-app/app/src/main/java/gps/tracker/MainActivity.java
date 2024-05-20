@@ -66,6 +66,7 @@ public class MainActivity extends AppCompatActivity {
     private FragmentManager fragmentManager;
     private Runnable onDisconnectRunnable = null;
     private Consumer<Player> playerConsumer = null;
+    private Runnable onLoggedInRunnable;
 
     public void saveString(String key, String value) {
         try {
@@ -295,6 +296,10 @@ public class MainActivity extends AppCompatActivity {
         this.onDisconnectRunnable = runnable;
     }
 
+    public void setOnLoggedIn(Runnable runnable) {
+        this.onLoggedInRunnable = runnable;
+    }
+
     public void setOnMeUpdate(Consumer<Player> consumer) {
         this.playerConsumer = consumer;
     }
@@ -393,7 +398,12 @@ public class MainActivity extends AppCompatActivity {
         }
 
         @Override
-        public void meUpdate(Player me) {
+        public synchronized void meUpdate(Player me) {
+            if(onLoggedInRunnable != null) {
+                onLoggedInRunnable.run();
+                onLoggedInRunnable = null;
+            }
+
             // Because this event is sent cyclically, we will use it to put enemies from backlog on the map
             if (enemyDisappearsConsumer != null) {
                 cleanBacklog(enemyAppearsConsumer);
@@ -408,7 +418,7 @@ public class MainActivity extends AppCompatActivity {
         }
 
         @Override
-        public void ping() {
+        public synchronized void ping() {
             webSocketClient.send().pong();
         }
 

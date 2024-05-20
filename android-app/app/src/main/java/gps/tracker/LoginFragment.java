@@ -1,5 +1,6 @@
 package gps.tracker;
 
+import android.app.ProgressDialog;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -45,11 +46,24 @@ public class LoginFragment extends Fragment {
                     mainActivity.saveString("username", lambdaUsername);
                     mainActivity.saveString("password", lambdaPassword);
 
+                    ProgressDialog progress = new ProgressDialog(this.mainActivity);
+                    progress.setTitle("Logging in");
+                    progress.setMessage("Spawning frogs...");
+                    progress.setCancelable(false); // disable dismiss by tapping outside of the dialog
+                    progress.show();
+
+                    mainActivity.setOnLoggedIn(
+                            () -> mainActivity.runOnUiThread(
+                                    () -> {
+                                        progress.dismiss();
+                                        NavHostFragment.findNavController(LoginFragment.this).navigate(R.id.action_loginFragment_to_gameMap);
+                                    }
+                            )
+                    );
 
                     mainActivity.runOnUiThread(
                             () -> {
                                 mainActivity.login(lambdaUsername, lambdaPassword, false);
-                                NavHostFragment.findNavController(LoginFragment.this).navigate(R.id.action_loginFragment_to_gameMap);
                             }
                     );
                 }
