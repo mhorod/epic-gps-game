@@ -50,7 +50,10 @@ public class LoginFragment extends Fragment {
                     progress.setTitle("Logging in");
                     progress.setMessage("Spawning frogs...");
                     progress.setCancelable(false); // disable dismiss by tapping outside of the dialog
-                    progress.show();
+
+                    mainActivity.runOnUiThread(
+                            progress::show
+                    );
 
                     mainActivity.setOnLoggedIn(
                             () -> mainActivity.runOnUiThread(
@@ -61,11 +64,7 @@ public class LoginFragment extends Fragment {
                             )
                     );
 
-                    mainActivity.runOnUiThread(
-                            () -> {
-                                mainActivity.login(lambdaUsername, lambdaPassword, false);
-                            }
-                    );
+                    mainActivity.login(lambdaUsername, lambdaPassword, false);
                 }
         );
 

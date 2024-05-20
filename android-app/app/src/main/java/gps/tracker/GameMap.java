@@ -82,18 +82,19 @@ public class GameMap extends Fragment {
         String defString = mainActivity.getString("def");
         String levelString = mainActivity.getString("level");
         String progressString = mainActivity.getString("progress");
-        long progress = (long) (Double.parseDouble(progressString) * 10000);
 
         if (hpString == null || atkString == null || defString == null || levelString == null || progressString == null) {
             return null;
         }
 
+        long progress = (long) (Double.parseDouble(progressString) * 10000);
+
         return new GraphicalStats(hpString, atkString, defString, levelString, progress);
     }
 
-    private void setStats(GraphicalStats stats) {
+    private synchronized void setStats(GraphicalStats stats) {
         if (stats == null) {
-            changeStatsVisibility(View.GONE);
+            return;
         }
 
         binding.hpLevel.setText(stats.hp());
