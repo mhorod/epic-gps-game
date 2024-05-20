@@ -11,6 +11,7 @@ import soturi.model.Config;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Optional;
 
 @Slf4j
 @Component
@@ -24,13 +25,13 @@ public class DynamicConfig {
         this.objectMapper = objectMapper;
         this.geoProvider = geoProvider;
         setConfigWithoutReloading(getDefaultConfig());
-        tryToLoad();
-        tryToDump();
+        tryToLoad().ifPresent(this::setConfigWithoutReloading);
+        tryToDump(registry.getConfig());
     }
 
-    public boolean tryToDump() {
+    public boolean tryToDump(Config config) {
         try {
-            objectMapper.writerWithDefaultPrettyPrinter().writeValue(configFile, registry.getConfig());
+            objectMapper.writerWithDefaultPrettyPrinter().writeValue(configFile, config);
             return true;
         }
         catch (JacksonException exception) {
@@ -40,20 +41,19 @@ public class DynamicConfig {
             return false;
         }
     }
-    public boolean tryToLoad() {
+    public Optional<Config> tryToLoad() {
         try {
-            setConfigWithoutReloading(objectMapper.readValue(configFile, Config.class));
-            return true;
+            return Optional.of(objectMapper.readValue(configFile, Config.class));
         }
         catch (JacksonException exception) {
             throw new RuntimeException(exception);
         }
         catch (Exception ignored) {
-            return false;
+            return Optional.empty();
         }
     }
 
-    public void setConfigWithoutReloading(Config config) {
+    private void jacksonShenanigansCheck(Config config) {
         try {
             String serial = objectMapper.writeValueAsString(config);
             Config deserial = objectMapper.readValue(serial, Config.class);
@@ -65,7 +65,10 @@ public class DynamicConfig {
         } catch (Exception e) {
             throw e instanceof RuntimeException re ? re : new RuntimeException(e);
         }
+    }
 
+    public void setConfigWithoutReloading(Config config) {
+        jacksonShenanigansCheck(config);
         registry = new Registry(config, geoProvider);
     }
 

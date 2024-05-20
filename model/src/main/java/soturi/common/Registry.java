@@ -53,7 +53,7 @@ public class Registry {
                 cumulativeXpForLvl[i] = cumulativeXpForLvl[i - 1] + (long) config.xpToLvl().eval(i);
             int finalI = i;
             enemiesPerLvl.add(
-                    getAllEnemyTypes().stream().filter(type -> type.lvlInRange(finalI)).collect(Collectors.toList())
+                getAllEnemyTypes().stream().filter(type -> type.lvlInRange(finalI)).collect(Collectors.toList())
             );
         }
         validate();
@@ -76,6 +76,16 @@ public class Registry {
             for (PolygonId spawn : type.spawnAreas())
                 if (getPolygonById(spawn) == null)
                     throw new RuntimeException(spawn + " polygon not found");
+
+        // validate difficulty
+        for (DifficultyLvl difficultyLvl : getDifficulties()) {
+            if (difficultyLvl.minLvl() < 1)
+                throw new RuntimeException("difficulty with minLvl < 1");
+            if (difficultyLvl.maxLvl() > getMaxLvl())
+                throw new RuntimeException("difficulty with maxLvl > configMaxLvl");
+            if (difficultyLvl.minLvl() > difficultyLvl.maxLvl())
+                throw new RuntimeException("difficulty with minLvl > maxLvl");
+        }
 
         // validate geoSplit
         if (getGameAreaSplitLvl() < 0) throw new RuntimeException("SplitLvl cannot be negative");
@@ -268,6 +278,9 @@ public class Registry {
     }
     public double getSpawnEnemyFailChance() {
         return config.spawnEnemyFailChance();
+    }
+    public int getMaxSingleSpawn() {
+        return 2000;
     }
     public int getHealDelayInSeconds() {
         return config.healDelayInSeconds();
