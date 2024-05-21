@@ -96,15 +96,14 @@ public class DashboardApiController {
 
     @PostMapping("/v1/reload-config")
     public void reloadConfigFile() {
-        if (!dynamicConfig.tryToLoad())
-            throw new RuntimeException();
-        setConfig(dynamicConfig.getRegistry().getConfig());
+        Config config = dynamicConfig.tryToLoad().orElseThrow();
+        setConfig(config);
     }
 
     @PostMapping("/v1/set-config")
     public void setConfig(@RequestBody Config config) {
         gameService.setConfig(config);
-        dynamicConfig.tryToDump();
+        dynamicConfig.tryToDump(config);
     }
 
     @GetMapping("/v1/config")

@@ -14,8 +14,6 @@ import soturi.model.PolygonWithDifficulty;
 import soturi.model.Position;
 import soturi.model.Rectangle;
 
-import java.time.Duration;
-import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -27,6 +25,7 @@ import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 import java.util.function.Supplier;
+import java.util.stream.IntStream;
 
 @Slf4j
 public class MonsterManager {
@@ -263,10 +262,15 @@ public class MonsterManager {
             }
 
             // area based algo
-            List<Region> shuffledRegions = new ArrayList<>(Arrays.asList(regions));
-            Collections.shuffle(shuffledRegions);
+            Region[] shuffledRegions = Arrays.stream(regions).flatMap(
+                region -> IntStream.range(0, region.capLeft.intValue()).mapToObj(i -> region)
+            ).toArray(Region[]::new);
+            Collections.shuffle(Arrays.asList(shuffledRegions));
+
             for (Region region : shuffledRegions) {
-                if (rnd.nextDouble() < registry.getSpawnEnemyFailChance() || generated.size() >= 2000)
+                if (generated.size() >= registry.getMaxSingleSpawn())
+                    break;
+                if (rnd.nextDouble() < registry.getSpawnEnemyFailChance())
                     continue;
                 Position position = region.rectangle.randomPosition(rnd);
                 int lvl = rnd.nextInt(minLvl(region), maxLvl(region) + 1);
