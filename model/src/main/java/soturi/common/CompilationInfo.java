@@ -5,6 +5,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 public class CompilationInfo {
@@ -23,8 +25,8 @@ public class CompilationInfo {
         }
     }
 
-    public static Optional<Instant> getCompilationTime() {
-        return readLineFrom("generated/compilation-time").map(Instant::parse);
+    public static Optional<LocalDateTime> getCompilationTime() {
+        return readLineFrom("generated/compilation-time").map(LocalDateTime::parse);
     }
 
     public static Optional<String> getCommitId() {

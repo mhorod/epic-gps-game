@@ -1,4 +1,4 @@
-import java.time.Instant
+import java.time.LocalDateTime
 import java.io.PrintWriter
 
 plugins {
@@ -22,7 +22,7 @@ tasks.whenTaskAdded {
     // this could be a one liner but IntelliJ does not like that
     val timePath = project.projectDir.absolutePath + "/src/main/resources/generated/compilation-time"
     val timeWriter = PrintWriter(File(timePath))
-    timeWriter.println(Instant.now())
+    timeWriter.println(LocalDateTime.now())
     timeWriter.flush()
     timeWriter.close()
 
