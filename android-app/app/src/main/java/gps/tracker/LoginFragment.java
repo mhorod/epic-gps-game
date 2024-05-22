@@ -9,6 +9,7 @@ import androidx.fragment.app.Fragment;
 import androidx.navigation.fragment.NavHostFragment;
 
 import gps.tracker.databinding.FragmentLoginBinding;
+import soturi.common.CompilationInfo;
 
 public class LoginFragment extends Fragment {
 
@@ -19,6 +20,11 @@ public class LoginFragment extends Fragment {
         // Required empty public constructor
     }
 
+    public void initVersionInfo() {
+        String time = "Compilation time: " + CompilationInfo.getCompilationTime().map(o -> o.toString().substring(0, 19)).orElse("UNKNOWN");
+        String git = "Commit id: " + CompilationInfo.getCommitId().orElse("UNKNOWN");
+        binding.textView.setText(time + "\n" + git);
+    }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -35,6 +41,7 @@ public class LoginFragment extends Fragment {
             binding.editTextTextPassword.setText(password);
         }
 
+        initVersionInfo();
 
         binding.loginButton.setOnClickListener(
                 (e) -> {
