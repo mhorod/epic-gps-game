@@ -37,8 +37,8 @@
                 <h1>Welcome back!</h1>
                 <input
                     type="hidden"
-                    th:name="${_csrf.parameterName}"
-                    th:value="${_csrf.token}"
+                    th:name="${_csrf?.parameterName}"
+                    th:value="${_csrf?.token}"
                 />
                 <input type="hidden" name="redirect" th:value="${redirect}" />
                 <input
