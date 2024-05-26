@@ -4,7 +4,7 @@ body {
     display: flex;
     flex-direction: column;
 
-    background: rgba(60, 60, 60, 0.4) url("/website/img/background-large.jpg");
+    background: rgba(60, 60, 60, 0.4) url("/static/website/img/background-large.jpg");
     background-size: cover;
     background-blend-mode: multiply;
 
@@ -93,31 +93,8 @@ main {
     font-weight: 200;
 }
 
-#buttons {
-    display: flex;
-    justify-content: space-between;
-    gap: 10px;
-    margin: 40px;
-}
-
-#secondary-buttons {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    font-size: 18px;
-}
 
 .text-light {
     font-weight: 200;
 }
 
-.text-btn {
-    font-weight: 600;
-    text-decoration: none;
-    color: #fff;
-    font-size: 24px;
-}
-
-.text-btn:hover {
-    color: #ccc;
-}

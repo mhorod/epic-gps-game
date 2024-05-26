@@ -1,5 +1,8 @@
+import Cookies from "js-cookie";
+
+const backend = process.env.REACT_APP_SOTURI_BACKEND;
+
 function get_url(): [string, string, string] {
-  const backend = process.env.REACT_APP_SOTURI_BACKEND;
   if (backend === "localhost") {
     return [
       `http://${window.location.hostname}:8080`,
@@ -36,5 +39,21 @@ export function ws_path(path: string) {
 }
 
 export async function get_json(path: string) {
-  return fetch(http_path(path)).then((res) => res.json());
+  return fetch(http_path(path), {
+    headers: {
+      Authorization: "Bearer " + get_auth_token(),
+    },
+  }).then((res) => res.json());
+}
+
+export async function get_string(path: string) {
+  return fetch(http_path(path), {
+    headers: {
+      Authorization: "Bearer " + get_auth_token(),
+    },
+  }).then((res) => res.text());
+}
+
+function get_auth_token() {
+  return Cookies.get("token");
 }

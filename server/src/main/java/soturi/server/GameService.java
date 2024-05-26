@@ -396,7 +396,7 @@ public class GameService {
         PlayerEntity entity = repository.findByName(name).orElseGet(
             () -> repository.save(new PlayerEntity(name, password))
         );
-        if (!password.equals(entity.getHashedPassword())) {
+        if (!entity.hasPassword(password)) {
             sender.error("incorrect password passed");
             return false;
         }

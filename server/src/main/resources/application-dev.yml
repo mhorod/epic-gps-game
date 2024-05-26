@@ -1,13 +1,8 @@
-
-# Settings for live-reloading dashboard while developing
 spring:
-  thymeleaf:
-    cache: false
-    prefix: file:src/main/resources/templates/
-
-  web:
-    resources:
-      static-locations: file:src/main/resources/static/
+  config:
+    activate:
+      on-profile: dev
 
 soturi:
   enable-cors: true
+  disable-csrf-protection: true
