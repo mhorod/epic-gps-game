@@ -1,9 +1,12 @@
 package soturi.web;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.annotation.security.RolesAllowed;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -149,4 +152,8 @@ public class DashboardApiController {
         return sb.toString();
     }
 
+    @GetMapping("/v1/current-user")
+    public String currentUser() {
+        return SecurityContextHolder.getContext().getAuthentication().getName();
+    }
 }

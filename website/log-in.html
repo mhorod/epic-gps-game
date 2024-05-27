@@ -2,7 +2,7 @@
 <html lang="en">
     <head>
         <meta charset="utf-8" />
-        <link rel="icon" href="/website/favicon.ico" />
+        <link rel="icon" href="/static/website/favicon.ico" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <meta name="theme-color" content="#000000" />
 
@@ -15,11 +15,15 @@
         />
         <meta property="og:description" content="Log In to Soturi Online" />
 
-        <link rel="stylesheet" href="/website/css/common.css" type="text/css" />
+        <link
+            rel="stylesheet"
+            href="/static/website/css/common.css"
+            type="text/css"
+        />
 
         <link
             rel="stylesheet"
-            href="/website/css/sign-up.css"
+            href="/static/website/css/sign-up.css"
             type="text/css"
         />
 
@@ -27,11 +31,16 @@
     </head>
     <body>
         <main>
-            <img src="/website/img/logo-full-white.png" id="logo" />
+            <img src="/static/website/img/logo-full-white.png" id="logo" />
 
             <form id="sign-up-form" action="/log-in" method="POST">
                 <h1>Welcome back!</h1>
-
+                <input
+                    type="hidden"
+                    th:name="${_csrf.parameterName}"
+                    th:value="${_csrf.token}"
+                />
+                <input type="hidden" name="redirect" th:value="${redirect}" />
                 <input
                     type="text"
                     name="username"
