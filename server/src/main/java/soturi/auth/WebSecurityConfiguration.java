@@ -25,7 +25,7 @@ import java.util.Arrays;
 class WebSecurityConfiguration {
 
     private static final String[] PUBLIC_URLS = {
-            "/", "/static/**", "/log-in", "/logout", "/logged-out", "/sign-in", "/error"
+            "/", "/static/**", "/log-in", "/logout", "/logged-out", "/sign-in", "/error", "/ws/game", "/health-check"
     };
 
     @Bean
