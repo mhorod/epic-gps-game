@@ -24,6 +24,7 @@
         android:orientation="vertical">
 
         <LinearLayout
+            android:id="@+id/stats_bar"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:orientation="horizontal">
@@ -96,7 +97,7 @@
                     android:layout_gravity="center_horizontal"
                     android:layout_weight="1"
                     android:src="@drawable/shield"
-                    android:visibility="gone"
+                    android:visibility="visible"
                     tools:visibility="visible" />
 
                 <TextView
@@ -108,7 +109,7 @@
                     android:foregroundGravity="center_vertical"
                     android:gravity="center_horizontal"
                     android:text="Bbb"
-                    android:visibility="gone"
+                    android:visibility="visible"
                     tools:visibility="visible" />
             </LinearLayout>
 
@@ -143,6 +144,7 @@
         </LinearLayout>
 
         <LinearLayout
+            android:id="@+id/inventory_bar"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:orientation="vertical">

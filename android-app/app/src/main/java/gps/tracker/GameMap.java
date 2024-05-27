@@ -9,6 +9,7 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.core.content.res.ResourcesCompat;
 import androidx.fragment.app.Fragment;
 import androidx.navigation.fragment.NavHostFragment;
@@ -66,23 +67,50 @@ public class GameMap extends Fragment {
 
         binding.mapLayout.addView(mapView);
 
-        changeStatsVisibility(View.GONE);
+        setStats(getDefaultGraphicalStats());
 
         return binding.getRoot();
 
     }
 
+    private static record GraphicalStats (String hp, String atk, String def, String level, long progress) {}
+
+    @Nullable
+    private GraphicalStats getDefaultGraphicalStats() {
+        String hpString = mainActivity.getString("hp");
+        String atkString = mainActivity.getString("atk");
+        String defString = mainActivity.getString("def");
+        String levelString = mainActivity.getString("level");
+        String progressString = mainActivity.getString("progress");
+
+        if (hpString == null || atkString == null || defString == null || levelString == null || progressString == null) {
+            return null;
+        }
+
+        long progress = (long) (Double.parseDouble(progressString) * 10000);
+
+        return new GraphicalStats(hpString, atkString, defString, levelString, progress);
+    }
+
+    private synchronized void setStats(GraphicalStats stats) {
+        if (stats == null) {
+            return;
+        }
+
+        binding.hpLevel.setText(stats.hp());
+        binding.atkLevel.setText(stats.atk());
+        binding.defLevel.setText(stats.def());
+        binding.levelLevel.setText(stats.level());
+
+        binding.progressBar.setMax(10000);
+        binding.progressBar.setProgress((int) (stats.progress * 10000));
+
+        changeStatsVisibility(View.VISIBLE);
+    }
+
     private void changeStatsVisibility(int visibility) {
-        binding.atkIcon.setVisibility(visibility);
-        binding.hpIcon.setVisibility(visibility);
-        binding.defIcon.setVisibility(visibility);
-        binding.hpLevel.setVisibility(visibility);
-        binding.atkLevel.setVisibility(visibility);
-        binding.defLevel.setVisibility(visibility);
-        binding.inventoryButton.setVisibility(visibility);
-        binding.levelImageView.setVisibility(visibility);
-        binding.levelLevel.setVisibility(visibility);
-        binding.progressBar.setVisibility(visibility);
+        binding.statsBar.setVisibility(visibility);
+        binding.inventoryBar.setVisibility(visibility);
     }
 
     private void centerMapOncePossible() {
@@ -257,17 +285,17 @@ public class GameMap extends Fragment {
 
                     String levelString = me.lvl() + "";
 
+                    mainActivity.saveString("hp", hpString);
+                    mainActivity.saveString("atk", atkString);
+                    mainActivity.saveString("def", defString);
+                    mainActivity.saveString("level", levelString);
+                    mainActivity.saveString("progress", String.valueOf(progress));
+
+                    GraphicalStats stats = new GraphicalStats(hpString, atkString, defString, levelString, (long) (progress));
+
+
                     mainActivity.runOnUiThread(() -> {
-                        binding.hpLevel.setText(hpString);
-                        binding.atkLevel.setText(atkString);
-                        binding.defLevel.setText(defString);
-                        binding.levelLevel.setText(levelString);
-
-                        binding.progressBar.setMax(10000);
-                        binding.progressBar.setProgress((int) (progress * 10000));
-
-                        changeStatsVisibility(View.VISIBLE);
-
+                        setStats(stats);
                     });
                 }
         );
