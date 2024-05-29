@@ -14,12 +14,14 @@ import androidx.core.content.res.ResourcesCompat;
 import androidx.fragment.app.Fragment;
 import androidx.navigation.fragment.NavHostFragment;
 
+import org.osmdroid.api.IGeoPoint;
 import org.osmdroid.api.IMapController;
 import org.osmdroid.events.MapEventsReceiver;
 import org.osmdroid.tileprovider.MapTileProviderBasic;
 import org.osmdroid.util.GeoPoint;
 import org.osmdroid.views.MapView;
 import org.osmdroid.views.overlay.MapEventsOverlay;
+import org.osmdroid.views.overlay.Overlay;
 import org.osmdroid.views.overlay.mylocation.IMyLocationConsumer;
 import org.osmdroid.views.overlay.mylocation.IMyLocationProvider;
 import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay;
@@ -46,7 +48,7 @@ public class GameMap extends Fragment {
     private MapEventsReceiver mapEventsReceiver;
     private Timer refreshLocationTimer;
     private MyLocationNewOverlay myLocationOverlay;
-    private Timer areWeLoggedInTimer;
+    private Timer updateOverlaysTimer;
     private EnemyList enemyList;
 
 
@@ -66,7 +68,7 @@ public class GameMap extends Fragment {
 
 
         binding.mapLayout.addView(mapView);
-
+        
         setStats(getDefaultGraphicalStats());
 
         return binding.getRoot();
@@ -177,6 +179,40 @@ public class GameMap extends Fragment {
         };
 
         refreshLocationTimer.schedule(updater, 0, 1000);
+    }
+
+    private void setUpdateOverlaysTimer() {
+        updateOverlaysTimer = new Timer();
+        TimerTask updater = new TimerTask() {
+            @Override
+            public void run() {
+                updateOverlays();
+            }
+        };
+
+        updateOverlaysTimer.schedule(updater, 2000, 5000);
+    }
+
+    private void updateOverlays() {
+        IGeoPoint currentMapCenter = mapView.getMapCenter();
+        Position center = new Position(currentMapCenter.getLatitude(), currentMapCenter.getLongitude());
+
+        // FIXME: Change hardcoding to dynamic calculation based on the zoom level
+        List<EnemyOverlay> enemies = enemyList.getAllEnemyOverlaysWithinRange(center, 1000);
+
+        mainActivity.runOnUiThread(() -> {
+            List<Overlay> currentOverlays = mapView.getOverlays();
+            if(currentOverlays.isEmpty()) {
+                return;
+            }
+
+            Overlay personOverlay = currentOverlays.get(currentOverlays.size() - 1);
+            currentOverlays.clear();
+            currentOverlays.addAll(enemies);
+            currentOverlays.add(personOverlay);
+
+            mapView.invalidate();
+        });
     }
 
     @Override
@@ -308,6 +344,8 @@ public class GameMap extends Fragment {
         binding.findMeButton.setOnClickListener(v -> {
             centerMapOncePossible();
         });
+
+        setUpdateOverlaysTimer();
     }
 
     @Override
