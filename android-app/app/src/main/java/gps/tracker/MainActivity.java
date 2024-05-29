@@ -2,7 +2,6 @@ package gps.tracker;
 
 import android.annotation.SuppressLint;
 import android.app.AlertDialog;
-import android.content.AbstractThreadedSyncAdapter;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.location.LocationListener;
@@ -33,6 +32,8 @@ import java.io.OutputStreamWriter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.function.Consumer;
 
 import gps.tracker.databinding.ActivityMainBinding;
@@ -68,6 +69,8 @@ public class MainActivity extends AppCompatActivity {
     private Runnable onDisconnectRunnable = null;
     private Consumer<Player> playerConsumer = null;
     private Runnable onLoggedInRunnable;
+    private Timer locationGuardianTimer;
+    private GPSGuardianState gpsGuardianState = new GPSGuardianState();
 
     public void saveString(String key, String value) {
         try {
@@ -136,20 +139,59 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
+    private boolean locationCanBeChecked() {
+        boolean gps = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER);
+        boolean network = locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
+
+        return gps || network;
+    }
+
+    private void enableLocationGuardian() {
+        locationGuardianTimer = new Timer();
+
+        TimerTask locationGuardianTask = new TimerTask() {
+            @Override
+            public void run() {
+                if (!locationCanBeChecked() && !gpsGuardianState.alertShown) {
+                    gpsGuardianState.alertShown = true;
+                    runOnUiThread(() -> {
+                        AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+                        builder.setTitle("Oh no!");
+                        builder.setMessage("Please, enable GPS to play the game.");
+                        builder.setPositiveButton("I've enabled it", (dialog, id) -> {
+                            gpsGuardianState.alertShown = false;
+                        });
+                        builder.create().show();
+                    });
+                }
+            }
+        };
+
+        locationGuardianTimer.schedule(locationGuardianTask, 5000, 1000);
+    }
+
+    private boolean permissionEnabled(String permission) {
+        return ActivityCompat.checkSelfPermission(this, permission) == PackageManager.PERMISSION_GRANTED;
+    }
+
+    @SuppressLint("MissingPermission")
     private void postRequestPermissions() {
-        {
-            int req = ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION);
-            if (req != PackageManager.PERMISSION_GRANTED) {
-                Log.e("main_activity", "ups od ACCESS_FINE_LOCATION, status: " + req);
-                return;
-            }
-        }
-        {
-            int req = ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION);
-            if (req != PackageManager.PERMISSION_GRANTED) {
-                Log.e("main_activity", "ups od ACCESS_COARSE_LOCATION, status: " + req);
-                return;
-            }
+
+        if (!permissionEnabled(android.Manifest.permission.ACCESS_FINE_LOCATION) || !permissionEnabled(android.Manifest.permission.ACCESS_COARSE_LOCATION)) {
+            Log.e("main_activity", "Permissions not granted, exiting.");
+
+            runOnUiThread(
+                    () -> {
+                        AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+                        builder.setTitle("Oh no!");
+                        builder.setMessage("Please, enable location permissions to play the game.");
+                        builder.setPositiveButton("I'll think about it", (dialog, id) -> finish());
+                        builder.setCancelable(false);
+                        builder.create().show();
+                    }
+            );
+
+            return;
         }
 
         Log.e("main_activity", "hello world?");
@@ -157,7 +199,7 @@ public class MainActivity extends AppCompatActivity {
         locationListener = this::processLocation;
         locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
 
-        Log.e("main_activity", "providers: " + locationManager.getAllProviders().toString());
+        Log.e("main_activity", "providers: " + locationManager.getAllProviders());
 
         locationManager.requestLocationUpdates(
                 "fused",
@@ -167,6 +209,8 @@ public class MainActivity extends AppCompatActivity {
         );
 
         Log.e("main_activity", "hello world!!");
+
+        enableLocationGuardian();
     }
 
     @SuppressLint("MissingPermission")
@@ -317,6 +361,10 @@ public class MainActivity extends AppCompatActivity {
         return enemyList;
     }
 
+    private static class GPSGuardianState {
+        public boolean alertShown = false;
+    }
+
     class MainActivityHandler implements MessageToClientHandler {
 
         private ArrayList<Enemy> enemiesBacklog = new ArrayList<>();
@@ -403,7 +451,7 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         public synchronized void meUpdate(Player me) {
-            if(onLoggedInRunnable != null) {
+            if (onLoggedInRunnable != null) {
                 onLoggedInRunnable.run();
                 onLoggedInRunnable = null;
             }

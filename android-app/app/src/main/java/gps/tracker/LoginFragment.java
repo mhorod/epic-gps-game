@@ -56,7 +56,7 @@ public class LoginFragment extends Fragment {
                     ProgressDialog progress = new ProgressDialog(this.mainActivity);
                     progress.setTitle("Logging in");
                     progress.setMessage("Spawning frogs...");
-                    progress.setCancelable(false); // disable dismiss by tapping outside of the dialog
+                    progress.setCancelable(false);
 
                     mainActivity.runOnUiThread(
                             progress::show
