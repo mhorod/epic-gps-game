@@ -31,10 +31,10 @@
             android:layout_height="60dp"
             android:layout_marginStart="130dp"
             android:layout_marginEnd="130dp"
-            android:layout_marginBottom="100dp"
+            android:layout_marginBottom="65dp"
             android:foregroundGravity="center"
             android:text="Dev Login"
-            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintBottom_toTopOf="@+id/textView"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.555"
             app:layout_constraintStart_toStartOf="parent" />
@@ -75,9 +75,13 @@
             android:id="@+id/textView"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginStart="167dp"
+            android:layout_marginEnd="168dp"
+            android:layout_marginBottom="16dp"
             android:text="TextView"
-            tools:layout_editor_absoluteX="173dp"
-            tools:layout_editor_absoluteY="667dp" />
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
