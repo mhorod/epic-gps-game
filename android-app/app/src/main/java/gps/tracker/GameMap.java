@@ -208,10 +208,11 @@ public class GameMap extends Fragment {
             currentOverlays.clear();
             currentOverlays.addAll(enemies);
             currentOverlays.add(personOverlay);
-
+            currentOverlays.add(new MapEventsOverlay(mapEventsReceiver));
             mapView.invalidate();
         });
     }
+
 
     @Override
     public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
