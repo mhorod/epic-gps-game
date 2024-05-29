@@ -66,6 +66,7 @@ public class GameMap extends Fragment {
         MapTileProviderBasic tileProvider = new MapTileProviderBasic(inflater.getContext());
         mapView = new MapView(inflater.getContext(), tileProvider, null);
 
+        mapView.setMinZoomLevel(10.0);
 
         binding.mapLayout.addView(mapView);
 
@@ -188,15 +189,25 @@ public class GameMap extends Fragment {
             }
         };
 
-        updateOverlaysTimer.schedule(updater, 2000, 5000);
+        updateOverlaysTimer.schedule(updater, 2000, 4000);
     }
 
     private void updateOverlays() {
         IGeoPoint currentMapCenter = mapView.getMapCenter();
         Position center = new Position(currentMapCenter.getLatitude(), currentMapCenter.getLongitude());
 
-        // FIXME: Change hardcoding to dynamic calculation based on the zoom level
-        List<EnemyOverlay> enemies = enemyList.getAllEnemyOverlaysWithinRange(center, 1000);
+        float multiplier = (float) Math.pow(2, 20 - mapView.getZoomLevelDouble());
+        float range = 500 * multiplier;
+
+        List<EnemyOverlay> enemies;
+
+        System.out.println("ZOOM:" + mapView.getZoomLevelDouble() + " RANGE:" + range);
+
+        if (mapView.getZoomLevelDouble() <= 13.5) {
+            enemies = List.of();
+        } else {
+            enemies = enemyList.getAllEnemyOverlaysWithinRange(center, range);
+        }
 
         mainActivity.runOnUiThread(() -> {
             List<Overlay> currentOverlays = mapView.getOverlays();
