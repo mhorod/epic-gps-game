@@ -251,6 +251,10 @@ public class MainActivity extends AppCompatActivity {
         sublisteners.add(listener);
     }
 
+    public void removeLocationListener(LocationListener listener) {
+        sublisteners.remove(listener);
+    }
+
     @SneakyThrows
     private void doProcessLocation(Location location) {
         lastLocation = location;

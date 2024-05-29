@@ -1,11 +1,14 @@
 package gps.tracker;
 
 import android.app.ProgressDialog;
+import android.location.Location;
+import android.location.LocationListener;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 import androidx.navigation.fragment.NavHostFragment;
 
@@ -53,22 +56,41 @@ public class LoginFragment extends Fragment {
                     mainActivity.saveString("username", lambdaUsername);
                     mainActivity.saveString("password", lambdaPassword);
 
-                    ProgressDialog progress = new ProgressDialog(this.mainActivity);
-                    progress.setTitle("Logging in");
-                    progress.setMessage("Spawning frogs...");
-                    progress.setCancelable(false);
+                    ProgressDialog gpsProgress = new ProgressDialog(this.mainActivity);
+                    gpsProgress.setTitle("Waiting for GPS signal...");
+                    gpsProgress.setMessage("Please wait...");
+                    gpsProgress.setCancelable(false);
 
-                    mainActivity.runOnUiThread(
-                            progress::show
+                    ProgressDialog loginProgress = new ProgressDialog(this.mainActivity);
+                    loginProgress.setTitle("Logging in");
+                    loginProgress.setMessage("Spawning frogs...");
+                    loginProgress.setCancelable(false);
+
+                    mainActivity.registerLocationListener(
+                            new LocationListener() {
+                                @Override
+                                public void onLocationChanged(@NonNull Location location) {
+                                    mainActivity.removeLocationListener(this);
+                                    mainActivity.runOnUiThread(() -> {
+                                                gpsProgress.dismiss();
+                                                loginProgress.show();
+                                            }
+                                    );
+                                }
+                            }
                     );
 
                     mainActivity.setOnLoggedIn(
                             () -> mainActivity.runOnUiThread(
                                     () -> {
-                                        progress.dismiss();
+                                        loginProgress.dismiss();
                                         NavHostFragment.findNavController(LoginFragment.this).navigate(R.id.action_loginFragment_to_gameMap);
                                     }
                             )
+                    );
+                    
+                    mainActivity.runOnUiThread(
+                            gpsProgress::show
                     );
 
                     mainActivity.login(lambdaUsername, lambdaPassword, false);
