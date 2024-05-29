@@ -162,12 +162,12 @@ public class Connection {
             long millisSinceLastReceived = Duration.between(lastReceived, Instant.now()).toMillis();
             long millisSinceLastPing = Duration.between(lastPing, Instant.now()).toMillis();
 
-            if (millisSinceLastReceived > 2000 && millisSinceLastPing > 2000)
-                doSendMessage(new Ping());
-            if (millisSinceLastReceived > 4000) {
+            if (millisSinceLastReceived > 8000) {
                 close();
                 return;
             }
+            if (millisSinceLastReceived > 2000 && millisSinceLastPing > 3000)
+                doSendMessage(new Ping());
 
             if (messageToClient != null)
                 doSendMessage(messageToClient);

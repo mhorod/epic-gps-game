@@ -1,9 +1,12 @@
 package soturi.web;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.annotation.security.RolesAllowed;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -96,15 +99,14 @@ public class DashboardApiController {
 
     @PostMapping("/v1/reload-config")
     public void reloadConfigFile() {
-        if (!dynamicConfig.tryToLoad())
-            throw new RuntimeException();
-        setConfig(dynamicConfig.getRegistry().getConfig());
+        Config config = dynamicConfig.tryToLoad().orElseThrow();
+        setConfig(config);
     }
 
     @PostMapping("/v1/set-config")
     public void setConfig(@RequestBody Config config) {
         gameService.setConfig(config);
-        dynamicConfig.tryToDump();
+        dynamicConfig.tryToDump(config);
     }
 
     @GetMapping("/v1/config")
@@ -150,4 +152,8 @@ public class DashboardApiController {
         return sb.toString();
     }
 
+    @GetMapping("/v1/current-user")
+    public String currentUser() {
+        return SecurityContextHolder.getContext().getAuthentication().getName();
+    }
 }

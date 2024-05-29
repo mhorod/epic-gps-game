@@ -68,14 +68,12 @@ public class GameMap extends Fragment {
 
 
         binding.mapLayout.addView(mapView);
-        
+
         setStats(getDefaultGraphicalStats());
 
         return binding.getRoot();
 
     }
-
-    private static record GraphicalStats (String hp, String atk, String def, String level, long progress) {}
 
     @Nullable
     private GraphicalStats getDefaultGraphicalStats() {
@@ -202,7 +200,7 @@ public class GameMap extends Fragment {
 
         mainActivity.runOnUiThread(() -> {
             List<Overlay> currentOverlays = mapView.getOverlays();
-            if(currentOverlays.isEmpty()) {
+            if (currentOverlays.isEmpty()) {
                 return;
             }
 
@@ -403,6 +401,10 @@ public class GameMap extends Fragment {
         MainActivity mainActivity = (MainActivity) getActivity();
 
         mainActivity.getWebSocketClient().send().attackEnemy(e.enemyId());
+    }
+
+    private static record GraphicalStats(String hp, String atk, String def, String level,
+                                         long progress) {
     }
 
     class MyLocationProvider implements IMyLocationProvider {

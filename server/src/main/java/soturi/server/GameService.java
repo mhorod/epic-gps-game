@@ -4,6 +4,7 @@ import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
+import soturi.common.CompilationInfo;
 import soturi.common.Registry;
 import soturi.model.Config;
 import soturi.model.Enemy;
@@ -46,6 +47,9 @@ public class GameService {
     private MonsterManager monsterManager;
 
     public GameService(PlayerRepository repository, FightRepository fightRepository, DynamicConfig dynamicConfig, CityProvider cityProvider) {
+        log.info("Compilation time: {}", CompilationInfo.getCompilationTime().orElse(null));
+        log.info("Commit id: {}", CompilationInfo.getCommitId().orElse(null));
+
         this.repository = repository;
         this.fightRepository = fightRepository;
         this.dynamicConfig = dynamicConfig;
@@ -396,7 +400,7 @@ public class GameService {
         PlayerEntity entity = repository.findByName(name).orElseGet(
             () -> repository.save(new PlayerEntity(name, password))
         );
-        if (!password.equals(entity.getHashedPassword())) {
+        if (!entity.hasPassword(password)) {
             sender.error("incorrect password passed");
             return false;
         }

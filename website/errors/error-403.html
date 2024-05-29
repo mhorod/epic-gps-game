@@ -2,12 +2,20 @@
 <html lang="en">
     <head>
         <meta charset="utf-8" />
-        <link rel="icon" href="/website/favicon.ico" />
+        <link rel="icon" href="/static/website/favicon.ico" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <meta name="theme-color" content="#000000" />
 
-        <link rel="stylesheet" href="/website/css/common.css" type="text/css" />
-        <link rel="stylesheet" href="/website/css/errors.css" type="text/css" />
+        <link
+            rel="stylesheet"
+            href="/static/website/css/common.css"
+            type="text/css"
+        />
+        <link
+            rel="stylesheet"
+            href="/static/website/css/errors.css"
+            type="text/css"
+        />
 
         <title>Soturi Online</title>
     </head>
@@ -18,7 +26,19 @@
                 <h2>You are not authorized to access this resource</h2>
             </div>
 
-            <a class="btn-primary" href="/"> Go back to the main page </a>
+            <div id="buttons">
+                <a class="btn-primary" href="/"> Go back to the main page </a>
+            </div>
+
+            <div id="secondary-buttons">
+                <a class="text-btn" href="/log-in" id="log-in-btn"> Log In </a>
+                <script>
+                    const btn = document.getElementById("log-in-btn");
+                    btn.href =
+                        "/log-in?redirect=" +
+                        encodeURIComponent(document.location.pathname);
+                </script>
+            </div>
         </main>
     </body>
 </html>
