@@ -22,7 +22,7 @@ tasks.whenTaskAdded {
     // this could be a one liner but IntelliJ does not like that
     val timePath = project.projectDir.absolutePath + "/src/main/resources/generated/compilation-time"
     val timeWriter = PrintWriter(File(timePath))
-    timeWriter.println(LocalDateTime.now())
+    timeWriter.println(LocalDateTime.now().withNano(0))
     timeWriter.flush()
     timeWriter.close()
 
@@ -33,6 +33,4 @@ tasks.whenTaskAdded {
     )
     commitWriter.flush()
     commitWriter.close()
-
-    project.logger.warn("my debug message$path")
 }

@@ -2,7 +2,7 @@ package soturi.web;
 
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
-import soturi.common.CompilationInfo;
+import soturi.common.VersionInfo;
 
 import java.time.LocalDateTime;
 
@@ -12,8 +12,7 @@ public class HealthCheckController {
     @GetMapping("/health-check")
     public HealthCheckDto getHealthCheck() {
         return new HealthCheckDto(
-                CompilationInfo.getCompilationTime().orElse(null),
-                CompilationInfo.getCommitId().orElse(null)
+            VersionInfo.compilationTime, VersionInfo.commitId
         );
     }
 

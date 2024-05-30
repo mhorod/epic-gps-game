@@ -4,7 +4,7 @@ import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
-import soturi.common.CompilationInfo;
+import soturi.common.VersionInfo;
 import soturi.common.Registry;
 import soturi.model.Config;
 import soturi.model.Enemy;
@@ -47,8 +47,8 @@ public class GameService {
     private MonsterManager monsterManager;
 
     public GameService(PlayerRepository repository, FightRepository fightRepository, DynamicConfig dynamicConfig, CityProvider cityProvider) {
-        log.info("Compilation time: {}", CompilationInfo.getCompilationTime().orElse(null));
-        log.info("Commit id: {}", CompilationInfo.getCommitId().orElse(null));
+        log.info("Compilation time: {}", VersionInfo.compilationTime);
+        log.info("Commit id: {}", VersionInfo.commitId);
 
         this.repository = repository;
         this.fightRepository = fightRepository;
