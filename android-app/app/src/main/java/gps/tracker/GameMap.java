@@ -31,6 +31,7 @@ import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 
+import gps.tracker.custom_overlays.CustomClusterer;
 import gps.tracker.custom_overlays.EnemyOverlay;
 import gps.tracker.databinding.GameMapFragmentBinding;
 import soturi.model.Enemy;
@@ -231,9 +232,9 @@ public class GameMap extends Fragment {
             NavHostFragment.findNavController(GameMap.this).navigate(R.id.action_gameMap_to_inventoryFragment);
         });
 
-        RadiusMarkerClusterer clusterer = new RadiusMarkerClusterer(mainActivity);
+        RadiusMarkerClusterer clusterer = new CustomClusterer(mainActivity);
         clusterer.setMaxClusteringZoomLevel(16);
-        clusterer.setRadius(500);
+        clusterer.setRadius(1000);
 
         mainActivity.runOnUiThread(
                 () -> mapView.getOverlays().add(clusterer)

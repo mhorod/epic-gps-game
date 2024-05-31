@@ -1,23 +1,16 @@
 package gps.tracker.custom_overlays;
 
-import android.content.Context;
-
 import org.osmdroid.bonuspack.clustering.RadiusMarkerClusterer;
-import org.osmdroid.bonuspack.clustering.StaticCluster;
-import org.osmdroid.views.MapView;
 
-import java.util.ArrayList;
+import gps.tracker.MainActivity;
 
 public class CustomClusterer extends RadiusMarkerClusterer {
 
-    public CustomClusterer(Context ctx) {
-        super(ctx);
-    }
+    MainActivity mainActivity;
 
-    @Override
-    public ArrayList<StaticCluster> clusterer(MapView mapView) {
-        System.out.println("CustomClusterer.clusterer");
-        return super.clusterer(mapView);
+    public CustomClusterer(MainActivity mainActivity) {
+        super(mainActivity);
+        this.mainActivity = mainActivity;
     }
 
 }
