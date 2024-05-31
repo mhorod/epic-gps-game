@@ -26,6 +26,7 @@ import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay;
 
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -39,6 +40,7 @@ import soturi.model.Player;
 
 public class GameMap extends Fragment {
 
+    private final HashMap<String, Drawable> drawableCache = new HashMap<>();
     private GameMapFragmentBinding binding;
     private MapView mapView;
     private MainActivity mainActivity;
@@ -47,7 +49,6 @@ public class GameMap extends Fragment {
     private Timer refreshLocationTimer;
     private MyLocationNewOverlay myLocationOverlay;
     private EnemyList enemyList;
-
 
     @Override
     public View onCreateView(
@@ -231,7 +232,7 @@ public class GameMap extends Fragment {
         });
 
         RadiusMarkerClusterer clusterer = new RadiusMarkerClusterer(mainActivity);
-        clusterer.setMaxClusteringZoomLevel(14);
+        clusterer.setMaxClusteringZoomLevel(5);
 
         mainActivity.runOnUiThread(
                 () -> mapView.getOverlays().add(new RadiusMarkerClusterer(mainActivity))
@@ -262,21 +263,23 @@ public class GameMap extends Fragment {
         timer.cancel();
     }
 
-    private synchronized void enemyAppearsConsumer(List<Enemy> enemies) {
+    private synchronized Drawable getDrawableResource(String path) {
+        return drawableCache.computeIfAbsent(path, ignored -> {
+            try (InputStream stream = getClass().getClassLoader().getResourceAsStream(path)) {
+                return Drawable.createFromStream(stream, null);
+            } catch (Exception exc) {
+                return ResourcesCompat.getDrawable(getResources(), R.mipmap.ic_launcher, null);
+            }
+        });
+    }
+
+    private synchronized void enemyAppearsConsumer(@NonNull List<Enemy> enemies) {
         List<Marker> toAdd = new ArrayList<>();
 
         for (Enemy e : enemies) {
+            EnemyType type = mainActivity.gameRegistry.getEnemyType(e);
+            Drawable d = getDrawableResource(type.gfxName());
 
-            Drawable d = ResourcesCompat.getDrawable(getResources(), R.mipmap.ic_launcher, null);
-            try {
-                EnemyType type = mainActivity.gameRegistry.getEnemyType(e);
-                InputStream stream = getClass().getClassLoader().getResourceAsStream(type.gfxName());
-                Drawable draw = Drawable.createFromStream(stream, null);
-                if (draw != null)
-                    d = draw;
-            } catch (Exception exc) {
-                exc.printStackTrace();
-            }
             EnemyOverlay overlay = new EnemyOverlay(mapView, new DrawableEnemy(d, e), mainActivity, this::attackEnemy);
 
             enemyList.addEnemy(e, overlay);
@@ -315,8 +318,8 @@ public class GameMap extends Fragment {
         mainActivity.getWebSocketClient().send().attackEnemy(e.enemyId());
     }
 
-    private static record GraphicalStats(String hp, String atk, String def, String level,
-                                         long progress) {
+    private record GraphicalStats(String hp, String atk, String def, String level,
+                                  long progress) {
     }
 
     class MyLocationProvider implements IMyLocationProvider {

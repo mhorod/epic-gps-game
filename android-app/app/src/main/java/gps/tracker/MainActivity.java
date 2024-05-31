@@ -386,8 +386,8 @@ public class MainActivity extends AppCompatActivity {
                 return;
             }
 
-            cleanBacklog(enemyAppearsConsumer);
-            enemyAppearsConsumer.accept(enemies);
+            new Thread(() -> cleanBacklog(enemyAppearsConsumer)).start();
+            new Thread(() -> enemyAppearsConsumer.accept(enemies)).start();
         }
 
         @Override
