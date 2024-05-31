@@ -14,14 +14,13 @@ import androidx.core.content.res.ResourcesCompat;
 import androidx.fragment.app.Fragment;
 import androidx.navigation.fragment.NavHostFragment;
 
-import org.osmdroid.api.IGeoPoint;
 import org.osmdroid.api.IMapController;
+import org.osmdroid.bonuspack.clustering.RadiusMarkerClusterer;
 import org.osmdroid.events.MapEventsReceiver;
 import org.osmdroid.tileprovider.MapTileProviderBasic;
 import org.osmdroid.util.GeoPoint;
 import org.osmdroid.views.MapView;
 import org.osmdroid.views.overlay.MapEventsOverlay;
-import org.osmdroid.views.overlay.Overlay;
 import org.osmdroid.views.overlay.mylocation.IMyLocationConsumer;
 import org.osmdroid.views.overlay.mylocation.IMyLocationProvider;
 import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay;
@@ -48,7 +47,6 @@ public class GameMap extends Fragment {
     private MapEventsReceiver mapEventsReceiver;
     private Timer refreshLocationTimer;
     private MyLocationNewOverlay myLocationOverlay;
-    private Timer updateOverlaysTimer;
     private EnemyList enemyList;
 
 
@@ -180,51 +178,6 @@ public class GameMap extends Fragment {
         refreshLocationTimer.schedule(updater, 0, 1000);
     }
 
-    private void setUpdateOverlaysTimer() {
-        updateOverlaysTimer = new Timer();
-        TimerTask updater = new TimerTask() {
-            @Override
-            public void run() {
-                updateOverlays();
-            }
-        };
-
-        updateOverlaysTimer.schedule(updater, 2000, 4000);
-    }
-
-    private void updateOverlays() {
-        IGeoPoint currentMapCenter = mapView.getMapCenter();
-        Position center = new Position(currentMapCenter.getLatitude(), currentMapCenter.getLongitude());
-
-        float multiplier = (float) Math.pow(2, 20 - mapView.getZoomLevelDouble());
-        float range = 500 * multiplier;
-
-        List<EnemyOverlay> enemies;
-
-        System.out.println("ZOOM:" + mapView.getZoomLevelDouble() + " RANGE:" + range);
-
-        if (mapView.getZoomLevelDouble() <= 13.5) {
-            enemies = List.of();
-        } else {
-            enemies = enemyList.getAllEnemyOverlaysWithinRange(center, range);
-        }
-
-        mainActivity.runOnUiThread(() -> {
-            List<Overlay> currentOverlays = mapView.getOverlays();
-            if (currentOverlays.isEmpty()) {
-                return;
-            }
-
-            Overlay personOverlay = currentOverlays.get(currentOverlays.size() - 1);
-            currentOverlays.clear();
-            currentOverlays.addAll(enemies);
-            currentOverlays.add(personOverlay);
-            currentOverlays.add(new MapEventsOverlay(mapEventsReceiver));
-            mapView.invalidate();
-        });
-    }
-
-
     @Override
     public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
@@ -351,11 +304,13 @@ public class GameMap extends Fragment {
             NavHostFragment.findNavController(GameMap.this).navigate(R.id.action_gameMap_to_inventoryFragment);
         });
 
-        binding.findMeButton.setOnClickListener(v -> {
-            centerMapOncePossible();
-        });
+        mainActivity.runOnUiThread(
+                () -> mapView.getOverlays().add(new RadiusMarkerClusterer(mainActivity))
+        );
 
-        setUpdateOverlaysTimer();
+        binding.findMeButton.setOnClickListener(v -> centerMapOncePossible());
+
+
     }
 
     @Override
@@ -389,12 +344,12 @@ public class GameMap extends Fragment {
             exc.printStackTrace();
         }
         EnemyOverlay overlay = new EnemyOverlay(mapView, new DrawableEnemy(d, e));
-        overlay.enableMyLocation();
 
         enemyList.addEnemy(e, overlay);
 
         mainActivity.runOnUiThread(() -> {
-            mapView.getOverlays().add(0, overlay);
+            RadiusMarkerClusterer clusterer = (RadiusMarkerClusterer) mapView.getOverlays().get(1);
+            clusterer.add(overlay);
             mapView.invalidate();
         });
     }
