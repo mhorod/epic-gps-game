@@ -45,4 +45,5 @@ public class CustomOverlay extends Marker {
         Bitmap resized = Bitmap.createScaledBitmap(bitmap, dstWidth, dstHeight, false);
         return new BitmapDrawable(resized);
     }
+    
 }

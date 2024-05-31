@@ -19,11 +19,13 @@ import org.osmdroid.events.MapEventsReceiver;
 import org.osmdroid.tileprovider.MapTileProviderBasic;
 import org.osmdroid.util.GeoPoint;
 import org.osmdroid.views.MapView;
+import org.osmdroid.views.overlay.Marker;
 import org.osmdroid.views.overlay.mylocation.IMyLocationConsumer;
 import org.osmdroid.views.overlay.mylocation.IMyLocationProvider;
 import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay;
 
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -184,11 +186,7 @@ public class GameMap extends Fragment {
         mainActivity.getEnemyList().clear();
 
         new Thread(
-                () -> {
-                    for (Enemy e : enemies) {
-                        enemyAppearsConsumer(e);
-                    }
-                }
+                () -> enemyAppearsConsumer(enemies)
         ).start();
 
         IMapController controller = mapView.getController();
@@ -197,9 +195,6 @@ public class GameMap extends Fragment {
         centerMapOncePossible();
 
         mainActivity.locationChangeRequestNotifier.registerListener(this::centerMapOncePossible);
-
-        mainActivity.setEnemyAppearsConsumer(this::enemyAppearsConsumer);
-        mainActivity.setEnemyDisappearsConsumer(this::enemyDisappearsConsumer);
 
         mainActivity.setOnMeUpdate(
                 (Player me) -> {
@@ -235,13 +230,17 @@ public class GameMap extends Fragment {
             NavHostFragment.findNavController(GameMap.this).navigate(R.id.action_gameMap_to_inventoryFragment);
         });
 
+        RadiusMarkerClusterer clusterer = new RadiusMarkerClusterer(mainActivity);
+        clusterer.setMaxClusteringZoomLevel(14);
+
         mainActivity.runOnUiThread(
                 () -> mapView.getOverlays().add(new RadiusMarkerClusterer(mainActivity))
         );
 
         binding.findMeButton.setOnClickListener(v -> centerMapOncePossible());
 
-
+        mainActivity.setEnemyAppearsConsumer(this::enemyAppearsConsumer);
+        mainActivity.setEnemyDisappearsConsumer(this::enemyDisappearsConsumer);
     }
 
     @Override
@@ -263,24 +262,36 @@ public class GameMap extends Fragment {
         timer.cancel();
     }
 
-    private synchronized void enemyAppearsConsumer(Enemy e) {
-        Drawable d = ResourcesCompat.getDrawable(getResources(), R.mipmap.ic_launcher, null);
-        try {
-            EnemyType type = mainActivity.gameRegistry.getEnemyType(e);
-            InputStream stream = getClass().getClassLoader().getResourceAsStream(type.gfxName());
-            Drawable draw = Drawable.createFromStream(stream, null);
-            if (draw != null)
-                d = draw;
-        } catch (Exception exc) {
-            exc.printStackTrace();
-        }
-        EnemyOverlay overlay = new EnemyOverlay(mapView, new DrawableEnemy(d, e), mainActivity, this::attackEnemy);
+    private synchronized void enemyAppearsConsumer(List<Enemy> enemies) {
+        List<Marker> toAdd = new ArrayList<>();
 
-        enemyList.addEnemy(e, overlay);
+        for (Enemy e : enemies) {
+
+            Drawable d = ResourcesCompat.getDrawable(getResources(), R.mipmap.ic_launcher, null);
+            try {
+                EnemyType type = mainActivity.gameRegistry.getEnemyType(e);
+                InputStream stream = getClass().getClassLoader().getResourceAsStream(type.gfxName());
+                Drawable draw = Drawable.createFromStream(stream, null);
+                if (draw != null)
+                    d = draw;
+            } catch (Exception exc) {
+                exc.printStackTrace();
+            }
+            EnemyOverlay overlay = new EnemyOverlay(mapView, new DrawableEnemy(d, e), mainActivity, this::attackEnemy);
+
+            enemyList.addEnemy(e, overlay);
+            toAdd.add(overlay);
+
+        }
 
         mainActivity.runOnUiThread(() -> {
             RadiusMarkerClusterer clusterer = (RadiusMarkerClusterer) mapView.getOverlays().get(0);
-            clusterer.add(overlay);
+
+            for (Marker overlay : toAdd) {
+                clusterer.add(overlay);
+            }
+
+            clusterer.invalidate();
             mapView.invalidate();
         });
     }
