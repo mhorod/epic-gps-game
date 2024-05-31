@@ -84,7 +84,7 @@ public class GameMap extends Fragment {
             return null;
         }
 
-        long progress = (long) (Double.parseDouble(progressString) * 10000);
+        int progress = (int) (Double.parseDouble(progressString) * 10000);
 
         return new GraphicalStats(hpString, atkString, defString, levelString, progress);
     }
@@ -100,7 +100,7 @@ public class GameMap extends Fragment {
         binding.levelLevel.setText(stats.level());
 
         binding.progressBar.setMax(10000);
-        binding.progressBar.setProgress((int) (stats.progress * 10000));
+        binding.progressBar.setProgress(stats.progress());
 
         changeStatsVisibility(View.VISIBLE);
     }
@@ -217,7 +217,7 @@ public class GameMap extends Fragment {
                     mainActivity.saveString("level", levelString);
                     mainActivity.saveString("progress", String.valueOf(progress));
 
-                    GraphicalStats stats = new GraphicalStats(hpString, atkString, defString, levelString, (long) (progress));
+                    GraphicalStats stats = new GraphicalStats(hpString, atkString, defString, levelString, (int) (progress * 10000));
 
 
                     mainActivity.runOnUiThread(() -> {
@@ -313,14 +313,14 @@ public class GameMap extends Fragment {
         });
     }
 
-    private void attackEnemy(Enemy e) {
+    private void attackEnemy(@NonNull Enemy e) {
         MainActivity mainActivity = (MainActivity) getActivity();
 
         mainActivity.getWebSocketClient().send().attackEnemy(e.enemyId());
     }
 
     private record GraphicalStats(String hp, String atk, String def, String level,
-                                  long progress) {
+                                  int progress) {
     }
 
     class MyLocationProvider implements IMyLocationProvider {
