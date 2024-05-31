@@ -2,7 +2,6 @@ package soturi;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.ArgumentMatcher;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.TestPropertySource;
@@ -14,7 +13,7 @@ import soturi.model.EnemyType;
 import soturi.model.FightResult;
 import soturi.model.Item;
 import soturi.model.ItemId;
-import soturi.model.Loot;
+import soturi.model.Reward;
 import soturi.model.Player;
 import soturi.model.PolygonId;
 import soturi.model.Position;
@@ -35,7 +34,6 @@ import soturi.server.geo.CityProvider;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.IntStream;
 import java.util.stream.LongStream;
 import java.util.stream.Stream;
 
@@ -95,7 +93,12 @@ public class ServerTests {
 
     private void giveItem(String playerName, ItemId itemId) {
         PlayerEntity entity = repository.findByName(playerName).orElseThrow();
-        entity.applyFightResult(new FightResult(Result.WON, 0, new Loot(0, List.of(itemId))));
+        entity.setInventory(
+            Stream.concat(
+                entity.getInventory().stream(),
+                Stream.of(itemId.id())
+            ).toList()
+        );
         repository.save(entity);
     }
 
@@ -246,7 +249,7 @@ public class ServerTests {
     @Test
     void lvl_1_enemy_xp_loot_makes_sense() {
         Enemy e = newEnemy(1, Position.KRAKOW, new EnemyId(0));
-        long xp = registry.getLootFor(e).xp();
+        long xp = registry.getRewardFor(e).xp();
 
         long xp_to_2 = registry.getXpForLvlCumulative(2);
         long xp_to_3 = registry.getXpForLvlCumulative(3);
@@ -258,7 +261,7 @@ public class ServerTests {
     @Test
     void lvl_10_enemy_xp_loot_makes_sense() {
         Enemy e = newEnemy(1, Position.KRAKOW, new EnemyId(0));
-        long xp = registry.getLootFor(e).xp();
+        long xp = registry.getRewardFor(e).xp();
 
         long xp_to_11 = registry.getXpForNextLvl(10);
 
@@ -342,7 +345,7 @@ public class ServerTests {
         List<ItemId> loot = LongStream.range(0, 100 * 100)
             .mapToObj(EnemyId::new)
             .map(id -> new Enemy(type.typeId(), id, type.minLvl(), Position.KRAKOW))
-            .flatMap(e -> registry.getLootFor(e).items().stream()).toList();
+            .flatMap(e -> registry.getRewardFor(e).items().stream()).toList();
 
         System.err.println(loot.size());
         assertThat(loot).isNotEmpty();

@@ -11,6 +11,7 @@ import soturi.model.Config;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Objects;
 import java.util.Optional;
 
 @Slf4j
@@ -74,11 +75,8 @@ public class DynamicConfig {
 
     public Config getDefaultConfig() {
         String defaultConfigFile = "default-config.json";
-        try {
-            InputStream is = getClass().getClassLoader().getResourceAsStream(defaultConfigFile);
-            if (is == null)
-                throw new RuntimeException("resource " + defaultConfigFile + " is missing");
-            return objectMapper.readValue(is, Config.class);
+        try (InputStream is = getClass().getClassLoader().getResourceAsStream(defaultConfigFile)) {
+            return objectMapper.readValue(Objects.requireNonNull(is), Config.class);
         }
         catch (IOException ioe) {
             throw new RuntimeException(ioe);

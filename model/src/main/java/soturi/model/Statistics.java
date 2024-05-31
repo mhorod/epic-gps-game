@@ -1,6 +1,9 @@
 package soturi.model;
 
 public record Statistics(long maxHp, long attack, long defense) {
+    public Statistics() {
+        this(0, 0, 0);
+    }
     public Statistics mul(double by) {
         return new Statistics(
             (long) (maxHp * by),

@@ -7,7 +7,7 @@ import soturi.model.EnemyType;
 import soturi.model.EnemyTypeId;
 import soturi.model.Item;
 import soturi.model.ItemId;
-import soturi.model.Loot;
+import soturi.model.Reward;
 import soturi.model.Polygon;
 import soturi.model.PolygonId;
 import soturi.model.Position;
@@ -259,12 +259,12 @@ public class Registry {
     public Statistics getPlayerStatistics(int lvl) {
         return config.statisticsPlayerPerLvl().mul(lvl).add(config.statisticsPlayerBase());
     }
-    public Loot getLootFor(Enemy enemy) {
+    public Reward getRewardFor(Enemy enemy) {
         EnemyType type = getEnemyType(enemy);
         double xp = config.xpLoot().eval(enemy.lvl()) * type.xpFactor();
         List<ItemId> loot = rnd.nextDouble() < type.lootChance() ?
             List.of(getRandomElement(type.lootList())) : List.of();
-        return new Loot((long) xp, loot);
+        return new Reward((long) xp, loot);
     }
 
     public int getGiveFreeXpDelayInSeconds() {
@@ -290,6 +290,9 @@ public class Registry {
     }
     public List<String> getCountryCodes() {
         return config.countryCodes();
+    }
+    public int getQuestDurationInSeconds() {
+        return config.questDurationInSeconds();
     }
     public Config getConfig() {
         return config;

@@ -1,13 +1,12 @@
 package soturi.server;
 
-import jakarta.servlet.annotation.WebInitParam;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 import soturi.common.Registry;
 import soturi.model.Enemy;
 import soturi.model.FightResult;
-import soturi.model.Loot;
+import soturi.model.Reward;
 import soturi.model.Player;
 import soturi.model.Result;
 
@@ -79,12 +78,12 @@ public class FightSimulator {
 
     public FightResult simulateFight(Player player, Enemy enemy) {
         FightResultInternal fri = simulateFightInternal(new Fighter(player), new Fighter(enemy));
-        Loot loot = fri.attackerResult() == Result.WON ? registry.getLootFor(enemy) : new Loot();
+        Reward reward = fri.attackerResult() == Result.WON ? registry.getRewardFor(enemy) : new Reward();
 
         return new FightResult(
             fri.attackerResult(),
             fri.lostHpAttacker(),
-            loot
+            reward
         );
     }
 }
