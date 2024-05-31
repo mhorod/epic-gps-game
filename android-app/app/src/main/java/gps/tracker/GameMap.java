@@ -1,6 +1,5 @@
 package gps.tracker;
 
-import android.app.AlertDialog;
 import android.graphics.drawable.Drawable;
 import android.location.Location;
 import android.os.Bundle;
@@ -20,7 +19,6 @@ import org.osmdroid.events.MapEventsReceiver;
 import org.osmdroid.tileprovider.MapTileProviderBasic;
 import org.osmdroid.util.GeoPoint;
 import org.osmdroid.views.MapView;
-import org.osmdroid.views.overlay.MapEventsOverlay;
 import org.osmdroid.views.overlay.mylocation.IMyLocationConsumer;
 import org.osmdroid.views.overlay.mylocation.IMyLocationProvider;
 import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay;
@@ -36,7 +34,6 @@ import soturi.model.Enemy;
 import soturi.model.EnemyId;
 import soturi.model.EnemyType;
 import soturi.model.Player;
-import soturi.model.Position;
 
 public class GameMap extends Fragment {
 
@@ -63,8 +60,6 @@ public class GameMap extends Fragment {
 
         MapTileProviderBasic tileProvider = new MapTileProviderBasic(inflater.getContext());
         mapView = new MapView(inflater.getContext(), tileProvider, null);
-
-        mapView.setMinZoomLevel(10.0);
 
         binding.mapLayout.addView(mapView);
 
@@ -199,70 +194,6 @@ public class GameMap extends Fragment {
         IMapController controller = mapView.getController();
         controller.setZoom(19.0);
 
-        mapEventsReceiver = new MapEventsReceiver() {
-            @Override
-            public boolean singleTapConfirmedHelper(GeoPoint p) {
-                if (mainActivity.getLastLocation() == null) {
-                    return false;
-                }
-
-                System.out.println("Tapped at " + p);
-                Enemy e = enemyList.getClosestEnemy(new Position(p.getLatitude(), p.getLongitude()));
-
-                System.out.println("Closest enemy is " + e);
-
-                if (e == null) {
-                    return false;
-                }
-
-                if (e.position().distance(new Position(p.getLatitude(), p.getLongitude())) < 10 * Math.pow(2, 20 - mapView.getZoomLevelDouble())) {
-                    Location userLocation = mainActivity.getLastLocation();
-                    Position userPosition = new Position(userLocation.getLatitude(), userLocation.getLongitude());
-
-                    boolean canAttack = userPosition.distance(e.position()) < 50;
-
-                    mainActivity.runOnUiThread(() -> {
-                        // Alert
-                        AlertDialog.Builder builder = new AlertDialog.Builder(mainActivity);
-
-                        String name = mainActivity.gameRegistry.getEnemyType(e).name();
-                        builder.setTitle("Enemy: " + name + " lvl " + e.lvl());
-
-                        if (canAttack) {
-                            builder.setMessage("Proceed with an attack?");
-                            builder.setPositiveButton("OK", (dialog, id) -> {
-                                System.out.println("Attacking enemy " + e.enemyId());
-                                new Thread(() -> attackEnemy(e)).start();
-                                dialog.dismiss();
-                            });
-                            builder.setNegativeButton("Nope", (dialog, id) -> {
-                                dialog.dismiss();
-                            });
-                        } else {
-                            builder.setMessage("You are too far away to attack this enemy!");
-                            builder.setPositiveButton("Quite the predicament", (dialog, id) -> {
-                                dialog.dismiss();
-                            });
-                        }
-
-                        AlertDialog dialog = builder.create();
-                        dialog.show();
-                    });
-
-                    return true;
-                }
-
-                return false;
-            }
-
-            @Override
-            public boolean longPressHelper(GeoPoint p) {
-                return false;
-            }
-        };
-
-        mapView.getOverlays().add(new MapEventsOverlay(mapEventsReceiver));
-
         centerMapOncePossible();
 
         mainActivity.locationChangeRequestNotifier.registerListener(this::centerMapOncePossible);
@@ -343,12 +274,12 @@ public class GameMap extends Fragment {
         } catch (Exception exc) {
             exc.printStackTrace();
         }
-        EnemyOverlay overlay = new EnemyOverlay(mapView, new DrawableEnemy(d, e));
+        EnemyOverlay overlay = new EnemyOverlay(mapView, new DrawableEnemy(d, e), mainActivity, this::attackEnemy);
 
         enemyList.addEnemy(e, overlay);
 
         mainActivity.runOnUiThread(() -> {
-            RadiusMarkerClusterer clusterer = (RadiusMarkerClusterer) mapView.getOverlays().get(1);
+            RadiusMarkerClusterer clusterer = (RadiusMarkerClusterer) mapView.getOverlays().get(0);
             clusterer.add(overlay);
             mapView.invalidate();
         });
@@ -356,10 +287,13 @@ public class GameMap extends Fragment {
 
     private synchronized void enemyDisappearsConsumer(EnemyId e) {
         EnemyOverlay overlay = enemyList.getOverlay(e);
+        RadiusMarkerClusterer clusterer = (RadiusMarkerClusterer) mapView.getOverlays().get(0);
+
         enemyList.removeEnemy(e);
 
         mainActivity.runOnUiThread(() -> {
-            mapView.getOverlays().remove(overlay);
+            clusterer.getItems().remove(overlay);
+            clusterer.invalidate();
             mapView.invalidate();
         });
     }
