@@ -11,17 +11,22 @@ import org.osmdroid.util.GeoPoint;
 import org.osmdroid.views.MapView;
 import org.osmdroid.views.overlay.Marker;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import soturi.model.Position;
 
 // Works like a human overlay, but is less annoying to deal with
 public class CustomOverlay extends Marker {
 
+    private static final Map<Drawable, Drawable> rescaleCache = new HashMap<>();
+
     public CustomOverlay(@NonNull MapView mapView, @NonNull Position position, @NonNull Drawable drawable) {
         super(mapView);
 
-        drawable = resizeDrawable(drawable, 20.0);
+        Drawable icon = rescaleCache.computeIfAbsent(drawable, (ign) -> resizeDrawable(drawable, 20.0));
 
-        this.setIcon(drawable);
+        this.setIcon(icon);
         this.setPosition(new GeoPoint(position.latitude(), position.longitude()));
         this.setAnchor(0.5f, 0.5f);
     }
@@ -45,5 +50,5 @@ public class CustomOverlay extends Marker {
         Bitmap resized = Bitmap.createScaledBitmap(bitmap, dstWidth, dstHeight, false);
         return new BitmapDrawable(resized);
     }
-    
+
 }

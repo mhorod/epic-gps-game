@@ -232,10 +232,11 @@ public class GameMap extends Fragment {
         });
 
         RadiusMarkerClusterer clusterer = new RadiusMarkerClusterer(mainActivity);
-        clusterer.setMaxClusteringZoomLevel(5);
+        clusterer.setMaxClusteringZoomLevel(16);
+        clusterer.setRadius(500);
 
         mainActivity.runOnUiThread(
-                () -> mapView.getOverlays().add(new RadiusMarkerClusterer(mainActivity))
+                () -> mapView.getOverlays().add(clusterer)
         );
 
         binding.findMeButton.setOnClickListener(v -> centerMapOncePossible());
