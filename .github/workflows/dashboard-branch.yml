@@ -1,8 +1,8 @@
-name: Build and deploy Dashbord [main]
+name: Build and deploy Dashbord [branch]
 
 on:
   push:
-    branches: [main]
+    branches-ignore: [main]
     paths: ["dashboard/**"]
 
 jobs:
@@ -34,27 +34,3 @@ jobs:
         with:
           name: dashboard
           path: ./dashboard/build/static/dashboard.zip
-
-  deploy:
-    needs: build
-
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Setup SSH
-        run: |
-          install -m 600 -D /dev/null ~/.ssh/id_rsa
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
-          ssh-keyscan -H soturi.online >> ~/.ssh/known_hosts
-          chmod 600 ~/.ssh/known_hosts
-        shell: bash
-
-      - name: Download built dashboard
-        uses: actions/download-artifact@v3
-        with:
-          name: dashboard
-
-      - name: Upload dashboard
-        run: |
-          scp -s dashboard.zip ulm@soturi.online:dashboard.zip
-          ssh ulm@soturi.online "bash ./update-dashboard.sh"
