@@ -1,7 +1,6 @@
-import { Component, useEffect, useState } from "react";
-import L, { Map, MarkerClusterGroup } from "leaflet";
+import { useState } from "react";
+import L, { Map } from "leaflet";
 import * as geojson from "geojson";
-import "leaflet.markercluster/dist/leaflet.markercluster";
 import "leaflet.markercluster/dist/MarkerCluster.css";
 import "leaflet.markercluster/dist/MarkerCluster.Default.css";
 import { useMap } from "react-leaflet";
@@ -35,14 +34,14 @@ type Point = geojson.Feature<geojson.Point, any>;
 
 function MarkerCluster(props: MarkerClusterProps) {
   const map = useMap();
-  const [markers, setMarkers] = useState(
+  const markers = useState(
     L.geoJson(null, {
       pointToLayer: (point: Point, latLng: L.LatLng) => {
         const zoom = map.getZoom();
         return createClusterIcon(point, latLng, zoom);
       },
     }).addTo(map),
-  );
+  )[0];
 
   const index = new Supercluster({
     radius: 150,

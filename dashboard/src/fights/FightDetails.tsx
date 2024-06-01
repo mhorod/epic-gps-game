@@ -1,4 +1,4 @@
-import { FightRecord, Item } from "../model/model";
+import { FightRecord } from "../model/model";
 import AttackerDetails from "./AttackerDetails";
 import DefenderDetails from "./DefenderDetails";
 import ResultDetails from "./ResultDetails";

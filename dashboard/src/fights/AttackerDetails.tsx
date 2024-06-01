@@ -1,11 +1,4 @@
-import {
-  Heart,
-  Star,
-  Flash,
-  Shield,
-  Person,
-  PersonCircle,
-} from "react-ionicons";
+import { Heart, Star, Flash, Shield, PersonCircle } from "react-ionicons";
 import configManager from "../Config";
 import IconWrapper from "../IconWrapper";
 import { rel_path } from "../backend";

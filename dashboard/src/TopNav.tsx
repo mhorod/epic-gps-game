@@ -1,8 +1,8 @@
 import { PersonCircle } from "react-ionicons";
 
 import "./TopNav.css";
-import { Component, useState } from "react";
-import { get_json, get_string } from "./backend";
+import { Component } from "react";
+import { get_string } from "./backend";
 
 type TopNavProps = { title: string };
 type TopNavState = { username: string };
