@@ -8,7 +8,6 @@ import SpawnAreas from "./SpawnAreas";
 
 import enableMocking from "./mocks/server";
 import Players from "./Players";
-import configManager from "./Config";
 import { Enemies } from "./enemies/Enemies";
 import FightHistory from "./fights/FightHistory";
 

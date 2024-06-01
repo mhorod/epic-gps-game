@@ -1,17 +1,11 @@
-import L, { Icon, LatLngExpression, Map as LeafletMap } from "leaflet";
-import { MapContainer, TileLayer, Popup, useMap } from "react-leaflet";
+import { Map as LeafletMap } from "leaflet";
+import { MapContainer, TileLayer, useMap } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 
 import "./MapView.css";
 import MapSearch from "./MapSearch";
-import {
-  Component,
-  ComponentType,
-  MemoExoticComponent,
-  memo,
-  useMemo,
-} from "react";
-import { Enemy, EnemyType, PlayerWithPosition, Position } from "../model/model";
+import { Component, ComponentType, MemoExoticComponent, memo } from "react";
+import { Enemy, PlayerWithPosition, Position } from "../model/model";
 import Entities from "./Entities";
 import {
   EnemiesAppear,
@@ -20,16 +14,11 @@ import {
   PlayerUpdate,
 } from "../model/messages";
 import EntityInfo from "./EntityInfo";
-import { http_path, ws_path } from "../backend";
+import { ws_path } from "../backend";
 import configManager from "../Config";
 import MarkerCluster, { Marker } from "./MarkerCluster";
 import SearchSettings from "./SearchSettings";
 import SearchResult from "./SearchResult";
-
-const warriorIcon = new Icon({
-  iconUrl: "/dashboard/img/warrior.png",
-  iconSize: [50, 50],
-});
 
 type MapComponentProps = {
   entities: Entities;
@@ -38,22 +27,11 @@ type MapComponentProps = {
   selectPlayer: (p: PlayerWithPosition) => void;
 };
 
-function mapPosition(position: Position): LatLngExpression {
-  return [position.latitude, position.longitude];
-}
-
 const MapAccess = ({ setMap }: { setMap: (m: LeafletMap) => void }) => {
   const map = useMap();
   setMap(map);
   return null;
 };
-
-function enemyIcon(gfxName: string) {
-  return new Icon({
-    iconUrl: http_path("/" + gfxName),
-    iconSize: [32, 32],
-  });
-}
 
 function MapComponent(props: MapComponentProps) {
   const markers: Marker[] = [];

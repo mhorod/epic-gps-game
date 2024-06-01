@@ -7,8 +7,6 @@ import SearchSettings from "./SearchSettings";
 
 import { Position } from "../model/model";
 import "./MapSearch.css";
-import Entities from "./Entities";
-import configManager from "../Config";
 
 type MapSearchProps = {
   search: (settings: SearchSettings) => SearchResult[];

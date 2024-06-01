@@ -32,7 +32,7 @@ function ResultDetails({ result }: { result: FightResult }) {
     (id) => configManager.getItemById(id)!,
   );
 
-  const color = result.result == "WON" ? "#A1DD70" : "#EE4E4E";
+  const color = result.result === "WON" ? "#A1DD70" : "#EE4E4E";
 
   const icon =
     result.result === "WON" ? (

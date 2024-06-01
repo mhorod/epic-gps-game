@@ -2,7 +2,6 @@ import { Component } from "react";
 import { PlayerWithPosition } from "./model/model";
 import { get_json } from "./backend";
 import {
-  Close,
   Heart,
   Shield,
   Star,

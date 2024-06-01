@@ -1,9 +1,6 @@
 import { Component, useState } from "react";
-import { get_json, http_path } from "../backend";
-import { FightRecord, Item } from "../model/model";
-import configManager from "../Config";
-import IconWrapper from "../IconWrapper";
-import { CaretDown, CaretUp, Skull, Trophy } from "react-ionicons";
+import { get_json } from "../backend";
+import { FightRecord } from "../model/model";
 
 import "./FightHistory.css";
 import FightDetails from "./FightDetails";
