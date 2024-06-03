@@ -209,6 +209,7 @@ public class MonsterManager {
             region.capLeft.increment();
     }
 
+    public long getEnemyCount() { return enemies.size(); }
     public List<Enemy> getAllEnemies() {
         return enemies.values().stream().toList();
     }

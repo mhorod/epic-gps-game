@@ -17,8 +17,10 @@ body {
     display: flex;
     flex-direction: column;
 
-    background: rgba(60, 60, 60, 0.4) url("/static/website/img/background-large.jpg");
+    background: rgba(60, 60, 60, 0.4)
+        url("/static/website/img/background-large.jpg");
     background-size: cover;
+    background-repeat: no-repeat;
     background-blend-mode: multiply;
 
     color: #fff;
@@ -73,9 +75,22 @@ body {
     font-weight: 600;
     text-decoration: none;
     color: #fff;
+}
+
+.larger-text {
     font-size: 24px;
 }
 
 .text-btn:hover {
     color: #ccc;
+}
+
+#top-nav {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    margin-top: 10px;
+    padding: 10px 20px;
+    font-size: 18px;
+    background-color: rgba(10, 10, 10, 0.3);
 }

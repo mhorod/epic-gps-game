@@ -103,6 +103,9 @@ public class GameService {
     public synchronized List<Enemy> getEnemies() {
         return monsterManager.getAllEnemies();
     }
+    public synchronized long getEnemyCount() {
+        return monsterManager.getEnemyCount();
+    }
 
     public synchronized List<PolygonWithDifficulty> getAreas() {
         return monsterManager.getAreas();
