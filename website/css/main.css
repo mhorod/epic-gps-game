@@ -4,10 +4,6 @@ body {
     display: flex;
     flex-direction: column;
 
-    background: rgba(60, 60, 60, 0.4) url("/static/website/img/background-large.jpg");
-    background-size: cover;
-    background-blend-mode: multiply;
-
     color: #fff;
 }
 
@@ -15,15 +11,9 @@ body {
     display: flex;
     justify-content: center;
     margin-top: 20px;
-    margin-bottom: 20px;
 }
 
 @media screen and (max-width: 800px) {
-    #logo {
-        width: 50vw;
-        max-width: 400px;
-    }
-
     #main-slogan {
         font-size: 8vw;
     }
@@ -39,25 +29,23 @@ body {
         width: 60vw;
         font-size: 4vw;
     }
+    .game-stat {
+        width: 80px;
+    }
+    .stat-value {
+        font-size: 18px;
+    }
 }
 
 @media screen and (min-width: 800px) {
-    #logo {
-        width: 40vw;
-        max-width: 500px;
-    }
-
     #main-slogan-br {
         display: none;
     }
-    #slogan {
-        margin: 50px;
-    }
     #main-slogan {
-        font-size: calc(min(4vw, 100px));
+        font-size: calc(min(4vw, 50px));
     }
     #secondary-slogan {
-        font-size: calc(min(3vw, 60px));
+        font-size: calc(min(3vw, 40px));
     }
 
     #buttons {
@@ -66,10 +54,25 @@ body {
 
     .btn-primary {
         padding: 20px;
-        width: 400px;
-        width: calc(min(40vw, 400px));
-        font-size: calc(min(3vw, 32px));
+        width: 300px;
+        width: calc(min(40vw, 300px));
+        font-size: calc(min(3vw, 24px));
     }
+    .game-stat {
+        width: 120px;
+    }
+    .stat-value {
+        font-size: 24px;
+    }
+}
+
+#logo {
+    max-height: 200px;
+    max-width: 70vw;
+}
+
+#slogan {
+    margin: 20px;
 }
 
 main {
@@ -93,8 +96,28 @@ main {
     font-weight: 200;
 }
 
-
 .text-light {
     font-weight: 200;
 }
 
+#game-stats {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+}
+
+.game-stat {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.stat-value {
+    font-weight: bold;
+}
+
+#username {
+    display: flex;
+    gap: 5px;
+    flex-direction: row;
+}
