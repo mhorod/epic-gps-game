@@ -46,5 +46,14 @@
         android:id="@+id/questChoice"
         android:name="gps.tracker.QuestChoice"
         android:label="fragment_quest_choice"
-        tools:layout="@layout/fragment_quest_choice" />
+        tools:layout="@layout/fragment_quest_choice">
+        <action
+            android:id="@+id/action_questChoice_to_questRewards"
+            app:destination="@id/questRewards" />
+    </fragment>
+    <fragment
+        android:id="@+id/questRewards"
+        android:name="gps.tracker.QuestRewards"
+        android:label="fragment_quest_rewards"
+        tools:layout="@layout/fragment_quest_rewards" />
 </navigation>

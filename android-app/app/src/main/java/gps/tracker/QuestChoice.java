@@ -11,6 +11,7 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
+import androidx.navigation.fragment.NavHostFragment;
 
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.progressindicator.LinearProgressIndicator;
@@ -94,9 +95,19 @@ public class QuestChoice extends Fragment {
             MaterialButton rewards = new MaterialButton(mainActivity);
             rewards.setText("Check rewards");
             rewards.setGravity(Gravity.CENTER_HORIZONTAL);
+            rewards.setOnClickListener(
+                    v -> {
+                        mainActivity.runOnUiThread(
+                                () -> {
+                                    mainActivity.currentReward = quest.reward();
+                                    NavHostFragment.findNavController(QuestChoice.this).navigate(R.id.action_questChoice_to_questRewards);
+                                }
+                        );
+                    }
+            );
 
             String finishedText = quest.isFinished() ? "Finished" : "Not finished";
-            int markerId = quest.isFinished() ? R.drawable.checkmark : R.drawable.sword2;
+            int markerId = quest.isFinished() ? R.drawable.checkmark : R.drawable.failmark;
             ObjectWithDescription finished = new ObjectWithDescription(mainActivity, finishedText, markerId, 20);
 
             LinearLayout rewardAndFinished = new LinearLayout(mainActivity);

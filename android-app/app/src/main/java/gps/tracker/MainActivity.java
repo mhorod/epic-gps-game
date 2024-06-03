@@ -52,6 +52,7 @@ import soturi.model.Player;
 import soturi.model.Position;
 import soturi.model.QuestStatus;
 import soturi.model.Result;
+import soturi.model.Reward;
 import soturi.model.messages_to_client.MeUpdate;
 import soturi.model.messages_to_client.MessageToClientHandler;
 
@@ -64,6 +65,7 @@ public class MainActivity extends AppCompatActivity {
     private final EnemyList enemyList = new EnemyList();
     @Getter
     public Registry gameRegistry;
+    public Reward currentReward; // FIXME: Yeah, I love global variables -- it is used in logic for Quests to properly render the loot
     @Getter
     private CurrentQuests currentQuests = null;
     @Getter
