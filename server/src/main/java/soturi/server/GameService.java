@@ -293,11 +293,15 @@ public class GameService {
         }
 
         public List<QuestStatus> getQuestsStatuses() {
-            return playerQuests.computeIfAbsent(playerName, _name -> generateQuests());
+            List<QuestStatus> copy = new ArrayList<>(
+                playerQuests.computeIfAbsent(playerName, _name -> generateQuests())
+            );
+            playerQuests.put(playerName, copy);
+            return copy;
         }
 
         private void updateQuests(Function<QuestStatus, Long> visitor) {
-            List<QuestStatus> list = new ArrayList<>(getQuestsStatuses());
+            List<QuestStatus> list = getQuestsStatuses();
             for (int i = 0; i < list.size(); ++i) {
                 QuestStatus status = list.get(i);
                 if (status.isFinished())
