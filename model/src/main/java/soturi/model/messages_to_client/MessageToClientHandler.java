@@ -7,7 +7,9 @@ import soturi.model.FightRecord;
 import soturi.model.FightResult;
 import soturi.model.Player;
 import soturi.model.Position;
+import soturi.model.QuestStatus;
 
+import java.time.Instant;
 import java.util.List;
 
 public interface MessageToClientHandler {
@@ -22,5 +24,6 @@ public interface MessageToClientHandler {
     void playerDisappears(String playerName);
     void playerUpdate(Player player, Position position);
     void pong();
+    void questUpdate(Instant deadline, List<QuestStatus> quests);
     void setConfig(Config config);
 }

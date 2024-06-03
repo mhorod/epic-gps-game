@@ -1,17 +1,13 @@
 package soturi.web;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import jakarta.annotation.security.RolesAllowed;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.http.ResponseEntity;
-import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
-import soturi.JacksonConfig;
 import soturi.common.Registry;
 import soturi.model.Config;
 import soturi.model.Enemy;
@@ -143,7 +139,7 @@ public class DashboardApiController {
                 .filter(x -> x.xpFactor() == 1)
                 .findFirst()
                 .orElseThrow();
-            long xpGain = registry.getLootFor(new Enemy(type.typeId(), new EnemyId(0), i, Position.KRAKOW)).xp();
+            long xpGain = registry.getRewardFor(new Enemy(type.typeId(), new EnemyId(0), i, Position.KRAKOW)).xp();
             double gainRel = 1.0 * xpGain / xpForNext;
             double toBeat = 1.0 / gainRel;
             sb.append("%d | %d | %d | %.3f | %.3f\n".formatted(i, xpForNext, xpGain, gainRel, toBeat));

@@ -52,30 +52,6 @@ public class PlayerEntity {
         setHashedPassword(hashedPassword);
     }
 
-    public void addXp(long xp) {
-        setXp(Math.max(0, xp) + getXp());
-    }
-
-    public void addHp(long hp) {
-        setHp(Math.max(0, getHp() + hp));
-    }
-
-    public void applyFightResult(FightResult result) {
-        List<Long> newInventory = Stream.concat(
-                getInventory().stream(),
-                result.loot().items().stream().map(ItemId::id)
-        ).toList();
-
-        addHp(-result.lostHp());
-        addXp(result.loot().xp());
-        setInventory(newInventory);
-    }
-
-    public void setEquipment(List<ItemId> equipped, List<ItemId> inventory) {
-        setEquipped(equipped.stream().map(ItemId::id).toList());
-        setInventory(inventory.stream().map(ItemId::id).toList());
-    }
-
     public boolean hasPassword(String password) {
         return hashPassword(password).equals(hashedPassword);
     }

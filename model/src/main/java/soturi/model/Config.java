@@ -31,6 +31,8 @@ public record Config(
     List<DifficultyLvl> difficultyConfiguration,
     List<String> countryCodes,
 
+    int questDurationInSeconds,
+
     int giveFreeXpDelayInSeconds,
     long giveFreeXpAmount,
 

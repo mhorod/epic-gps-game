@@ -2,7 +2,6 @@ package soturi;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.ArgumentMatcher;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.TestPropertySource;
@@ -14,11 +13,12 @@ import soturi.model.EnemyType;
 import soturi.model.FightResult;
 import soturi.model.Item;
 import soturi.model.ItemId;
-import soturi.model.Loot;
+import soturi.model.Reward;
 import soturi.model.Player;
 import soturi.model.PolygonId;
 import soturi.model.Position;
 import soturi.model.Result;
+import soturi.model.Statistics;
 import soturi.model.messages_to_client.Disconnect;
 import soturi.model.messages_to_client.EnemiesDisappear;
 import soturi.model.messages_to_client.Error;
@@ -26,6 +26,7 @@ import soturi.model.messages_to_client.FightInfo;
 import soturi.model.messages_to_client.MessageToClient;
 import soturi.model.messages_to_client.MessageToClientFactory;
 import soturi.model.messages_to_client.MessageToClientHandler;
+import soturi.model.messages_to_client.QuestUpdate;
 import soturi.server.DynamicConfig;
 import soturi.server.FightSimulator;
 import soturi.server.GameService;
@@ -35,7 +36,6 @@ import soturi.server.geo.CityProvider;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.IntStream;
 import java.util.stream.LongStream;
 import java.util.stream.Stream;
 
@@ -65,6 +65,7 @@ public class ServerTests {
         Config testConfig = defaultConfig
             .withGiveFreeXpDelayInSeconds(0)
             .withSpawnEnemyDelayInSeconds(0)
+            .withQuestDurationInSeconds(24 * 3600)
             .withHealDelayInSeconds(0)
             .withGameAreaId(POLAND);
 
@@ -95,7 +96,12 @@ public class ServerTests {
 
     private void giveItem(String playerName, ItemId itemId) {
         PlayerEntity entity = repository.findByName(playerName).orElseThrow();
-        entity.applyFightResult(new FightResult(Result.WON, 0, new Loot(0, List.of(itemId))));
+        entity.setInventory(
+            Stream.concat(
+                entity.getInventory().stream(),
+                Stream.of(itemId.id())
+            ).toList()
+        );
         repository.save(entity);
     }
 
@@ -246,7 +252,7 @@ public class ServerTests {
     @Test
     void lvl_1_enemy_xp_loot_makes_sense() {
         Enemy e = newEnemy(1, Position.KRAKOW, new EnemyId(0));
-        long xp = registry.getLootFor(e).xp();
+        long xp = registry.getRewardFor(e).xp();
 
         long xp_to_2 = registry.getXpForLvlCumulative(2);
         long xp_to_3 = registry.getXpForLvlCumulative(3);
@@ -258,7 +264,7 @@ public class ServerTests {
     @Test
     void lvl_10_enemy_xp_loot_makes_sense() {
         Enemy e = newEnemy(1, Position.KRAKOW, new EnemyId(0));
-        long xp = registry.getLootFor(e).xp();
+        long xp = registry.getRewardFor(e).xp();
 
         long xp_to_11 = registry.getXpForNextLvl(10);
 
@@ -342,9 +348,40 @@ public class ServerTests {
         List<ItemId> loot = LongStream.range(0, 100 * 100)
             .mapToObj(EnemyId::new)
             .map(id -> new Enemy(type.typeId(), id, type.minLvl(), Position.KRAKOW))
-            .flatMap(e -> registry.getLootFor(e).items().stream()).toList();
+            .flatMap(e -> registry.getRewardFor(e).items().stream()).toList();
 
-        System.err.println(loot.size());
         assertThat(loot).isNotEmpty();
+    }
+    @Test
+    void quests_are_send() {
+        List<MessageToClient> received = new ArrayList<>();
+        gameService.login("p", "", Position.KRAKOW, new MessageToClientFactory(received::add));
+        QuestUpdate quests = (QuestUpdate) received.stream().filter(QuestUpdate.class::isInstance).findAny().orElseThrow();
+        assertThat(quests.quests()).isNotEmpty();
+    }
+    @Test
+    void quests_duration_is_sync() {
+        List<MessageToClient> received = new ArrayList<>();
+        gameService.login("p", "", Position.KRAKOW, new MessageToClientFactory(received::add));
+        QuestUpdate quests = (QuestUpdate) received.stream().filter(QuestUpdate.class::isInstance).findAny().orElseThrow();
+        assertThat(quests.deadline().getEpochSecond() % (24 * 3600)).isZero();
+    }
+    @Test
+    void items_add_stats() {
+        Item good = registry.getAllItems().stream()
+            .filter(i -> !i.statistics().equals(new Statistics()))
+            .findAny()
+            .orElseThrow();
+
+        gameService.login("a", "", Position.KRAKOW, mock());
+        Player p1 = gameService.getPlayers().get(0).player();
+        gameService.logout("a");
+
+        giveItem("a", good.itemId());
+        gameService.login("a", "", Position.KRAKOW, mock());
+        gameService.receiveFrom("a").equipItem(good.itemId());
+        Player p2 = gameService.getPlayers().get(0).player();
+
+        assertThat(p2.statistics()).isEqualTo(p1.statistics().add(good.statistics()));
     }
 }

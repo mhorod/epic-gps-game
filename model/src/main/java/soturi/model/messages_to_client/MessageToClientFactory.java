@@ -7,7 +7,9 @@ import soturi.model.FightRecord;
 import soturi.model.FightResult;
 import soturi.model.Player;
 import soturi.model.Position;
+import soturi.model.QuestStatus;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.function.Consumer;
 
@@ -71,6 +73,11 @@ public final class MessageToClientFactory implements MessageToClientHandler {
     @Override
     public void pong() {
         consumer.accept(new Pong());
+    }
+
+    @Override
+    public void questUpdate(Instant deadline, List<QuestStatus> quests) {
+        consumer.accept(new QuestUpdate(deadline, quests));
     }
 
     @Override

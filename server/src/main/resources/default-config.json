@@ -424,5 +424,6 @@
   "spawnEnemyDelayInSeconds" : 2,
   "spawnEnemyFailChance" : 0.75,
   "healDelayInSeconds" : 1,
+  "questDurationInSeconds" : 86400,
   "healFraction" : 0.1
 }

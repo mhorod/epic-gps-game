@@ -1,3 +1,3 @@
 package soturi.model;
 
-public record FightResult(Result result, long lostHp, Loot loot) { }
+public record FightResult(Result result, long lostHp, Reward reward) { }
