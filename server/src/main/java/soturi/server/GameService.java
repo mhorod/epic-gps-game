@@ -1,5 +1,6 @@
 package soturi.server;
 
+import jakarta.persistence.criteria.CriteriaBuilder.In;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -9,6 +10,7 @@ import soturi.common.Registry;
 import soturi.model.Config;
 import soturi.model.Enemy;
 import soturi.model.EnemyId;
+import soturi.model.EnemyType;
 import soturi.model.FightRecord;
 import soturi.model.FightResult;
 import soturi.model.ItemId;
@@ -16,6 +18,7 @@ import soturi.model.Player;
 import soturi.model.PlayerWithPosition;
 import soturi.model.PolygonWithDifficulty;
 import soturi.model.Position;
+import soturi.model.QuestStatus;
 import soturi.model.Result;
 import soturi.model.Reward;
 import soturi.model.Statistics;
@@ -31,12 +34,16 @@ import soturi.server.geo.MonsterManager;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.time.temporal.TemporalUnit;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Random;
+import java.util.function.Function;
 import java.util.stream.Stream;
 
 @Slf4j
@@ -64,6 +71,9 @@ public class GameService {
 
     private final Map<String, PlayerSession> sessions = new LinkedHashMap<>();
     private final Map<String, MessageToClientHandler> observers = new LinkedHashMap<>();
+
+    private Instant questsDeadline = Instant.now();
+    private final Map<String, List<QuestStatus>> playerQuests = new LinkedHashMap<>();
 
     public void kickAllPlayers() {
         while (!sessions.isEmpty())
@@ -141,6 +151,8 @@ public class GameService {
         int hpDelay = registry.getHealDelayInSeconds();
         if (hpDelay > 0 && secondCount % hpDelay == 0)
             healPlayers();
+
+        regenerateQuests();
     }
 
     @Scheduled(fixedDelay = 1000)
@@ -158,6 +170,20 @@ public class GameService {
             session.applyReward(reward);
             session.sendUpdates();
         }
+    }
+
+    public synchronized void regenerateQuests() {
+        Instant now = Instant.now();
+        if (questsDeadline.isAfter(now))
+            return;
+        log.info("regenerateQuests()");
+
+        playerQuests.clear();
+
+        long questDuration = registry.getQuestDurationInSeconds();
+        long approxDeadline = now.getEpochSecond() + questDuration * 3 / 2;
+        questsDeadline = Instant.ofEpochSecond(approxDeadline / questDuration * questDuration);
+        sessions.values().forEach(PlayerSession::sendUpdates);
     }
 
     private long nextEnemyIdLong = 0;
@@ -241,12 +267,58 @@ public class GameService {
             playerEntity = repository.findByName(playerName).orElseThrow();
         }
 
+        private List<QuestStatus> generateQuests() {
+            Player me = toPlayer();
+            Random rnd = new Random();
+
+            EnemyType enemyType = registry.getRandomEnemyTypeOfLvl(me.lvl());
+            int cntEnemyType = rnd.nextInt(5, 11);
+
+            int cntEnemy = rnd.nextInt(10, 21);
+
+            List<Reward> rewards = new ArrayList<>(List.of(
+                new Reward(rnd.nextInt(5000)),
+                new Reward(rnd.nextInt(2000)),
+                new Reward(List.of(registry.getRandomElement(registry.getAllItems()).itemId()))
+            ));
+            Collections.shuffle(rewards);
+
+            List<QuestStatus> list = new ArrayList<>(List.of(
+                new QuestStatus("Pokonaj %d przeciwników typu %s".formatted(cntEnemyType, enemyType.name()), 0, cntEnemyType, rewards.get(0)),
+                new QuestStatus("Pokonaj %d przeciwników".formatted(cntEnemy), 0, cntEnemy, rewards.get(1)),
+                new QuestStatus("Zdobądź nowy poziom", 0, 1, rewards.get(2))
+            ));
+
+            Collections.shuffle(list);
+            return list;
+        }
+
+        public List<QuestStatus> getQuestsStatuses() {
+            return playerQuests.computeIfAbsent(playerName, _name -> generateQuests());
+        }
+
+        private void updateQuests(Function<QuestStatus, Long> visitor) {
+            List<QuestStatus> list = getQuestsStatuses();
+            for (int i = 0; i < list.size(); ++i) {
+                QuestStatus status = list.get(i);
+                if (status.isFinished())
+                    continue;
+                long newProgress = status.progress() + visitor.apply(status);
+
+                QuestStatus newStatus = status.withProgress(Math.max(0, Math.min(newProgress, status.goal())));
+                if (newStatus.isFinished())
+                    applyReward(newStatus.reward());
+                list.set(i, newStatus);
+            }
+        }
+
         private void sendUpdates() {
             playerEntity = repository.save(playerEntity);
 
             Player me = toPlayer();
 
             sender.meUpdate(me);
+            sender.questUpdate(questsDeadline, getQuestsStatuses());
             for (var sender : observers.values())
                 sender.playerUpdate(me, position);
         }
@@ -257,7 +329,7 @@ public class GameService {
         }
 
         public void applyReward(Reward reward) {
-            playerEntity.setXp(playerEntity.getXp() + reward.xp());
+            applyAddXp(reward.xp());
 
             // todo used applySetEquipment
             List<Long> inventory = Stream.concat(
@@ -266,6 +338,17 @@ public class GameService {
             ).toList();
 
             playerEntity.setInventory(inventory);
+        }
+
+        public void applyAddXp(long xp) {
+            long lvlBefore = registry.getLvlFromXp(playerEntity.getXp());
+            playerEntity.setXp(playerEntity.getXp() + xp);
+            long lvlAfter = registry.getLvlFromXp(playerEntity.getXp());
+            updateQuests(s -> {
+                if (!s.quest().equals("Zdobądź nowy poziom"))
+                    return 0L;
+                return lvlAfter - lvlBefore;
+            });
         }
 
         public void applyAddHp(long hp) {
@@ -297,12 +380,21 @@ public class GameService {
             }
 
             FightResult result = new FightSimulator(registry).simulateFight(me, enemy);
+
+            if (result.result() == Result.WON) {
+                unregisterEnemy(enemyId);
+
+                EnemyType type = registry.getEnemyType(enemy);
+                updateQuests(s -> {
+                    if (s.quest().endsWith("przeciwników") || s.quest().endsWith(type.name()))
+                        return 1L;
+                    return 0L;
+                });
+            }
+
             sender.fightInfo(enemy.enemyId(), result);
             applyFightResult(result);
             sendUpdates();
-
-            if (result.result() == Result.WON)
-                unregisterEnemy(enemyId);
 
             FightRecord fightRecord = new FightRecord(
                 new PlayerWithPosition(me, position),

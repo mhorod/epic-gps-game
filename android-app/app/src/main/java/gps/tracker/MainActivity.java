@@ -30,6 +30,7 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
@@ -46,6 +47,7 @@ import soturi.model.FightRecord;
 import soturi.model.FightResult;
 import soturi.model.Player;
 import soturi.model.Position;
+import soturi.model.QuestStatus;
 import soturi.model.Result;
 import soturi.model.messages_to_client.MessageToClientHandler;
 
@@ -439,6 +441,11 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void pong() {
 
+        }
+
+        @Override
+        public void questUpdate(Instant deadline, List<QuestStatus> quests) {
+            Instant started = deadline.minusSeconds(gameRegistry.getQuestDurationInSeconds());
         }
 
         @Override
