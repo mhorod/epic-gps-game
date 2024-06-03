@@ -2,7 +2,7 @@ import java.time.LocalDateTime
 import java.io.PrintWriter
 
 plugins {
-    java
+    `java-library`
     id("io.freefair.lombok") version "8.6"
 }
 
@@ -13,7 +13,11 @@ repositories {
 }
 
 dependencies {
-    implementation("com.fasterxml.jackson.core:jackson-databind:2.16.2")
+    api("com.fasterxml.jackson.core:jackson-core:2.16.2")
+    api("com.fasterxml.jackson.core:jackson-databind:2.16.2")
+    implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-xml:2.16.2")
+    implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.16.2")
+    implementation("com.fasterxml.jackson.module:jackson-module-android-record:2.16.2");
     compileOnly("org.projectlombok:lombok:1.18.30")
     annotationProcessor("org.projectlombok:lombok:1.18.30")
 }
