@@ -2,6 +2,7 @@ package gps.tracker;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.module.androidrecord.AndroidRecordModule;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
 import java.util.concurrent.TimeUnit;
 
@@ -21,7 +22,8 @@ import soturi.model.messages_to_server.UpdateRealPosition;
 
 public class WebSocketClient extends WebSocketListener {
     private final ObjectMapper objectMapper = new ObjectMapper()
-            .registerModule(new AndroidRecordModule());
+            .registerModule(new AndroidRecordModule())
+            .registerModule(new JavaTimeModule());
     private final MessageToClientHandler handler;
     private final String urlPrefix;
     public volatile String userName = "helloall2", userPassword = "password";

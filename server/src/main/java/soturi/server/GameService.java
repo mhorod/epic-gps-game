@@ -1,6 +1,5 @@
 package soturi.server;
 
-import jakarta.persistence.criteria.CriteriaBuilder.In;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -298,7 +297,7 @@ public class GameService {
         }
 
         private void updateQuests(Function<QuestStatus, Long> visitor) {
-            List<QuestStatus> list = getQuestsStatuses();
+            List<QuestStatus> list = new ArrayList<>(getQuestsStatuses());
             for (int i = 0; i < list.size(); ++i) {
                 QuestStatus status = list.get(i);
                 if (status.isFinished())
