@@ -13,6 +13,8 @@ import androidx.core.content.res.ResourcesCompat;
 import androidx.fragment.app.Fragment;
 import androidx.navigation.fragment.NavHostFragment;
 
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+
 import org.osmdroid.api.IMapController;
 import org.osmdroid.bonuspack.clustering.RadiusMarkerClusterer;
 import org.osmdroid.events.MapEventsReceiver;
@@ -230,6 +232,16 @@ public class GameMap extends Fragment {
 
         binding.inventoryButton.setOnClickListener(v -> {
             NavHostFragment.findNavController(GameMap.this).navigate(R.id.action_gameMap_to_inventoryFragment);
+        });
+
+        binding.questButton.setOnClickListener(v -> {
+            if (mainActivity.getCurrentQuests() == null) {
+                MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(mainActivity);
+                builder.setTitle("No quests available");
+                mainActivity.runOnUiThread(builder::show);
+            } else {
+                NavHostFragment.findNavController(GameMap.this).navigate(R.id.action_gameMap_to_questChoice);
+            }
         });
 
         RadiusMarkerClusterer clusterer = new CustomClusterer(mainActivity);

@@ -52,6 +52,7 @@ import soturi.model.Player;
 import soturi.model.Position;
 import soturi.model.QuestStatus;
 import soturi.model.Result;
+import soturi.model.messages_to_client.MeUpdate;
 import soturi.model.messages_to_client.MessageToClientHandler;
 
 public class MainActivity extends AppCompatActivity {
@@ -65,6 +66,8 @@ public class MainActivity extends AppCompatActivity {
     public Registry gameRegistry;
     @Getter
     private CurrentQuests currentQuests = null;
+    @Getter
+    private MeUpdate lastMeUpdate = null;
     private WebSocketClient webSocketClient;
     private AppBarConfiguration appBarConfiguration;
     private ActivityMainBinding binding;

@@ -15,6 +15,9 @@
         <action
             android:id="@+id/action_gameMap_to_inventoryFragment"
             app:destination="@id/inventoryFragment" />
+        <action
+            android:id="@+id/action_gameMap_to_questChoice"
+            app:destination="@id/questChoice" />
     </fragment>
     <fragment
         android:id="@+id/loginFragment"
@@ -39,4 +42,9 @@
         android:name="gps.tracker.ItemChoice"
         android:label="Choose an item"
         tools:layout="@layout/fragment_item_choice" />
+    <fragment
+        android:id="@+id/questChoice"
+        android:name="gps.tracker.QuestChoice"
+        android:label="fragment_quest_choice"
+        tools:layout="@layout/fragment_quest_choice" />
 </navigation>
