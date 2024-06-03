@@ -120,6 +120,10 @@ public class Registry {
                 throw new RuntimeException("loot chance is 0 iff loot list is empty");
         }
 
+        // validate time
+        if (getQuestDurationInSeconds() <= 0)
+            throw new RuntimeException("quest duration has to be positive");
+
         if (geoProvider != null)
             validateGeo();
     }

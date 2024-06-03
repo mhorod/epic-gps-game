@@ -18,6 +18,7 @@ import soturi.model.Player;
 import soturi.model.PolygonId;
 import soturi.model.Position;
 import soturi.model.Result;
+import soturi.model.Statistics;
 import soturi.model.messages_to_client.Disconnect;
 import soturi.model.messages_to_client.EnemiesDisappear;
 import soturi.model.messages_to_client.Error;
@@ -25,6 +26,7 @@ import soturi.model.messages_to_client.FightInfo;
 import soturi.model.messages_to_client.MessageToClient;
 import soturi.model.messages_to_client.MessageToClientFactory;
 import soturi.model.messages_to_client.MessageToClientHandler;
+import soturi.model.messages_to_client.QuestUpdate;
 import soturi.server.DynamicConfig;
 import soturi.server.FightSimulator;
 import soturi.server.GameService;
@@ -63,6 +65,7 @@ public class ServerTests {
         Config testConfig = defaultConfig
             .withGiveFreeXpDelayInSeconds(0)
             .withSpawnEnemyDelayInSeconds(0)
+            .withQuestDurationInSeconds(24 * 3600)
             .withHealDelayInSeconds(0)
             .withGameAreaId(POLAND);
 
@@ -347,7 +350,38 @@ public class ServerTests {
             .map(id -> new Enemy(type.typeId(), id, type.minLvl(), Position.KRAKOW))
             .flatMap(e -> registry.getRewardFor(e).items().stream()).toList();
 
-        System.err.println(loot.size());
         assertThat(loot).isNotEmpty();
+    }
+    @Test
+    void quests_are_send() {
+        List<MessageToClient> received = new ArrayList<>();
+        gameService.login("p", "", Position.KRAKOW, new MessageToClientFactory(received::add));
+        QuestUpdate quests = (QuestUpdate) received.stream().filter(QuestUpdate.class::isInstance).findAny().orElseThrow();
+        assertThat(quests.quests()).isNotEmpty();
+    }
+    @Test
+    void quests_duration_is_sync() {
+        List<MessageToClient> received = new ArrayList<>();
+        gameService.login("p", "", Position.KRAKOW, new MessageToClientFactory(received::add));
+        QuestUpdate quests = (QuestUpdate) received.stream().filter(QuestUpdate.class::isInstance).findAny().orElseThrow();
+        assertThat(quests.deadline().getEpochSecond() % (24 * 3600)).isZero();
+    }
+    @Test
+    void items_add_stats() {
+        Item good = registry.getAllItems().stream()
+            .filter(i -> !i.statistics().equals(new Statistics()))
+            .findAny()
+            .orElseThrow();
+
+        gameService.login("a", "", Position.KRAKOW, mock());
+        Player p1 = gameService.getPlayers().get(0).player();
+        gameService.logout("a");
+
+        giveItem("a", good.itemId());
+        gameService.login("a", "", Position.KRAKOW, mock());
+        gameService.receiveFrom("a").equipItem(good.itemId());
+        Player p2 = gameService.getPlayers().get(0).player();
+
+        assertThat(p2.statistics()).isEqualTo(p1.statistics().add(good.statistics()));
     }
 }
