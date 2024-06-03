@@ -63,7 +63,7 @@ export type Config = {
   items: Item[];
 };
 
-export type Loot = {
+export type Reward = {
   xp: number;
   items: number[];
 };
@@ -71,7 +71,7 @@ export type Loot = {
 export type FightResult = {
   result: string;
   lostHp: number;
-  loot: Loot;
+  reward: Reward;
 };
 
 export type FightRecord = {

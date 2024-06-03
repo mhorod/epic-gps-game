@@ -28,7 +28,7 @@ function lootView(loot: Item[]) {
 }
 
 function ResultDetails({ result }: { result: FightResult }) {
-  const loot: Item[] = result.loot.items.map(
+  const loot: Item[] = result.reward.items.map(
     (id) => configManager.getItemById(id)!,
   );
 
@@ -53,7 +53,7 @@ function ResultDetails({ result }: { result: FightResult }) {
             <IconWrapper icon={<HeartHalf />} /> Lost HP: {result.lostHp}{" "}
           </div>
           <div className="result-stats-entry">
-            <IconWrapper icon={<Star />} /> Gained XP: {result.loot.xp}{" "}
+            <IconWrapper icon={<Star />} /> Gained XP: {result.reward.xp}{" "}
           </div>
         </div>
         {lootView(loot)}
