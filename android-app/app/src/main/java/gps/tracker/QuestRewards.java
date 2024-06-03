@@ -35,7 +35,7 @@ public class QuestRewards extends Fragment {
         mainActivity = (MainActivity) getActivity();
         reward = mainActivity.currentReward;
 
-        ObjectWithDescription xp = new ObjectWithDescription(mainActivity, String.valueOf(reward.xp()), R.drawable.level, 15);
+        ObjectWithDescription xp = new ObjectWithDescription(mainActivity, String.valueOf(reward.xp()), R.drawable.xp_mark, 15);
         xp.setGravity(Gravity.CENTER);
 
         binding.rewardInfo.addView(xp);
@@ -48,6 +48,12 @@ public class QuestRewards extends Fragment {
         for (ItemId item : reward.items()) {
             Item itemObject = mainActivity.getGameRegistry().getItemById(item);
             ItemChoice.FullItemInfoSegment itemInfo = new ItemChoice.FullItemInfoSegment(mainActivity, itemObject);
+
+            Space itemSpace = new Space(mainActivity);
+            itemSpace.setMinimumHeight(80);
+
+            binding.rewardInfo.addView(itemSpace);
+            binding.rewardInfo.addView(itemInfo);
         }
     }
 

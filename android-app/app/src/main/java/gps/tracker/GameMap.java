@@ -294,7 +294,13 @@ public class GameMap extends Fragment {
             EnemyType type = mainActivity.gameRegistry.getEnemyType(e);
             Drawable d = getDrawableResource(type.gfxName());
 
-            EnemyOverlay overlay = new EnemyOverlay(mapView, new DrawableEnemy(d, e), mainActivity, this::attackEnemy);
+            EnemyOverlay overlay;
+
+            try {
+                overlay = new EnemyOverlay(mapView, new DrawableEnemy(d, e), mainActivity, this::attackEnemy);
+            } catch (NullPointerException npe) {
+                overlay = null;
+            }
 
             enemyList.addEnemy(e, overlay);
             toAdd.add(overlay);
@@ -302,14 +308,18 @@ public class GameMap extends Fragment {
         }
 
         mainActivity.runOnUiThread(() -> {
-            RadiusMarkerClusterer clusterer = (RadiusMarkerClusterer) mapView.getOverlays().get(0);
+            try {
+                RadiusMarkerClusterer clusterer = (RadiusMarkerClusterer) mapView.getOverlays().get(0);
 
-            for (Marker overlay : toAdd) {
-                clusterer.add(overlay);
+                for (Marker overlay : toAdd) {
+                    clusterer.add(overlay);
+                }
+
+                clusterer.invalidate();
+                mapView.invalidate();
+            } catch (Exception e) {
+                // I know why, don't worry
             }
-
-            clusterer.invalidate();
-            mapView.invalidate();
         });
     }
 
