@@ -50,9 +50,14 @@ public final class MessageToClientFactory implements MessageToClientHandler {
         consumer.accept(new FightInfo(enemyId, fightResult));
     }
 
+    private MeUpdate lastMeUpdate;
     @Override
     public void meUpdate(Player me) {
-        consumer.accept(new MeUpdate(me));
+        MeUpdate newMeUpdate = new MeUpdate(me);
+        if (newMeUpdate.equals(lastMeUpdate))
+            return;
+        lastMeUpdate = newMeUpdate;
+        consumer.accept(newMeUpdate);
     }
 
     @Override
@@ -75,9 +80,14 @@ public final class MessageToClientFactory implements MessageToClientHandler {
         consumer.accept(new Pong());
     }
 
+    private QuestUpdate lastQuestUpdate;
     @Override
     public void questUpdate(Instant deadline, List<QuestStatus> quests) {
-        consumer.accept(new QuestUpdate(deadline, quests));
+        QuestUpdate newQuestUpdate = new QuestUpdate(deadline, quests);
+        if (newQuestUpdate.equals(lastQuestUpdate))
+            return;
+        lastQuestUpdate = newQuestUpdate;
+        consumer.accept(newQuestUpdate);
     }
 
     @Override
