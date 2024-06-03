@@ -40,6 +40,7 @@ import java.util.function.Consumer;
 
 import gps.tracker.databinding.ActivityMainBinding;
 import gps.tracker.simple_listeners.Notifier;
+import lombok.Getter;
 import lombok.SneakyThrows;
 import soturi.common.Registry;
 import soturi.model.Config;
@@ -54,12 +55,16 @@ import soturi.model.Result;
 import soturi.model.messages_to_client.MessageToClientHandler;
 
 public class MainActivity extends AppCompatActivity {
-
     public final Notifier locationChangeRequestNotifier = new Notifier();
     private final List<LocationListener> sublisteners = new ArrayList<>();
+    @Getter
     private final ItemManager itemManager = new ItemManager(this);
+    @Getter
     private final EnemyList enemyList = new EnemyList();
+    @Getter
     public Registry gameRegistry;
+    @Getter
+    private CurrentQuests currentQuests = null;
     private WebSocketClient webSocketClient;
     private AppBarConfiguration appBarConfiguration;
     private ActivityMainBinding binding;
@@ -356,18 +361,6 @@ public class MainActivity extends AppCompatActivity {
         this.playerConsumer = consumer;
     }
 
-    public Registry getGameRegistry() {
-        return gameRegistry;
-    }
-
-    public ItemManager getItemManager() {
-        return itemManager;
-    }
-
-    public EnemyList getEnemyList() {
-        return enemyList;
-    }
-
     private static class GPSGuardianState {
         public boolean alertShown = false;
     }
@@ -489,7 +482,7 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         public void questUpdate(Instant deadline, List<QuestStatus> quests) {
-            Instant started = deadline.minusSeconds(gameRegistry.getQuestDurationInSeconds());
+            currentQuests = new CurrentQuests(deadline, quests);
         }
 
         @Override
