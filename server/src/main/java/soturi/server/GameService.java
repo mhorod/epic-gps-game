@@ -33,7 +33,6 @@ import soturi.server.geo.MonsterManager;
 
 import java.time.Duration;
 import java.time.Instant;
-import java.time.temporal.TemporalUnit;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -53,8 +52,8 @@ public class GameService {
     private final DynamicConfig dynamicConfig;
     private final CityProvider cityProvider;
 
-    private Registry registry;
-    private MonsterManager monsterManager;
+    private volatile Registry registry;
+    private volatile MonsterManager monsterManager;
 
     public GameService(PlayerRepository repository, FightRepository fightRepository, DynamicConfig dynamicConfig, CityProvider cityProvider) {
         log.info("Compilation time: {}", VersionInfo.compilationTime);
@@ -71,7 +70,7 @@ public class GameService {
     private final Map<String, PlayerSession> sessions = new LinkedHashMap<>();
     private final Map<String, MessageToClientHandler> observers = new LinkedHashMap<>();
 
-    private Instant questsDeadline = Instant.now();
+    private volatile Instant questsDeadline = Instant.now();
     private final Map<String, List<QuestStatus>> playerQuests = new LinkedHashMap<>();
 
     public void kickAllPlayers() {
@@ -138,7 +137,7 @@ public class GameService {
         }
     }
 
-    private long secondCount = 0;
+    private volatile long secondCount = 0;
     private synchronized void doTickEverySecond() {
         secondCount++;
 
@@ -157,9 +156,15 @@ public class GameService {
         regenerateQuests();
     }
 
+    private volatile boolean doTick = true;
     @Scheduled(fixedDelay = 1000)
     private synchronized void tickEverySecond() {
-        doTickEverySecond();
+        if (doTick)
+            doTickEverySecond();
+    }
+
+    public synchronized void setDoTick(boolean doTick) {
+        this.doTick = doTick;
     }
 
     private synchronized void giveFreeXp() {

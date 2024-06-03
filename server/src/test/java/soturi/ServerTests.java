@@ -13,7 +13,6 @@ import soturi.model.EnemyType;
 import soturi.model.FightResult;
 import soturi.model.Item;
 import soturi.model.ItemId;
-import soturi.model.Reward;
 import soturi.model.Player;
 import soturi.model.PolygonId;
 import soturi.model.Position;
@@ -63,13 +62,11 @@ public class ServerTests {
     void cleanGameService() {
         Config defaultConfig = dynamicConfig.getDefaultConfig();
         Config testConfig = defaultConfig
-            .withGiveFreeXpDelayInSeconds(0)
-            .withSpawnEnemyDelayInSeconds(0)
             .withQuestDurationInSeconds(24 * 3600)
-            .withHealDelayInSeconds(0)
             .withGameAreaId(POLAND);
 
         gameService.setConfig(testConfig);
+        gameService.setDoTick(false);
         registry = dynamicConfig.getRegistry();
         fightSimulator = new FightSimulator(registry);
 
