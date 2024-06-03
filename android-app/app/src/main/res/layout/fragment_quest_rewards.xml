@@ -6,6 +6,7 @@
     tools:context=".QuestRewards">
 
     <LinearLayout
+        android:id="@+id/reward_info"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="vertical"></LinearLayout>
