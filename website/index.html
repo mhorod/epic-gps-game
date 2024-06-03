@@ -102,9 +102,11 @@
                 </a>
             </div>
 
-            <div id="secondary-buttons">
-                <div class="text-light">already have an account?</div>
-                <a href="/log-in" class="text-btn larger-text"> Log In </a>
+            <div th:if="${username == null}">
+                <div id="secondary-buttons">
+                    <div class="text-light">already have an account?</div>
+                    <a href="/log-in" class="text-btn larger-text"> Log In </a>
+                </div>
             </div>
         </main>
     </body>
