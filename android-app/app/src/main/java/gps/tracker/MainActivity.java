@@ -13,6 +13,7 @@ import android.view.MenuItem;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.fragment.app.FragmentManager;
@@ -65,7 +66,7 @@ public class MainActivity extends AppCompatActivity {
     private LocationListener locationListener;
     private LocationManager locationManager;
     private Location lastLocation;
-    private Consumer<Enemy> enemyAppearsConsumer = null;
+    private Consumer<List<Enemy>> enemyAppearsConsumer = null;
     private Consumer<EnemyId> enemyDisappearsConsumer = null;
     private FragmentManager fragmentManager;
     private Runnable onDisconnectRunnable = null;
@@ -302,7 +303,7 @@ public class MainActivity extends AppCompatActivity {
         return lastLocation;
     }
 
-    public void setEnemyAppearsConsumer(Consumer<Enemy> enemyAppearsConsumer) {
+    public void setEnemyAppearsConsumer(Consumer<List<Enemy>> enemyAppearsConsumer) {
         this.enemyAppearsConsumer = enemyAppearsConsumer;
     }
 
@@ -382,7 +383,13 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         public void enemiesAppear(List<Enemy> enemies) {
-            enemies.forEach(this::enemyAppears);
+            if (enemyAppearsConsumer == null) {
+                enemiesBacklog.addAll(enemies);
+                return;
+            }
+
+            new Thread(() -> cleanBacklog(enemyAppearsConsumer)).start();
+            new Thread(() -> enemyAppearsConsumer.accept(enemies)).start();
         }
 
         @Override
@@ -390,26 +397,11 @@ public class MainActivity extends AppCompatActivity {
             enemyIds.forEach(this::enemyDisappears);
         }
 
-        private void cleanBacklog(Consumer<Enemy> consumer) {
-            for (Enemy enemy : enemiesBacklog) {
-                consumer.accept(enemy);
-            }
+        private void cleanBacklog(@NonNull Consumer<List<Enemy>> consumer) {
+            consumer.accept(enemiesBacklog);
             enemiesBacklog.clear();
         }
 
-        private void enemyAppears(Enemy enemy) {
-            if (enemyAppearsConsumer == null) {
-                enemiesBacklog.add(enemy);
-                return;
-            }
-
-            new Thread(() -> {
-                cleanBacklog(enemyAppearsConsumer);
-            }).start();
-
-            enemyAppearsConsumer.accept(enemy);
-
-        }
 
         private void enemyDisappears(EnemyId enemyId) {
             if (enemyAppearsConsumer == null || enemyDisappearsConsumer == null) {

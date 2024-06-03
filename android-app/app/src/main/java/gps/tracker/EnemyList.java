@@ -51,6 +51,13 @@ public class EnemyList {
         return closestEnemy;
     }
 
+    public synchronized List<EnemyOverlay> getAllEnemyOverlaysWithinRange(Position position, double range) {
+        return enemies.values().stream()
+                .filter(instance -> instance.enemy().position().distance(position) <= range)
+                .map(EnemyInstance::overlay)
+                .collect(Collectors.toList());
+    }
+
     public synchronized List<EnemyOverlay> getAllEnemyOverlays() {
         return enemies.values().stream()
                 .map(EnemyInstance::overlay)
