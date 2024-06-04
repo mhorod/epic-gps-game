@@ -67,7 +67,7 @@ public class MainActivity extends AppCompatActivity {
     public Registry gameRegistry;
     public Reward currentReward; // FIXME: Yeah, I love global variables -- it is used in logic for Quests to properly render the loot
     @Getter
-    private CurrentQuests currentQuests = null;
+    private volatile CurrentQuests currentQuests = null;
     @Getter
     private MeUpdate lastMeUpdate = null;
     private WebSocketClient webSocketClient;
