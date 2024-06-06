@@ -48,6 +48,7 @@ import soturi.model.Enemy;
 import soturi.model.EnemyId;
 import soturi.model.FightRecord;
 import soturi.model.FightResult;
+import soturi.model.ItemId;
 import soturi.model.Player;
 import soturi.model.Position;
 import soturi.model.QuestStatus;
@@ -431,7 +432,21 @@ public class MainActivity extends AppCompatActivity {
                 AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
 
                 if (fightResult.result() == Result.WON) {
-                    builder.setMessage("You won!");
+                    String xpString = "XP: " + fightResult.reward().xp();
+
+
+                    String lootString = fightResult.reward().items().stream()
+                            .reduce("",
+                                    (acc, item) -> acc + gameRegistry.getItemById(new ItemId(item.id())).name() + "\n",
+                                    String::concat);
+
+                    if (lootString.isEmpty()) {
+                        lootString = "No loot :(";
+                    } else {
+                        lootString = "Loot:\n" + lootString;
+                    }
+
+                    builder.setMessage("You've won!\n" + xpString + "\n" + lootString);
                     builder.setPositiveButton("Yay!", (dialog, id) -> {
                     });
                 } else {
