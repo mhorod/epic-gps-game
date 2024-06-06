@@ -97,15 +97,23 @@ public class GameMap extends Fragment {
             return;
         }
 
-        binding.hpLevel.setText(stats.hp());
-        binding.atkLevel.setText(stats.atk());
-        binding.defLevel.setText(stats.def());
-        binding.levelLevel.setText(stats.level());
+        try {
 
-        binding.progressBar.setMax(10000);
-        binding.progressBar.setProgress(stats.progress());
+            binding.hpLevel.setText(stats.hp());
+            binding.atkLevel.setText(stats.atk());
+            binding.defLevel.setText(stats.def());
+            binding.levelLevel.setText(stats.level());
 
-        changeStatsVisibility(View.VISIBLE);
+            binding.progressBar.setMax(10000);
+            binding.progressBar.setProgress(stats.progress());
+
+            changeStatsVisibility(View.VISIBLE);
+        } catch (Exception e) {
+            // There is a slight chance that due to the multithreaded nature of the app
+            // We will attempt a change after destruction of the view here
+            // Causing havoc if this error is not caught
+            // But if an error is caught, we can just ignore it as the view doesn't exist anymore either way
+        }
     }
 
     private void changeStatsVisibility(int visibility) {
