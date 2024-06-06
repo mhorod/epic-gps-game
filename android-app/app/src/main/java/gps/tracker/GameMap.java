@@ -13,6 +13,8 @@ import androidx.core.content.res.ResourcesCompat;
 import androidx.fragment.app.Fragment;
 import androidx.navigation.fragment.NavHostFragment;
 
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+
 import org.osmdroid.api.IMapController;
 import org.osmdroid.bonuspack.clustering.RadiusMarkerClusterer;
 import org.osmdroid.events.MapEventsReceiver;
@@ -232,6 +234,16 @@ public class GameMap extends Fragment {
             NavHostFragment.findNavController(GameMap.this).navigate(R.id.action_gameMap_to_inventoryFragment);
         });
 
+        binding.questButton.setOnClickListener(v -> {
+            if (mainActivity.getCurrentQuests() == null) {
+                MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(mainActivity);
+                builder.setTitle("No quests available");
+                mainActivity.runOnUiThread(builder::show);
+            } else {
+                NavHostFragment.findNavController(GameMap.this).navigate(R.id.action_gameMap_to_questChoice);
+            }
+        });
+
         RadiusMarkerClusterer clusterer = new CustomClusterer(mainActivity);
         clusterer.setMaxClusteringZoomLevel(16);
         clusterer.setRadius(1000);
@@ -282,7 +294,13 @@ public class GameMap extends Fragment {
             EnemyType type = mainActivity.gameRegistry.getEnemyType(e);
             Drawable d = getDrawableResource(type.gfxName());
 
-            EnemyOverlay overlay = new EnemyOverlay(mapView, new DrawableEnemy(d, e), mainActivity, this::attackEnemy);
+            EnemyOverlay overlay;
+
+            try {
+                overlay = new EnemyOverlay(mapView, new DrawableEnemy(d, e), mainActivity, this::attackEnemy);
+            } catch (NullPointerException npe) {
+                overlay = null;
+            }
 
             enemyList.addEnemy(e, overlay);
             toAdd.add(overlay);
@@ -290,14 +308,18 @@ public class GameMap extends Fragment {
         }
 
         mainActivity.runOnUiThread(() -> {
-            RadiusMarkerClusterer clusterer = (RadiusMarkerClusterer) mapView.getOverlays().get(0);
+            try {
+                RadiusMarkerClusterer clusterer = (RadiusMarkerClusterer) mapView.getOverlays().get(0);
 
-            for (Marker overlay : toAdd) {
-                clusterer.add(overlay);
+                for (Marker overlay : toAdd) {
+                    clusterer.add(overlay);
+                }
+
+                clusterer.invalidate();
+                mapView.invalidate();
+            } catch (Exception e) {
+                // I know why, don't worry
             }
-
-            clusterer.invalidate();
-            mapView.invalidate();
         });
     }
 

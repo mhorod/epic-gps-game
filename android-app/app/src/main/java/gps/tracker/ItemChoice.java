@@ -33,13 +33,6 @@ public class ItemChoice extends Fragment {
     MainActivity mainActivity;
     ItemManager itemManager;
 
-    private Bitmap getBitmapFromItem(@NonNull Item item) {
-        InputStream stream = getClass().getClassLoader().getResourceAsStream(item.gfxName());
-        Drawable draw = Drawable.createFromStream(stream, null);
-        BitmapDrawable bitmapDrawable = (BitmapDrawable) draw;
-        return bitmapDrawable.getBitmap();
-    }
-
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -127,8 +120,7 @@ public class ItemChoice extends Fragment {
         return binding.getRoot();
     }
 
-    private class FullItemInfoSegment extends LinearLayout {
-
+    public static class FullItemInfoSegment extends LinearLayout {
         public FullItemInfoSegment(Context context, @NonNull Item item) {
             super(context);
 
@@ -185,6 +177,13 @@ public class ItemChoice extends Fragment {
             this.addView(defenseDescription);
 
             this.setGravity(Gravity.CENTER_HORIZONTAL);
+        }
+
+        private Bitmap getBitmapFromItem(@NonNull Item item) {
+            InputStream stream = getClass().getClassLoader().getResourceAsStream(item.gfxName());
+            Drawable draw = Drawable.createFromStream(stream, null);
+            BitmapDrawable bitmapDrawable = (BitmapDrawable) draw;
+            return bitmapDrawable.getBitmap();
         }
     }
 
