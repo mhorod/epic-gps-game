@@ -48,7 +48,7 @@ public class EnemyOverlay extends CustomOverlay {
         Position userPosition = new Position(userLocation.getLatitude(), userLocation.getLongitude());
         Position enemyPosition = new Position(this.getPosition().getLatitude(), this.getPosition().getLongitude());
 
-        boolean canAttack = userPosition.distance(enemyPosition) < 50;
+        boolean canAttack = userPosition.distance(enemyPosition) < mainActivity.gameRegistry.getFightingDistanceMaxInMeters();
 
         mainActivity.runOnUiThread(() -> {
             AlertDialog.Builder builder = new AlertDialog.Builder(mainActivity);
