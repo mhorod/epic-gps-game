@@ -6,6 +6,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
+import android.widget.ProgressBar;
 import android.widget.Space;
 import android.widget.TextView;
 
@@ -14,7 +15,6 @@ import androidx.fragment.app.Fragment;
 import androidx.navigation.fragment.NavHostFragment;
 
 import com.google.android.material.button.MaterialButton;
-import com.google.android.material.progressindicator.LinearProgressIndicator;
 
 import java.util.List;
 
@@ -73,11 +73,9 @@ public class QuestChoice extends Fragment {
             questGoal.setText(quest.quest());
             questGoal.setGravity(Gravity.CENTER_HORIZONTAL);
 
-            LinearProgressIndicator progressBar = new LinearProgressIndicator(mainActivity);
+            ProgressBar progressBar = new ProgressBar(mainActivity, null, android.R.attr.progressBarStyleHorizontal);
             progressBar.setMax((int) quest.goal());
             progressBar.setProgress((int) quest.progress());
-            progressBar.setIndeterminate(false);
-            progressBar.setIndicatorColor(0xFF0000);
             progressBar.setForegroundGravity(Gravity.CENTER_HORIZONTAL);
 
 
