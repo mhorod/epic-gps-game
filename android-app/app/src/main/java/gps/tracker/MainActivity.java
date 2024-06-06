@@ -48,12 +48,12 @@ import soturi.model.Enemy;
 import soturi.model.EnemyId;
 import soturi.model.FightRecord;
 import soturi.model.FightResult;
+import soturi.model.ItemId;
 import soturi.model.Player;
 import soturi.model.Position;
 import soturi.model.QuestStatus;
 import soturi.model.Result;
 import soturi.model.Reward;
-import soturi.model.messages_to_client.MeUpdate;
 import soturi.model.messages_to_client.MessageToClientHandler;
 
 public class MainActivity extends AppCompatActivity {
@@ -69,7 +69,7 @@ public class MainActivity extends AppCompatActivity {
     @Getter
     private volatile CurrentQuests currentQuests = null;
     @Getter
-    private MeUpdate lastMeUpdate = null;
+    private volatile Player lastMeUpdate = null;
     private WebSocketClient webSocketClient;
     private AppBarConfiguration appBarConfiguration;
     private ActivityMainBinding binding;
@@ -432,7 +432,21 @@ public class MainActivity extends AppCompatActivity {
                 AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
 
                 if (fightResult.result() == Result.WON) {
-                    builder.setMessage("You won!");
+                    String xpString = "XP: " + fightResult.reward().xp();
+
+
+                    String lootString = fightResult.reward().items().stream()
+                            .reduce("",
+                                    (acc, item) -> acc + gameRegistry.getItemById(new ItemId(item.id())).name() + "\n",
+                                    String::concat);
+
+                    if (lootString.isEmpty()) {
+                        lootString = "No loot :(";
+                    } else {
+                        lootString = "Loot:\n" + lootString;
+                    }
+
+                    builder.setMessage("You've won!\n" + xpString + "\n" + lootString);
                     builder.setPositiveButton("Yay!", (dialog, id) -> {
                     });
                 } else {
@@ -447,6 +461,8 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         public synchronized void meUpdate(Player me) {
+            lastMeUpdate = me;
+
             if (onLoggedInRunnable != null) {
                 onLoggedInRunnable.run();
                 onLoggedInRunnable = null;

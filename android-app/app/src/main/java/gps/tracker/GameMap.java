@@ -97,15 +97,23 @@ public class GameMap extends Fragment {
             return;
         }
 
-        binding.hpLevel.setText(stats.hp());
-        binding.atkLevel.setText(stats.atk());
-        binding.defLevel.setText(stats.def());
-        binding.levelLevel.setText(stats.level());
+        try {
 
-        binding.progressBar.setMax(10000);
-        binding.progressBar.setProgress(stats.progress());
+            binding.hpLevel.setText(stats.hp());
+            binding.atkLevel.setText(stats.atk());
+            binding.defLevel.setText(stats.def());
+            binding.levelLevel.setText(stats.level());
 
-        changeStatsVisibility(View.VISIBLE);
+            binding.progressBar.setMax(10000);
+            binding.progressBar.setProgress(stats.progress());
+
+            changeStatsVisibility(View.VISIBLE);
+        } catch (Exception e) {
+            // There is a slight chance that due to the multithreaded nature of the app
+            // We will attempt a change after destruction of the view here
+            // Causing havoc if this error is not caught
+            // But if an error is caught, we can just ignore it as the view doesn't exist anymore either way
+        }
     }
 
     private void changeStatsVisibility(int visibility) {
@@ -179,6 +187,33 @@ public class GameMap extends Fragment {
         refreshLocationTimer.schedule(updater, 0, 1000);
     }
 
+    private void onMeUpdate(@NonNull Player me) {
+        String hpString = me.hp() + "/" + me.statistics().maxHp();
+        String atkString = String.valueOf(me.statistics().attack());
+        String defString = String.valueOf(me.statistics().defense());
+
+        long xpInCurrentLevel = me.xp() - mainActivity.gameRegistry.getXpForLvlCumulative(me.lvl());
+        long xpForNextLevel = mainActivity.gameRegistry.getXpForNextLvl(me.lvl());
+
+        double progress = me.lvl() == mainActivity.gameRegistry.getMaxLvl() ?
+                1.0 : ((double) xpInCurrentLevel) / xpForNextLevel;
+
+        String levelString = me.lvl() + "";
+
+        mainActivity.saveString("hp", hpString);
+        mainActivity.saveString("atk", atkString);
+        mainActivity.saveString("def", defString);
+        mainActivity.saveString("level", levelString);
+        mainActivity.saveString("progress", String.valueOf(progress));
+
+        GraphicalStats stats = new GraphicalStats(hpString, atkString, defString, levelString, (int) (progress * 10000));
+
+
+        mainActivity.runOnUiThread(() -> {
+            setStats(stats);
+        });
+    }
+
     @Override
     public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
@@ -200,39 +235,15 @@ public class GameMap extends Fragment {
 
         mainActivity.locationChangeRequestNotifier.registerListener(this::centerMapOncePossible);
 
-        mainActivity.setOnMeUpdate(
-                (Player me) -> {
-                    String hpString = me.hp() + "/" + me.statistics().maxHp();
-                    String atkString = String.valueOf(me.statistics().attack());
-                    String defString = String.valueOf(me.statistics().defense());
+        // It should always not be null, but just in case
+        if (mainActivity.getLastMeUpdate() != null) {
+            onMeUpdate(mainActivity.getLastMeUpdate());
+        }
 
-                    long xpInCurrentLevel = me.xp() - mainActivity.gameRegistry.getXpForLvlCumulative(me.lvl());
-                    long xpForNextLevel = mainActivity.gameRegistry.getXpForNextLvl(me.lvl());
-
-                    double progress = me.lvl() == mainActivity.gameRegistry.getMaxLvl() ?
-                            1.0 : ((double) xpInCurrentLevel) / xpForNextLevel;
-
-                    String levelString = me.lvl() + "";
-
-                    mainActivity.saveString("hp", hpString);
-                    mainActivity.saveString("atk", atkString);
-                    mainActivity.saveString("def", defString);
-                    mainActivity.saveString("level", levelString);
-                    mainActivity.saveString("progress", String.valueOf(progress));
-
-                    GraphicalStats stats = new GraphicalStats(hpString, atkString, defString, levelString, (int) (progress * 10000));
+        mainActivity.setOnMeUpdate(this::onMeUpdate);
 
 
-                    mainActivity.runOnUiThread(() -> {
-                        setStats(stats);
-                    });
-                }
-        );
-
-
-        binding.inventoryButton.setOnClickListener(v -> {
-            NavHostFragment.findNavController(GameMap.this).navigate(R.id.action_gameMap_to_inventoryFragment);
-        });
+        binding.inventoryButton.setOnClickListener(v -> NavHostFragment.findNavController(GameMap.this).navigate(R.id.action_gameMap_to_inventoryFragment));
 
         binding.questButton.setOnClickListener(v -> {
             if (mainActivity.getCurrentQuests() == null) {
@@ -256,6 +267,8 @@ public class GameMap extends Fragment {
 
         mainActivity.setEnemyAppearsConsumer(this::enemyAppearsConsumer);
         mainActivity.setEnemyDisappearsConsumer(this::enemyDisappearsConsumer);
+
+
     }
 
     @Override
