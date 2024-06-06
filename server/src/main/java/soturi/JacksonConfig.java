@@ -1,5 +1,6 @@
 package soturi;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
@@ -17,7 +18,8 @@ public class JacksonConfig {
                 .build()
                 .registerModule(new JavaTimeModule())
                 .configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false)
-                .configure(SerializationFeature.WRITE_DURATIONS_AS_TIMESTAMPS, true);
+                .configure(SerializationFeature.WRITE_DURATIONS_AS_TIMESTAMPS, true)
+                .configure(DeserializationFeature.FAIL_ON_NULL_CREATOR_PROPERTIES, true);
 
         JacksonConfig.mapper = mapper;
         return mapper;
