@@ -7,15 +7,18 @@ import org.springframework.messaging.Message;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authorization.AuthorizationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.annotation.web.socket.EnableWebSocketSecurity;
+import org.springframework.security.config.core.GrantedAuthorityDefaults;
 import org.springframework.security.messaging.access.intercept.MessageMatcherDelegatingAuthorizationManager;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
+import soturi.server.database.PlayerRepository;
 
 import java.util.Arrays;
 
@@ -23,6 +26,7 @@ import java.util.Arrays;
 @Configuration
 @EnableWebSecurity
 @EnableWebSocketSecurity
+@EnableMethodSecurity(securedEnabled = true, jsr250Enabled = true)
 class WebSecurityConfiguration {
 
     private static final String[] PUBLIC_URLS = {
@@ -36,6 +40,7 @@ class WebSecurityConfiguration {
                 .authorizeHttpRequests(auth -> {
                                            Arrays.stream(PUBLIC_URLS)
                                                    .forEach(url -> auth.requestMatchers(url).permitAll());
+                                           auth.requestMatchers("/swagger-ui/**").hasRole("ADMIN");
                                            auth.anyRequest().authenticated();
                                        }
                 ).logout(logout -> logout.logoutSuccessUrl("/logged-out").deleteCookies("token"))
@@ -51,9 +56,10 @@ class WebSecurityConfiguration {
 
     @Bean
     public AuthTokenFilter authenticationJwtTokenFilter(
-            JwtService jwtService
+            JwtService jwtService,
+            PlayerRepository playerRepository
     ) {
-        return new AuthTokenFilter(jwtService);
+        return new AuthTokenFilter(jwtService, playerRepository);
     }
 
     @Bean
@@ -61,8 +67,12 @@ class WebSecurityConfiguration {
             MessageMatcherDelegatingAuthorizationManager.Builder messages
     ) {
         return messages.nullDestMatcher().authenticated()
-                .anyMessage().hasRole("ADMIN")
                 .build();
+    }
+
+    @Bean
+    GrantedAuthorityDefaults grantedAuthorityDefaults() {
+        return new GrantedAuthorityDefaults("");
     }
 
     @Bean

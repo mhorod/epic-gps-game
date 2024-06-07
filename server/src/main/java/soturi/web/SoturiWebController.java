@@ -1,5 +1,6 @@
 package soturi.web;
 
+import jakarta.annotation.security.RolesAllowed;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -24,6 +25,7 @@ public class SoturiWebController {
     private final FightRepository fightRepository;
 
     // Rendering is done in React which also handles these paths
+    @RolesAllowed("ADMIN")
     @GetMapping(value = {"/dashboard", "/dashboard/map-view", "/dashboard/spawn-areas", "/dashboard/players", "/dashboard/enemies", "/dashboard/fight-history"})
     public String dashboardIndex() {
         return "dashboard/index";
