@@ -1,5 +1,8 @@
 package gps.tracker;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -8,7 +11,6 @@ import java.util.stream.Collectors;
 import gps.tracker.custom_overlays.EnemyOverlay;
 import soturi.model.Enemy;
 import soturi.model.EnemyId;
-import soturi.model.Position;
 
 public class EnemyList {
     private final Map<EnemyId, EnemyInstance> enemies;
@@ -17,13 +19,13 @@ public class EnemyList {
         this.enemies = new HashMap<>();
     }
 
-    public synchronized void addEnemy(Enemy enemy, EnemyOverlay overlay) {
+    public synchronized void addEnemy(@NonNull Enemy enemy, @Nullable EnemyOverlay overlay) {
         EnemyInstance instance = new EnemyInstance(enemy, overlay);
 
         enemies.put(enemy.enemyId(), instance);
     }
 
-    public synchronized EnemyOverlay getOverlay(EnemyId enemy) {
+    public synchronized EnemyOverlay getOverlay(@NonNull EnemyId enemy) {
         if (!enemies.containsKey(enemy)) {
             return null;
         }
@@ -33,35 +35,19 @@ public class EnemyList {
         return instance.overlay();
     }
 
-    public synchronized void removeEnemy(EnemyId enemy) {
-        enemies.remove(enemy);
-    }
-
-    public synchronized Enemy getClosestEnemy(Position position) {
-        Enemy closestEnemy = null;
-        double closestDistance = Double.MAX_VALUE;
-        for (EnemyInstance instance : enemies.values()) {
-            Enemy enemy = instance.enemy();
-            double distance = enemy.position().distance(position);
-            if (distance < closestDistance) {
-                closestDistance = distance;
-                closestEnemy = enemy;
-            }
+    public synchronized void updateOverlayFor(@NonNull EnemyId enemy, @Nullable EnemyOverlay overlay) {
+        if (!enemies.containsKey(enemy)) {
+            return;
         }
-        return closestEnemy;
+
+        EnemyInstance oldInstance = enemies.get(enemy);
+        enemies.remove(enemy);
+
+        enemies.put(enemy, new EnemyInstance(oldInstance.enemy(), overlay));
     }
 
-    public synchronized List<EnemyOverlay> getAllEnemyOverlaysWithinRange(Position position, double range) {
-        return enemies.values().stream()
-                .filter(instance -> instance.enemy().position().distance(position) <= range)
-                .map(EnemyInstance::overlay)
-                .collect(Collectors.toList());
-    }
-
-    public synchronized List<EnemyOverlay> getAllEnemyOverlays() {
-        return enemies.values().stream()
-                .map(EnemyInstance::overlay)
-                .collect(Collectors.toList());
+    public synchronized void removeEnemy(@NonNull EnemyId enemy) {
+        enemies.remove(enemy);
     }
 
     public synchronized List<Enemy> getAllEnemies() {
@@ -74,10 +60,6 @@ public class EnemyList {
         enemies.clear();
     }
 
-    public synchronized boolean empty() {
-        return enemies.isEmpty();
-    }
-
-    private record EnemyInstance(Enemy enemy, EnemyOverlay overlay) {
+    private record EnemyInstance(@NonNull Enemy enemy, @Nullable EnemyOverlay overlay) {
     }
 }

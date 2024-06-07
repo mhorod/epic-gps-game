@@ -37,9 +37,10 @@ import gps.tracker.custom_overlays.CustomClusterer;
 import gps.tracker.custom_overlays.EnemyOverlay;
 import gps.tracker.databinding.GameMapFragmentBinding;
 import soturi.model.Enemy;
-import soturi.model.EnemyId;
 import soturi.model.EnemyType;
 import soturi.model.Player;
+import soturi.model.Polygon;
+import soturi.model.Position;
 
 public class GameMap extends Fragment {
 
@@ -222,8 +223,6 @@ public class GameMap extends Fragment {
 
         // We don't allow for any funny business when it comes to the map
         List<Enemy> enemies = mainActivity.getEnemyList().getAllEnemies();
-        mainActivity.getEnemyList().clear();
-
         new Thread(
                 () -> enemyAppearsConsumer(enemies)
         ).start();
@@ -255,9 +254,14 @@ public class GameMap extends Fragment {
             }
         });
 
+        Polygon area = mainActivity.gameRegistry.getGameArea();
+        int diameter = getDiameterOfPolygon(area);
+
+        System.out.println("Diameter: " + diameter);
+
         RadiusMarkerClusterer clusterer = new CustomClusterer(mainActivity);
         clusterer.setMaxClusteringZoomLevel(16);
-        clusterer.setRadius(1000);
+        clusterer.setRadius(diameter / 100);
 
         mainActivity.runOnUiThread(
                 () -> mapView.getOverlays().add(clusterer)
@@ -312,10 +316,11 @@ public class GameMap extends Fragment {
             try {
                 overlay = new EnemyOverlay(mapView, new DrawableEnemy(d, e), mainActivity, this::attackEnemy);
             } catch (NullPointerException npe) {
+                System.out.println("GUYS, WE HAVE A NPE: " + npe);
                 overlay = null;
             }
 
-            enemyList.addEnemy(e, overlay);
+            enemyList.updateOverlayFor(e.enemyId(), overlay);
             toAdd.add(overlay);
 
         }
@@ -336,17 +341,32 @@ public class GameMap extends Fragment {
         });
     }
 
-    private synchronized void enemyDisappearsConsumer(EnemyId e) {
-        EnemyOverlay overlay = enemyList.getOverlay(e);
+    private synchronized void enemyDisappearsConsumer(EnemyOverlay overlay) {
         RadiusMarkerClusterer clusterer = (RadiusMarkerClusterer) mapView.getOverlays().get(0);
-
-        enemyList.removeEnemy(e);
 
         mainActivity.runOnUiThread(() -> {
             clusterer.getItems().remove(overlay);
             clusterer.invalidate();
             mapView.invalidate();
         });
+    }
+
+    private int getDiameterOfPolygon(@NonNull Polygon polygon) {
+        double maxDistance = 0;
+
+        for (Position x : polygon.points()) {
+            for (Position y : polygon.points()) {
+                double distance = x.distance(y);
+                if (distance > maxDistance) {
+                    maxDistance = distance;
+                }
+            }
+        }
+
+        int rounded = (int) maxDistance;
+
+        return Math.max(rounded, 1);
+
     }
 
     private void attackEnemy(@NonNull Enemy e) {
