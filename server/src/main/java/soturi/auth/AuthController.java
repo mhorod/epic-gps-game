@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import org.springframework.web.servlet.view.RedirectView;
 import soturi.server.database.PlayerEntity;
+import soturi.server.database.PlayerEntity.UserRole;
 import soturi.server.database.PlayerRepository;
 
 import java.util.Optional;
@@ -43,6 +44,7 @@ public class AuthController {
         String url = form.redirect != null ? form.redirect : "/";
         return new RedirectView(url);
     }
+
 
 
     public record LogInForm(String username, String password, String redirect) { }

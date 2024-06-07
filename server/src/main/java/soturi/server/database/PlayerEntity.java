@@ -9,11 +9,9 @@ import jakarta.persistence.Id;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
-import soturi.model.FightResult;
-import soturi.model.ItemId;
+import org.springframework.security.crypto.bcrypt.BCrypt;
 
 import java.util.List;
-import java.util.stream.Stream;
 
 @Slf4j
 @Entity
@@ -34,7 +32,15 @@ public class PlayerEntity {
 
     @Getter
     @Setter
+    private String hashingAlgorithm;
+
+    @Getter
+    @Setter
     private long xp, hp;
+
+    @Getter
+    @Setter
+    private UserRole role = UserRole.DEFAULT;
 
     @Getter
     @Setter
@@ -53,11 +59,18 @@ public class PlayerEntity {
     }
 
     public boolean hasPassword(String password) {
-        return hashPassword(password).equals(hashedPassword);
+        if ("BCRYPT".equals(hashingAlgorithm))
+            return BCrypt.checkpw(password, hashedPassword);
+        else
+            return hashedPassword.equals(password);
     }
 
-    private static String hashPassword(String password) {
-        // TODO: use real hashing
-        return password;
+    public static String hashPassword(String password) {
+        return BCrypt.hashpw(password, BCrypt.gensalt(10));
+    }
+
+    public enum UserRole {
+        DEFAULT,
+        ADMIN
     }
 }

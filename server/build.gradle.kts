@@ -5,7 +5,7 @@ plugins {
     id("io.freefair.lombok") version "8.6"
 }
 
-version = "0.0.7-SNAPSHOT"
+version = "0.0.8-SNAPSHOT"
 
 java {
     sourceCompatibility = JavaVersion.VERSION_21
