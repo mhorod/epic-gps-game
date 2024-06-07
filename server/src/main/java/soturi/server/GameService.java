@@ -193,6 +193,10 @@ public class GameService {
         sessions.values().forEach(PlayerSession::sendUpdates);
     }
 
+    public synchronized void setQuests(String playerName, List<QuestStatus> quests) {
+        playerQuests.put(playerName, new ArrayList<>(quests));
+    }
+
     private long nextEnemyIdLong = 0;
     public EnemyId nextEnemyId() {
         return new EnemyId(nextEnemyIdLong++);
@@ -225,7 +229,6 @@ public class GameService {
     private synchronized void unregisterEnemy(EnemyId enemyId) {
         unregisterEnemies(List.of(enemyId));
     }
-
 
     private synchronized void unregisterEnemies(List<EnemyId> enemyIds) {
         if (enemyIds.isEmpty())
@@ -301,11 +304,7 @@ public class GameService {
         }
 
         public List<QuestStatus> getQuestsStatuses() {
-            List<QuestStatus> copy = new ArrayList<>(
-                playerQuests.computeIfAbsent(playerName, _name -> generateQuests())
-            );
-            playerQuests.put(playerName, copy);
-            return copy;
+            return playerQuests.computeIfAbsent(playerName, _name -> generateQuests());
         }
 
         private void updateQuests(Function<QuestStatus, Long> visitor) {
@@ -315,11 +314,12 @@ public class GameService {
                 if (status.isFinished())
                     continue;
                 long newProgress = status.progress() + visitor.apply(status);
+                newProgress = Math.max(0, Math.min(newProgress, status.goal()));
 
-                QuestStatus newStatus = status.withProgress(Math.max(0, Math.min(newProgress, status.goal())));
+                QuestStatus newStatus = status.withProgress(newProgress);
+                list.set(i, newStatus);
                 if (newStatus.isFinished())
                     applyReward(newStatus.reward());
-                list.set(i, newStatus);
             }
         }
 
