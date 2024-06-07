@@ -37,7 +37,6 @@ import gps.tracker.custom_overlays.CustomClusterer;
 import gps.tracker.custom_overlays.EnemyOverlay;
 import gps.tracker.databinding.GameMapFragmentBinding;
 import soturi.model.Enemy;
-import soturi.model.EnemyId;
 import soturi.model.EnemyType;
 import soturi.model.Player;
 import soturi.model.Polygon;
@@ -224,8 +223,6 @@ public class GameMap extends Fragment {
 
         // We don't allow for any funny business when it comes to the map
         List<Enemy> enemies = mainActivity.getEnemyList().getAllEnemies();
-        mainActivity.getEnemyList().clear();
-
         new Thread(
                 () -> enemyAppearsConsumer(enemies)
         ).start();
@@ -319,10 +316,11 @@ public class GameMap extends Fragment {
             try {
                 overlay = new EnemyOverlay(mapView, new DrawableEnemy(d, e), mainActivity, this::attackEnemy);
             } catch (NullPointerException npe) {
+                System.out.println("GUYS, WE HAVE A NPE: " + npe);
                 overlay = null;
             }
 
-            enemyList.addEnemy(e, overlay);
+            enemyList.updateOverlayFor(e.enemyId(), overlay);
             toAdd.add(overlay);
 
         }
@@ -343,11 +341,8 @@ public class GameMap extends Fragment {
         });
     }
 
-    private synchronized void enemyDisappearsConsumer(EnemyId e) {
-        EnemyOverlay overlay = enemyList.getOverlay(e);
+    private synchronized void enemyDisappearsConsumer(EnemyOverlay overlay) {
         RadiusMarkerClusterer clusterer = (RadiusMarkerClusterer) mapView.getOverlays().get(0);
-
-        enemyList.removeEnemy(e);
 
         mainActivity.runOnUiThread(() -> {
             clusterer.getItems().remove(overlay);

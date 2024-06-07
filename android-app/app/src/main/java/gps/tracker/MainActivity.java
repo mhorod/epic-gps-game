@@ -38,6 +38,7 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.function.Consumer;
 
+import gps.tracker.custom_overlays.EnemyOverlay;
 import gps.tracker.databinding.ActivityMainBinding;
 import gps.tracker.simple_listeners.Notifier;
 import lombok.Getter;
@@ -71,14 +72,18 @@ public class MainActivity extends AppCompatActivity {
     private volatile CurrentQuests currentQuests = null;
     @Getter
     private volatile Player lastMeUpdate = null;
+    @Getter
     private WebSocketClient webSocketClient;
     private AppBarConfiguration appBarConfiguration;
     private ActivityMainBinding binding;
     private LocationListener locationListener;
     private LocationManager locationManager;
+    @Getter
     private Location lastLocation;
+    @Setter
     private Consumer<List<Enemy>> enemyAppearsConsumer = null;
-    private Consumer<EnemyId> enemyDisappearsConsumer = null;
+    @Setter
+    private Consumer<EnemyOverlay> enemyDisappearsConsumer = null;
     private FragmentManager fragmentManager;
     private Runnable onDisconnectRunnable = null;
     private Consumer<Player> playerConsumer = null;
@@ -313,22 +318,6 @@ public class MainActivity extends AppCompatActivity {
                 || super.onSupportNavigateUp();
     }
 
-    public Location getLastLocation() {
-        return lastLocation;
-    }
-
-    public void setEnemyAppearsConsumer(Consumer<List<Enemy>> enemyAppearsConsumer) {
-        this.enemyAppearsConsumer = enemyAppearsConsumer;
-    }
-
-    public void setEnemyDisappearsConsumer(Consumer<EnemyId> enemyDisappearsConsumer) {
-        this.enemyDisappearsConsumer = enemyDisappearsConsumer;
-    }
-
-    public WebSocketClient getWebSocketClient() {
-        return webSocketClient;
-    }
-
     public void login(String userName, String userPassword, boolean dev) {
         webSocketClient = new WebSocketClient(new MainActivityHandler(), userName, userPassword, dev);
     }
@@ -376,41 +365,36 @@ public class MainActivity extends AppCompatActivity {
 
     class MainActivityHandler implements MessageToClientHandler {
 
-        private ArrayList<Enemy> enemiesBacklog = new ArrayList<>();
-
         @Override
         public void disconnect() {
             onDisconnect();
         }
 
         @Override
-        public void enemiesAppear(List<Enemy> enemies) {
+        public synchronized void enemiesAppear(@NonNull List<Enemy> enemies) {
+            for (Enemy enemy : enemies) {
+                enemyList.addEnemy(enemy, null);
+            }
+
             if (enemyAppearsConsumer == null) {
-                enemiesBacklog.addAll(enemies);
                 return;
             }
 
-            new Thread(() -> cleanBacklog(enemyAppearsConsumer)).start();
             new Thread(() -> enemyAppearsConsumer.accept(enemies)).start();
         }
 
         @Override
-        public void enemiesDisappear(List<EnemyId> enemyIds) {
+        public synchronized void enemiesDisappear(@NonNull List<EnemyId> enemyIds) {
             enemyIds.forEach(this::enemyDisappears);
         }
 
-        private void cleanBacklog(@NonNull Consumer<List<Enemy>> consumer) {
-            consumer.accept(enemiesBacklog);
-            enemiesBacklog.clear();
-        }
-
-
         private void enemyDisappears(EnemyId enemyId) {
             if (enemyAppearsConsumer == null || enemyDisappearsConsumer == null) {
-                enemiesBacklog.removeIf(enemy -> enemy.enemyId().equals(enemyId));
                 return;
             }
-            enemyDisappearsConsumer.accept(enemyId);
+            EnemyOverlay overlay = enemyList.getOverlay(enemyId);
+            enemyList.removeEnemy(enemyId);
+            enemyDisappearsConsumer.accept(overlay);
         }
 
         @Override
@@ -479,11 +463,6 @@ public class MainActivity extends AppCompatActivity {
             if (onLoggedInRunnable != null) {
                 onLoggedInRunnable.run();
                 onLoggedInRunnable = null;
-            }
-
-            // Because this event is sent cyclically, we will use it to put enemies from backlog on the map
-            if (enemyDisappearsConsumer != null) {
-                cleanBacklog(enemyAppearsConsumer);
             }
 
             itemManager.setInventoryItemIDs(me.inventory());
