@@ -65,6 +65,16 @@ public class LoginFragment extends Fragment {
                     loginProgress.setMessage("Spawning frogs...");
                     loginProgress.setCancelable(false);
 
+                    mainActivity.setOnErrorRunnable(
+                            () -> mainActivity.runOnUiThread(
+                                    () -> {
+                                        gpsProgress.dismiss();
+                                        loginProgress.dismiss();
+                                        mainActivity.setOnErrorRunnable(null);
+                                    }
+                            )
+                    );
+
                     mainActivity.registerLocationListener(
                             new LocationListener() {
                                 @Override
@@ -87,7 +97,7 @@ public class LoginFragment extends Fragment {
                                     }
                             )
                     );
-                    
+
                     mainActivity.runOnUiThread(
                             gpsProgress::show
                     );

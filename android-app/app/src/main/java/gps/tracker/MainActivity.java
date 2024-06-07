@@ -41,6 +41,7 @@ import java.util.function.Consumer;
 import gps.tracker.databinding.ActivityMainBinding;
 import gps.tracker.simple_listeners.Notifier;
 import lombok.Getter;
+import lombok.Setter;
 import lombok.SneakyThrows;
 import soturi.common.Registry;
 import soturi.model.Config;
@@ -84,6 +85,9 @@ public class MainActivity extends AppCompatActivity {
     private Runnable onLoggedInRunnable;
     private Timer locationGuardianTimer;
     private GPSGuardianState gpsGuardianState = new GPSGuardianState();
+    @Getter
+    @Setter
+    private Runnable onErrorRunnable;
 
     public void saveString(String key, String value) {
         try {
@@ -411,6 +415,15 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         public void error(String error) {
+            if (onErrorRunnable != null) {
+                System.out.println("Error: " + error);
+                System.out.println("Error runnable is not null");
+                onErrorRunnable.run();
+            } else {
+                System.out.println("Error: " + error);
+                System.out.println("Error runnable is null");
+            }
+
             runOnUiThread(() -> {
                 AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
                 builder.setTitle("Error");
