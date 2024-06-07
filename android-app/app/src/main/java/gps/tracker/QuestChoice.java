@@ -16,6 +16,10 @@ import androidx.navigation.fragment.NavHostFragment;
 
 import com.google.android.material.button.MaterialButton;
 
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 import gps.tracker.databinding.FragmentQuestChoiceBinding;
@@ -34,8 +38,12 @@ public class QuestChoice extends Fragment {
     }
 
     private void createQuestInfo() {
+        Instant deadline = mainActivity.getCurrentQuests().deadline();
+        LocalDateTime localDeadline = deadline.atZone(ZoneId.systemDefault()).toLocalDateTime();
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm:ss dd-MM-yyyy");
+
         mainActivity.runOnUiThread(() -> {
-            binding.deadlineInfo.setText("Deadline: " + mainActivity.getCurrentQuests().deadline());
+            binding.deadlineInfo.setText("Deadline: " + localDeadline.format(formatter));
         });
 
         List<QuestStatus> quests = mainActivity.getCurrentQuests().quests();
