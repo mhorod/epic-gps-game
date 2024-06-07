@@ -40,6 +40,8 @@ import soturi.model.Enemy;
 import soturi.model.EnemyId;
 import soturi.model.EnemyType;
 import soturi.model.Player;
+import soturi.model.Polygon;
+import soturi.model.Position;
 
 public class GameMap extends Fragment {
 
@@ -255,9 +257,14 @@ public class GameMap extends Fragment {
             }
         });
 
+        Polygon area = mainActivity.gameRegistry.getGameArea();
+        int diameter = getDiameterOfPolygon(area);
+
+        System.out.println("Diameter: " + diameter);
+
         RadiusMarkerClusterer clusterer = new CustomClusterer(mainActivity);
         clusterer.setMaxClusteringZoomLevel(16);
-        clusterer.setRadius(1000);
+        clusterer.setRadius(diameter / 100);
 
         mainActivity.runOnUiThread(
                 () -> mapView.getOverlays().add(clusterer)
@@ -347,6 +354,24 @@ public class GameMap extends Fragment {
             clusterer.invalidate();
             mapView.invalidate();
         });
+    }
+
+    private int getDiameterOfPolygon(@NonNull Polygon polygon) {
+        double maxDistance = 0;
+
+        for (Position x : polygon.points()) {
+            for (Position y : polygon.points()) {
+                double distance = x.distance(y);
+                if (distance > maxDistance) {
+                    maxDistance = distance;
+                }
+            }
+        }
+
+        int rounded = (int) maxDistance;
+
+        return Math.max(rounded, 1);
+
     }
 
     private void attackEnemy(@NonNull Enemy e) {
