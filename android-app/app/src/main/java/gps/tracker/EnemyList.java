@@ -11,6 +11,7 @@ import java.util.stream.Collectors;
 import gps.tracker.custom_overlays.EnemyOverlay;
 import soturi.model.Enemy;
 import soturi.model.EnemyId;
+import soturi.model.Position;
 
 public class EnemyList {
     private final Map<EnemyId, EnemyInstance> enemies;
@@ -52,6 +53,13 @@ public class EnemyList {
 
     public synchronized List<Enemy> getAllEnemies() {
         return enemies.values().stream()
+                .map(EnemyInstance::enemy)
+                .collect(Collectors.toList());
+    }
+
+    public synchronized List<Enemy> getEnemiesWithinRange(double range, Position position) {
+        return enemies.values().stream().parallel()
+                .filter(enemy -> enemy.enemy().position().distance(position) <= range)
                 .map(EnemyInstance::enemy)
                 .collect(Collectors.toList());
     }
