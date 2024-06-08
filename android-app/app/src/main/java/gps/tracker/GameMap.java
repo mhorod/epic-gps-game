@@ -15,13 +15,19 @@ import androidx.navigation.fragment.NavHostFragment;
 
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 
+import org.osmdroid.api.IGeoPoint;
 import org.osmdroid.api.IMapController;
 import org.osmdroid.bonuspack.clustering.RadiusMarkerClusterer;
+import org.osmdroid.events.DelayedMapListener;
 import org.osmdroid.events.MapEventsReceiver;
+import org.osmdroid.events.MapListener;
+import org.osmdroid.events.ScrollEvent;
+import org.osmdroid.events.ZoomEvent;
 import org.osmdroid.tileprovider.MapTileProviderBasic;
 import org.osmdroid.util.GeoPoint;
 import org.osmdroid.views.MapView;
 import org.osmdroid.views.overlay.Marker;
+import org.osmdroid.views.overlay.Overlay;
 import org.osmdroid.views.overlay.mylocation.IMyLocationConsumer;
 import org.osmdroid.views.overlay.mylocation.IMyLocationProvider;
 import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay;
@@ -33,7 +39,6 @@ import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 
-import gps.tracker.custom_overlays.CustomClusterer;
 import gps.tracker.custom_overlays.EnemyOverlay;
 import gps.tracker.databinding.GameMapFragmentBinding;
 import soturi.model.Enemy;
@@ -259,7 +264,7 @@ public class GameMap extends Fragment {
 
         System.out.println("Diameter: " + diameter);
 
-        RadiusMarkerClusterer clusterer = new CustomClusterer(mainActivity);
+        RadiusMarkerClusterer clusterer = new FastClusterer(mainActivity);
         clusterer.setMaxClusteringZoomLevel(16);
         clusterer.setRadius(diameter / 100);
 
@@ -272,7 +277,10 @@ public class GameMap extends Fragment {
         mainActivity.setEnemyAppearsConsumer(this::enemyAppearsConsumer);
         mainActivity.setEnemyDisappearsConsumer(this::enemyDisappearsConsumer);
 
+        mapView.setMapListener(new MarkerLoader(0));
 
+        mapView.setBuiltInZoomControls(true);
+        mapView.setMultiTouchControls(true);
     }
 
     @Override
@@ -377,6 +385,43 @@ public class GameMap extends Fragment {
 
     private record GraphicalStats(String hp, String atk, String def, String level,
                                   int progress) {
+    }
+
+    class MarkerLoader extends DelayedMapListener {
+        public MarkerLoader(long delay) {
+            super(new MarkerMapListener(), delay);
+        }
+    }
+
+    private class MarkerMapListener implements MapListener {
+
+        @Override
+        public boolean onScroll(ScrollEvent event) {
+            MapView source = event.getSource();
+
+            IGeoPoint center = source.getMapCenter();
+            Position centerPosition = new Position(center.getLatitude(), center.getLongitude());
+
+            List<Overlay> overlays = source.getOverlays();
+            RadiusMarkerClusterer clusterer;
+            try {
+                clusterer = (RadiusMarkerClusterer) overlays.get(0);
+            } catch (Exception e) {
+                return false;
+            }
+
+            clusterer.getItems().clear();
+            List<Enemy> enemies = mainActivity.getEnemyList().getEnemiesWithinRange(1000, centerPosition);
+            
+            enemyAppearsConsumer(enemies);
+
+            return true;
+        }
+
+        @Override
+        public boolean onZoom(ZoomEvent event) {
+            return false;
+        }
     }
 
     class MyLocationProvider implements IMyLocationProvider {
