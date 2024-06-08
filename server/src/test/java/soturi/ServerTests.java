@@ -65,7 +65,8 @@ public class ServerTests {
         Config defaultConfig = dynamicConfig.getDefaultConfig();
         Config testConfig = defaultConfig
             .withQuestDurationInSeconds(24 * 3600)
-            .withGameAreaId(POLAND);
+            .withGameAreaId(POLAND)
+            .withGameAreaSplitLvl(4);
 
         gameService.setConfig(testConfig);
         gameService.setDoTick(false);

@@ -97,6 +97,8 @@ public class GameService {
             session.sender.setConfig(config);
         for (MessageToClientHandler obs : observers.values())
             obs.setConfig(config);
+
+        clearQuests();
     }
 
     public synchronized List<Enemy> getEnemies() {
@@ -153,7 +155,8 @@ public class GameService {
         if (hpDelay > 0 && secondCount % hpDelay == 0)
             healPlayers();
 
-        regenerateQuests();
+        if (Instant.now().isAfter(questsDeadline))
+            clearQuests();
     }
 
     private volatile boolean doTick = true;
@@ -179,16 +182,13 @@ public class GameService {
         }
     }
 
-    public synchronized void regenerateQuests() {
-        Instant now = Instant.now();
-        if (questsDeadline.isAfter(now))
-            return;
-        log.info("regenerateQuests()");
+    public synchronized void clearQuests() {
+        log.info("clearQuests()");
 
         playerQuests.clear();
 
         long questDuration = registry.getQuestDurationInSeconds();
-        long approxDeadline = now.getEpochSecond() + questDuration * 3 / 2;
+        long approxDeadline = Instant.now().getEpochSecond() + questDuration * 3 / 2;
         questsDeadline = Instant.ofEpochSecond(approxDeadline / questDuration * questDuration);
         sessions.values().forEach(PlayerSession::sendUpdates);
     }
