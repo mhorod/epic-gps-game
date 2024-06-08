@@ -39,7 +39,6 @@ import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 
-import gps.tracker.custom_overlays.CustomClusterer;
 import gps.tracker.custom_overlays.EnemyOverlay;
 import gps.tracker.databinding.GameMapFragmentBinding;
 import soturi.model.Enemy;
@@ -265,7 +264,7 @@ public class GameMap extends Fragment {
 
         System.out.println("Diameter: " + diameter);
 
-        RadiusMarkerClusterer clusterer = new CustomClusterer(mainActivity);
+        RadiusMarkerClusterer clusterer = new FastClusterer(mainActivity);
         clusterer.setMaxClusteringZoomLevel(16);
         clusterer.setRadius(diameter / 100);
 
