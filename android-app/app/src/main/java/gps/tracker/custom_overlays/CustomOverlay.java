@@ -1,7 +1,6 @@
 package gps.tracker.custom_overlays;
 
 import android.graphics.Bitmap;
-import android.graphics.Canvas;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 
@@ -31,23 +30,13 @@ public class CustomOverlay extends Marker {
         this.setAnchor(0.5f, 0.5f);
     }
 
-    // From https://stackoverflow.com/questions/50077917/android-graphics-drawable-adaptiveicondrawable-cannot-be-cast-to-android-graphic
-    // by Shashank Holla; CC BY-SA 4.0
-    @NonNull
-    private static Bitmap getBitmapFromDrawable(@NonNull Drawable drawable) {
-        final Bitmap bmp = Bitmap.createBitmap(drawable.getIntrinsicWidth(), drawable.getIntrinsicHeight(), Bitmap.Config.ARGB_8888);
-        final Canvas canvas = new Canvas(bmp);
-        drawable.setBounds(0, 0, canvas.getWidth(), canvas.getHeight());
-        drawable.draw(canvas);
-        return bmp;
-    }
-
     @NonNull
     private Drawable resizeDrawable(Drawable drawable, double scale) {
-        Bitmap bitmap = getBitmapFromDrawable(drawable);
-        int dstWidth = (int) (bitmap.getWidth() * scale);
-        int dstHeight = (int) (bitmap.getHeight() * scale);
-        Bitmap resized = Bitmap.createScaledBitmap(bitmap, dstWidth, dstHeight, false);
+        BitmapDrawable bitmap = (BitmapDrawable) drawable;
+        int dstWidth = (int) (bitmap.getIntrinsicWidth() * scale);
+        int dstHeight = (int) (bitmap.getIntrinsicHeight() * scale);
+        Bitmap beforeResizing = bitmap.getBitmap();
+        Bitmap resized = Bitmap.createScaledBitmap(beforeResizing, dstWidth, dstHeight, false);
         return new BitmapDrawable(resized);
     }
 
