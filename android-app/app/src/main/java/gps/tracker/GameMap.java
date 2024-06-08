@@ -1,5 +1,6 @@
 package gps.tracker;
 
+import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.location.Location;
 import android.os.Bundle;
@@ -49,7 +50,7 @@ import soturi.model.Position;
 
 public class GameMap extends Fragment {
 
-    private final HashMap<String, Drawable> drawableCache = new HashMap<>();
+    private final HashMap<String, BitmapDrawable> drawableCache = new HashMap<>();
     private GameMapFragmentBinding binding;
     private MapView mapView;
     private MainActivity mainActivity;
@@ -302,12 +303,12 @@ public class GameMap extends Fragment {
         timer.cancel();
     }
 
-    private synchronized Drawable getDrawableResource(String path) {
+    private synchronized BitmapDrawable getDrawableResource(String path) {
         return drawableCache.computeIfAbsent(path, ignored -> {
             try (InputStream stream = getClass().getClassLoader().getResourceAsStream(path)) {
-                return Drawable.createFromStream(stream, null);
+                return (BitmapDrawable) Drawable.createFromStream(stream, null);
             } catch (Exception exc) {
-                return ResourcesCompat.getDrawable(getResources(), R.mipmap.ic_launcher, null);
+                return (BitmapDrawable) ResourcesCompat.getDrawable(getResources(), R.mipmap.ic_launcher, null);
             }
         });
     }
@@ -317,7 +318,7 @@ public class GameMap extends Fragment {
 
         for (Enemy e : enemies) {
             EnemyType type = mainActivity.gameRegistry.getEnemyType(e);
-            Drawable d = getDrawableResource(type.gfxName());
+            BitmapDrawable d = getDrawableResource(type.gfxName());
 
             EnemyOverlay overlay;
 
@@ -412,7 +413,7 @@ public class GameMap extends Fragment {
 
             clusterer.getItems().clear();
             List<Enemy> enemies = mainActivity.getEnemyList().getEnemiesWithinRange(1000, centerPosition);
-            
+
             enemyAppearsConsumer(enemies);
 
             return true;
