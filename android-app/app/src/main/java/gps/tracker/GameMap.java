@@ -278,6 +278,9 @@ public class GameMap extends Fragment {
         mainActivity.setEnemyDisappearsConsumer(this::enemyDisappearsConsumer);
 
         mapView.setMapListener(new MarkerLoader(0));
+
+        mapView.setBuiltInZoomControls(true);
+        mapView.setMultiTouchControls(true);
     }
 
     @Override
@@ -409,9 +412,7 @@ public class GameMap extends Fragment {
 
             clusterer.getItems().clear();
             List<Enemy> enemies = mainActivity.getEnemyList().getEnemiesWithinRange(1000, centerPosition);
-
-            System.out.println("Enemies within range: " + enemies.size());
-
+            
             enemyAppearsConsumer(enemies);
 
             return true;
