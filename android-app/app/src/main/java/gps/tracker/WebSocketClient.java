@@ -10,6 +10,7 @@ import okhttp3.WebSocket;
 import okhttp3.WebSocketListener;
 import okio.ByteString;
 import soturi.common.Jackson;
+import soturi.common.VersionInfo;
 import soturi.model.Position;
 import soturi.model.messages_to_client.MessageToClient;
 import soturi.model.messages_to_client.MessageToClientHandler;
@@ -52,6 +53,7 @@ public class WebSocketClient extends WebSocketListener {
                 .header("epic-password", userPassword)
                 .header("epic-latitude", String.valueOf(lastPosition.latitude()))
                 .header("epic-longitude", String.valueOf(lastPosition.longitude()))
+                .header("epic-version", String.valueOf(VersionInfo.compilationTime))
                 .url("wss://" + urlPrefix + "soturi.online/ws/game")
                 .build();
 
