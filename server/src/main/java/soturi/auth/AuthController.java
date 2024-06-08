@@ -45,5 +45,6 @@ public class AuthController {
     }
 
 
+
     public record LogInForm(String username, String password, String redirect) { }
 }

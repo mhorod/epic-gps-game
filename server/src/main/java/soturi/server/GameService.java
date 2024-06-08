@@ -4,8 +4,8 @@ import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
-import soturi.common.VersionInfo;
 import soturi.common.Registry;
+import soturi.common.VersionInfo;
 import soturi.model.Config;
 import soturi.model.Enemy;
 import soturi.model.EnemyId;
@@ -33,7 +33,6 @@ import soturi.server.geo.MonsterManager;
 
 import java.time.Duration;
 import java.time.Instant;
-import java.time.temporal.TemporalUnit;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -53,8 +52,8 @@ public class GameService {
     private final DynamicConfig dynamicConfig;
     private final CityProvider cityProvider;
 
-    private Registry registry;
-    private MonsterManager monsterManager;
+    private volatile Registry registry;
+    private volatile MonsterManager monsterManager;
 
     public GameService(PlayerRepository repository, FightRepository fightRepository, DynamicConfig dynamicConfig, CityProvider cityProvider) {
         log.info("Compilation time: {}", VersionInfo.compilationTime);
@@ -71,7 +70,7 @@ public class GameService {
     private final Map<String, PlayerSession> sessions = new LinkedHashMap<>();
     private final Map<String, MessageToClientHandler> observers = new LinkedHashMap<>();
 
-    private Instant questsDeadline = Instant.now();
+    private volatile Instant questsDeadline = Instant.now();
     private final Map<String, List<QuestStatus>> playerQuests = new LinkedHashMap<>();
 
     public void kickAllPlayers() {
@@ -98,6 +97,8 @@ public class GameService {
             session.sender.setConfig(config);
         for (MessageToClientHandler obs : observers.values())
             obs.setConfig(config);
+
+        clearQuests();
     }
 
     public synchronized List<Enemy> getEnemies() {
@@ -138,7 +139,7 @@ public class GameService {
         }
     }
 
-    private long secondCount = 0;
+    private volatile long secondCount = 0;
     private synchronized void doTickEverySecond() {
         secondCount++;
 
@@ -154,12 +155,19 @@ public class GameService {
         if (hpDelay > 0 && secondCount % hpDelay == 0)
             healPlayers();
 
-        regenerateQuests();
+        if (Instant.now().isAfter(questsDeadline))
+            clearQuests();
     }
 
+    private volatile boolean doTick = true;
     @Scheduled(fixedDelay = 1000)
     private synchronized void tickEverySecond() {
-        doTickEverySecond();
+        if (doTick)
+            doTickEverySecond();
+    }
+
+    public synchronized void setDoTick(boolean doTick) {
+        this.doTick = doTick;
     }
 
     private synchronized void giveFreeXp() {
@@ -174,18 +182,19 @@ public class GameService {
         }
     }
 
-    public synchronized void regenerateQuests() {
-        Instant now = Instant.now();
-        if (questsDeadline.isAfter(now))
-            return;
-        log.info("regenerateQuests()");
+    public synchronized void clearQuests() {
+        log.info("clearQuests()");
 
         playerQuests.clear();
 
         long questDuration = registry.getQuestDurationInSeconds();
-        long approxDeadline = now.getEpochSecond() + questDuration * 3 / 2;
+        long approxDeadline = Instant.now().getEpochSecond() + questDuration * 3 / 2;
         questsDeadline = Instant.ofEpochSecond(approxDeadline / questDuration * questDuration);
         sessions.values().forEach(PlayerSession::sendUpdates);
+    }
+
+    public synchronized void setQuests(String playerName, List<QuestStatus> quests) {
+        playerQuests.put(playerName, new ArrayList<>(quests));
     }
 
     private long nextEnemyIdLong = 0;
@@ -220,7 +229,6 @@ public class GameService {
     private synchronized void unregisterEnemy(EnemyId enemyId) {
         unregisterEnemies(List.of(enemyId));
     }
-
 
     private synchronized void unregisterEnemies(List<EnemyId> enemyIds) {
         if (enemyIds.isEmpty())
@@ -296,11 +304,7 @@ public class GameService {
         }
 
         public List<QuestStatus> getQuestsStatuses() {
-            List<QuestStatus> copy = new ArrayList<>(
-                playerQuests.computeIfAbsent(playerName, _name -> generateQuests())
-            );
-            playerQuests.put(playerName, copy);
-            return copy;
+            return playerQuests.computeIfAbsent(playerName, _name -> generateQuests());
         }
 
         private void updateQuests(Function<QuestStatus, Long> visitor) {
@@ -310,11 +314,12 @@ public class GameService {
                 if (status.isFinished())
                     continue;
                 long newProgress = status.progress() + visitor.apply(status);
+                newProgress = Math.max(0, Math.min(newProgress, status.goal()));
 
-                QuestStatus newStatus = status.withProgress(Math.max(0, Math.min(newProgress, status.goal())));
+                QuestStatus newStatus = status.withProgress(newProgress);
+                list.set(i, newStatus);
                 if (newStatus.isFinished())
                     applyReward(newStatus.reward());
-                list.set(i, newStatus);
             }
         }
 

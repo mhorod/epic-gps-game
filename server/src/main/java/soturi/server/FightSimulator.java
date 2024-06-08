@@ -6,9 +6,9 @@ import lombok.Setter;
 import soturi.common.Registry;
 import soturi.model.Enemy;
 import soturi.model.FightResult;
-import soturi.model.Reward;
 import soturi.model.Player;
 import soturi.model.Result;
+import soturi.model.Reward;
 
 @AllArgsConstructor
 public class FightSimulator {

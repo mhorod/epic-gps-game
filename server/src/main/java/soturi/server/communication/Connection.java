@@ -6,6 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
+import soturi.common.VersionInfo;
 import soturi.model.Position;
 import soturi.model.messages_to_client.Disconnect;
 import soturi.model.messages_to_client.EnemiesAppear;
@@ -20,6 +21,7 @@ import soturi.server.GameService;
 import java.io.IOException;
 import java.time.Duration;
 import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
@@ -50,6 +52,17 @@ public class Connection {
             return null;
         }
     }
+    private static boolean isOutdated(String compilationTime) {
+        LocalDateTime userTime = LocalDateTime.MIN;
+        LocalDateTime serverTime = VersionInfo.appCompilationTime().orElse(LocalDateTime.MIN);
+
+        try {
+            userTime = LocalDateTime.parse(compilationTime);
+        }
+        catch (Exception ignored) { }
+
+        return userTime.isBefore(serverTime);
+    }
 
     public Connection(WebSocketSession session, GameService gameService, ObjectMapper objectMapper) {
         synchronized (session) {
@@ -63,6 +76,7 @@ public class Connection {
             String password = headers.getFirst("epic-password");
             String latitude = headers.getFirst("epic-latitude");
             String longitude = headers.getFirst("epic-longitude");
+            String compilationTime = headers.getFirst("epic-version");
 
             Position position = positionFromStrings(latitude, longitude);
             MessageToClientHandler handler = new MessageToClientFactory(queue::add);
@@ -73,6 +87,9 @@ public class Connection {
                 scheduleToClose();
 
             Thread.ofVirtual().start(this::work);
+
+            if (isOutdated(compilationTime))
+                handler.error("Your app is outdated, download new version from https://soturi.online/static/app.apk");
         }
     }
 

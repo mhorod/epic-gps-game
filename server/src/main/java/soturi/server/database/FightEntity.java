@@ -8,7 +8,7 @@ import jakarta.persistence.Lob;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.SneakyThrows;
-import soturi.JacksonConfig;
+import soturi.common.Jackson;
 import soturi.model.FightRecord;
 
 import java.util.Optional;
@@ -25,12 +25,12 @@ public class FightEntity {
 
     @SneakyThrows(JacksonException.class)
     public FightEntity(FightRecord record) {
-        setFight(JacksonConfig.mapper.writeValueAsString(record));
+        setFight(Jackson.mapper.writeValueAsString(record));
     }
 
     public Optional<FightRecord> getFightRecord() {
         try {
-            return Optional.of(JacksonConfig.mapper.readValue(getFight(), FightRecord.class));
+            return Optional.of(Jackson.mapper.readValue(getFight(), FightRecord.class));
         }
         catch (JacksonException ignored) {
             return Optional.empty();

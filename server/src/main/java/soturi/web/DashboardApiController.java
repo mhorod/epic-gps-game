@@ -1,6 +1,7 @@
 package soturi.web;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.annotation.security.RolesAllowed;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -40,11 +41,13 @@ public class DashboardApiController {
     private final ObjectMapper mapper;
     private final FightRepository fightRepository;
 
+    @RolesAllowed("ADMIN")
     @GetMapping("/v1/enemies")
     public List<Enemy> getEnemies() {
         return gameService.getEnemies();
     }
 
+    @RolesAllowed("ADMIN")
     @GetMapping("/v1/players")
     public List<PlayerWithPosition> getPlayers() {
         List<PlayerWithPosition> players = gameService.getPlayers();
@@ -58,22 +61,26 @@ public class DashboardApiController {
             return players;
     }
 
+    @RolesAllowed("ADMIN")
     @GetMapping("/v1/registered-players")
     public List<Player> getRegisteredPlayers() {
         return gameService.getRegisteredPlayers();
     }
 
+    @RolesAllowed("ADMIN")
     @GetMapping("/v1/areas")
     public List<PolygonWithDifficulty> getAreas() {
         return gameService.getAreas();
     }
 
+    @RolesAllowed("ADMIN")
     @GetMapping("/v1/wkt-areas")
     public String getAreasAsWKT() {
         List<Polygon> polys = gameService.getAreas().stream().map(PolygonWithDifficulty::polygon).toList();
         return Polygon.asWKT(polys);
     }
 
+    @RolesAllowed("ADMIN")
     @GetMapping("/v1/polygon-wkt-converter")
     public String getPolygonAsWKT(String name) {
         Polygon poly = dynamicConfig.getRegistry().getPolygonById(new PolygonId(name));
@@ -82,6 +89,7 @@ public class DashboardApiController {
         return poly.asWKT();
     }
 
+    @RolesAllowed("ADMIN")
     @PostMapping("/v1/config-kv")
     public void changeConfig(String key, String value) throws Exception {
         Config config = dynamicConfig.getRegistry().getConfig();
@@ -93,6 +101,7 @@ public class DashboardApiController {
         setConfig(newConfig);
     }
 
+    @RolesAllowed("ADMIN")
     @PostMapping("/v1/reload-config")
     public void reloadConfigFile() {
         Config config = dynamicConfig.tryToLoad().orElseThrow();
@@ -105,11 +114,13 @@ public class DashboardApiController {
         dynamicConfig.tryToDump(config);
     }
 
+    @RolesAllowed("ADMIN")
     @GetMapping("/v1/config")
     public Config getConfig() {
         return dynamicConfig.getRegistry().getConfig();
     }
 
+    @RolesAllowed("ADMIN")
     @GetMapping("/v1/fight-list")
     public List<FightRecord> getFightList(int limit) throws  Exception {
         System.out.println(mapper.writeValueAsString(Instant.now()));
@@ -121,11 +132,13 @@ public class DashboardApiController {
             .toList();
     }
 
+    @RolesAllowed("ADMIN")
     @PostMapping("/v1/kill-all-enemies")
     public void killAllEnemies() {
         gameService.unregisterAllEnemies();
     }
 
+    @RolesAllowed("ADMIN")
     @GetMapping("/v1/info/xp")
     public String xpInfo() { // TODO quick and dirty, to rewrite
         Registry registry = dynamicConfig.getRegistry();
