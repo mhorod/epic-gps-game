@@ -8,8 +8,8 @@ import org.junit.runner.RunWith;
 import static org.junit.Assert.*;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.module.androidrecord.AndroidRecordModule;
 
+import soturi.common.Jackson;
 import soturi.model.EnemyId;
 import soturi.model.messages_to_server.AttackEnemy;
 import soturi.model.messages_to_server.MessageToServer;
@@ -23,7 +23,7 @@ import soturi.model.messages_to_server.MessageToServer;
 public class ExampleInstrumentedTest {
     @Test
     public void serializationCycle() throws Throwable {
-        ObjectMapper normalMapper = new ObjectMapper().registerModule(new AndroidRecordModule());
+        ObjectMapper normalMapper = Jackson.mapper;
         MessageToServer message = new AttackEnemy(new EnemyId(42));
         String serial = normalMapper.writeValueAsString(message);
         MessageToServer deserial = normalMapper.readValue(serial, MessageToServer.class);

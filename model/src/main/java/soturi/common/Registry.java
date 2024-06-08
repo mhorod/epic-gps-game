@@ -7,10 +7,10 @@ import soturi.model.EnemyType;
 import soturi.model.EnemyTypeId;
 import soturi.model.Item;
 import soturi.model.ItemId;
-import soturi.model.Reward;
 import soturi.model.Polygon;
 import soturi.model.PolygonId;
 import soturi.model.Position;
+import soturi.model.Reward;
 import soturi.model.Statistics;
 
 import java.util.ArrayList;

@@ -13,11 +13,12 @@ import soturi.model.EnemyType;
 import soturi.model.FightResult;
 import soturi.model.Item;
 import soturi.model.ItemId;
-import soturi.model.Reward;
 import soturi.model.Player;
 import soturi.model.PolygonId;
 import soturi.model.Position;
+import soturi.model.QuestStatus;
 import soturi.model.Result;
+import soturi.model.Reward;
 import soturi.model.Statistics;
 import soturi.model.messages_to_client.Disconnect;
 import soturi.model.messages_to_client.EnemiesDisappear;
@@ -63,13 +64,12 @@ public class ServerTests {
     void cleanGameService() {
         Config defaultConfig = dynamicConfig.getDefaultConfig();
         Config testConfig = defaultConfig
-            .withGiveFreeXpDelayInSeconds(0)
-            .withSpawnEnemyDelayInSeconds(0)
             .withQuestDurationInSeconds(24 * 3600)
-            .withHealDelayInSeconds(0)
-            .withGameAreaId(POLAND);
+            .withGameAreaId(POLAND)
+            .withGameAreaSplitLvl(4);
 
         gameService.setConfig(testConfig);
+        gameService.setDoTick(false);
         registry = dynamicConfig.getRegistry();
         fightSimulator = new FightSimulator(registry);
 
@@ -383,5 +383,69 @@ public class ServerTests {
         Player p2 = gameService.getPlayers().get(0).player();
 
         assertThat(p2.statistics()).isEqualTo(p1.statistics().add(good.statistics()));
+    }
+    @Test
+    void quests_are_preserved() {
+        QuestStatus quest = new QuestStatus("Pokonaj 2 przeciwników", 0, 2, new Reward(1000000));
+        gameService.setQuests("a", List.of(quest));
+
+        MessageToClientHandler received = mock();
+        gameService.login("a", "", Position.KRAKOW, received);
+        verify(received, atLeastOnce()).questUpdate(any(), eq(List.of(quest)));
+    }
+    @Test
+    void quests_progression() {
+        QuestStatus quest = new QuestStatus("Pokonaj 2 przeciwników", 0, 2, new Reward(1000000));
+        gameService.setQuests("a", List.of(quest));
+
+        MessageToClientHandler received = mock();
+        gameService.login("a", "", Position.KRAKOW, received);
+
+        Enemy enemy = newEnemy(1, Position.KRAKOW, new EnemyId(0));
+        gameService.registerEnemy(enemy);
+        healPlayers();
+        gameService.receiveFrom("a").attackEnemy(new EnemyId(0));
+
+        verify(received, atLeastOnce()).questUpdate(any(), eq(List.of(quest.withProgress(1))));
+        assertThat(gameService.getPlayers().get(0).player().xp()).isLessThan(quest.reward().xp());
+    }
+    @Test
+    void quests_finish_and_give_rewards() {
+        QuestStatus quest = new QuestStatus("Pokonaj 2 przeciwników", 0, 2, new Reward(1000000));
+        gameService.setQuests("a", List.of(quest));
+
+        MessageToClientHandler received = mock();
+        gameService.login("a", "", Position.KRAKOW, received);
+
+        Enemy enemy1 = newEnemy(1, Position.KRAKOW, new EnemyId(0));
+        gameService.registerEnemy(enemy1);
+        healPlayers();
+        gameService.receiveFrom("a").attackEnemy(new EnemyId(0));
+
+        Enemy enemy2 = newEnemy(1, Position.KRAKOW, new EnemyId(1));
+        gameService.registerEnemy(enemy2);
+        healPlayers();
+        gameService.receiveFrom("a").attackEnemy(new EnemyId(1));
+
+        verify(received, atLeastOnce()).questUpdate(any(), eq(List.of(quest.withProgress(2))));
+        assertThat(gameService.getPlayers().get(0).player().xp()).isGreaterThanOrEqualTo(quest.reward().xp());
+    }
+    @Test
+    void double_quest_completion() {
+        QuestStatus quest = new QuestStatus("Pokonaj 1 przeciwników", 0, 1, new Reward(1000000));
+        gameService.setQuests("a", List.of(quest, quest));
+
+        MessageToClientHandler received = mock();
+        gameService.login("a", "", Position.KRAKOW, received);
+
+        Enemy enemy = newEnemy(1, Position.KRAKOW, new EnemyId(0));
+        gameService.registerEnemy(enemy);
+        healPlayers();
+        gameService.receiveFrom("a").attackEnemy(new EnemyId(0));
+
+        verify(received, atLeastOnce()).questUpdate(any(), eq(List.of(quest.withProgress(1), quest.withProgress(1))));
+        assertThat(gameService.getPlayers().get(0).player().xp())
+            .isGreaterThanOrEqualTo(quest.reward().xp() * 2)
+            .isLessThan(quest.reward().xp() * 3);
     }
 }

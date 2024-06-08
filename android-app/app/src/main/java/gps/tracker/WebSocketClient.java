@@ -1,9 +1,5 @@
 package gps.tracker;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.module.androidrecord.AndroidRecordModule;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-
 import java.util.concurrent.TimeUnit;
 
 import lombok.SneakyThrows;
@@ -13,6 +9,8 @@ import okhttp3.Response;
 import okhttp3.WebSocket;
 import okhttp3.WebSocketListener;
 import okio.ByteString;
+import soturi.common.Jackson;
+import soturi.common.VersionInfo;
 import soturi.model.Position;
 import soturi.model.messages_to_client.MessageToClient;
 import soturi.model.messages_to_client.MessageToClientHandler;
@@ -21,9 +19,6 @@ import soturi.model.messages_to_server.MessageToServerFactory;
 import soturi.model.messages_to_server.UpdateRealPosition;
 
 public class WebSocketClient extends WebSocketListener {
-    private final ObjectMapper objectMapper = new ObjectMapper()
-            .registerModule(new AndroidRecordModule())
-            .registerModule(new JavaTimeModule());
     private final MessageToClientHandler handler;
     private final String urlPrefix;
     public volatile String userName = "helloall2", userPassword = "password";
@@ -58,6 +53,7 @@ public class WebSocketClient extends WebSocketListener {
                 .header("epic-password", userPassword)
                 .header("epic-latitude", String.valueOf(lastPosition.latitude()))
                 .header("epic-longitude", String.valueOf(lastPosition.longitude()))
+                .header("epic-version", String.valueOf(VersionInfo.compilationTime))
                 .url("wss://" + urlPrefix + "soturi.online/ws/game")
                 .build();
 
@@ -77,7 +73,7 @@ public class WebSocketClient extends WebSocketListener {
     @SneakyThrows
     public void onMessage(WebSocket webSocket, String text) {
         System.out.println("[REC] " + text);
-        MessageToClient message = objectMapper.readValue(text, MessageToClient.class);
+        MessageToClient message = Jackson.mapper.readValue(text, MessageToClient.class);
         System.out.println("[REC] " + message);
         message.process(handler);
     }
@@ -108,7 +104,7 @@ public class WebSocketClient extends WebSocketListener {
             lastPosition = updateRealPosition.position();
         ensureSocketOpened();
 
-        String asText = objectMapper.writeValueAsString(message);
+        String asText = Jackson.mapper.writeValueAsString(message);
         if (!webSocket.send(asText))
             webSocket = null;
     }

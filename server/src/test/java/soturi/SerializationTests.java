@@ -3,6 +3,7 @@ package soturi;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder;
+import soturi.common.Jackson;
 import soturi.model.Config;
 import soturi.model.EnemyId;
 import soturi.model.QuestStatus;
@@ -16,7 +17,7 @@ import java.time.Duration;
 import static org.assertj.core.api.Assertions.assertThat;
 
 class SerializationTests {
-    ObjectMapper objectMapper = new JacksonConfig().objectMapper(new Jackson2ObjectMapperBuilder());
+    ObjectMapper objectMapper = Jackson.mapper;
 
     @Test
     public void serializationCycle() throws Throwable {
