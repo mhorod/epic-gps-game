@@ -16,12 +16,19 @@ import androidx.navigation.fragment.NavHostFragment;
 
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 
+import org.osmdroid.api.IGeoPoint;
 import org.osmdroid.api.IMapController;
+import org.osmdroid.bonuspack.clustering.RadiusMarkerClusterer;
+import org.osmdroid.events.DelayedMapListener;
 import org.osmdroid.events.MapEventsReceiver;
+import org.osmdroid.events.MapListener;
+import org.osmdroid.events.ScrollEvent;
+import org.osmdroid.events.ZoomEvent;
 import org.osmdroid.tileprovider.MapTileProviderBasic;
 import org.osmdroid.util.GeoPoint;
 import org.osmdroid.views.MapView;
 import org.osmdroid.views.overlay.Marker;
+import org.osmdroid.views.overlay.Overlay;
 import org.osmdroid.views.overlay.mylocation.IMyLocationConsumer;
 import org.osmdroid.views.overlay.mylocation.IMyLocationProvider;
 import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay;
@@ -39,6 +46,8 @@ import gps.tracker.slow_clusterer.SlowClusterer;
 import soturi.model.Enemy;
 import soturi.model.EnemyType;
 import soturi.model.Player;
+import soturi.model.Polygon;
+import soturi.model.Position;
 
 public class GameMap extends Fragment {
 
@@ -47,7 +56,6 @@ public class GameMap extends Fragment {
     private MapView mapView;
     private MainActivity mainActivity;
     private Timer timer;
-    private MapEventsReceiver mapEventsReceiver;
     private Timer refreshLocationTimer;
     private MyLocationNewOverlay myLocationOverlay;
     private EnemyList enemyList;

@@ -46,6 +46,11 @@ import gps.tracker.slow_clusterer.Cluster;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.SneakyThrows;
+import okhttp3.MediaType;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import soturi.common.Jackson;
 import soturi.common.Registry;
 import soturi.model.Config;
 import soturi.model.Enemy;
@@ -67,8 +72,6 @@ public class MainActivity extends AppCompatActivity {
     private final ItemManager itemManager = new ItemManager(this);
     @Getter
     private final EnemyList enemyList = new EnemyList();
-    @Getter
-    private Cluster topCluster = Cluster.of();
     @Getter
     public Registry gameRegistry;
     public Reward currentReward; // FIXME: Yeah, I love global variables -- it is used in logic for Quests to properly render the loot
@@ -344,7 +347,6 @@ public class MainActivity extends AppCompatActivity {
     public void onDisconnect() {
         this.webSocketClient = null;
         enemyList.clear();
-        topCluster = Cluster.of();
 
         if (onDisconnectRunnable != null) {
             onDisconnectRunnable.run();

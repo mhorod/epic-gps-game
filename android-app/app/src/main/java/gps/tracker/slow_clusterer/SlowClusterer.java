@@ -33,7 +33,7 @@ public class SlowClusterer extends Overlay {
     public SlowClusterer(MainActivity ctx) {
         this.ctx = ctx;
         this.radiusMarkerClusterer = new RadiusMarkerClusterer(ctx);
-        this.topCluster = ctx.getTopCluster();
+        this.topCluster = Cluster.of();
     }
 
     public void setMaxIcons(int maxIcons) {
