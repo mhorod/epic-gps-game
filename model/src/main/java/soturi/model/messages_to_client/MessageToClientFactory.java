@@ -27,12 +27,24 @@ public final class MessageToClientFactory implements MessageToClientHandler {
 
     @Override
     public void enemiesAppear(List<Enemy> enemies) {
-        consumer.accept(new EnemiesAppear(enemies));
+        if (enemies.size() < 2000) {
+            consumer.accept(new EnemiesAppear(enemies));
+            return;
+        }
+        int mid = enemies.size() / 2;
+        enemiesAppear(enemies.subList(0, mid));
+        enemiesAppear(enemies.subList(mid, enemies.size()));
     }
 
     @Override
     public void enemiesDisappear(List<EnemyId> enemyIds) {
-        consumer.accept(new EnemiesDisappear(enemyIds));
+        if (enemyIds.size() < 2000) {
+            consumer.accept(new EnemiesDisappear(enemyIds));
+            return;
+        }
+        int mid = enemyIds.size() / 2;
+        enemiesDisappear(enemyIds.subList(0, mid));
+        enemiesDisappear(enemyIds.subList(mid, enemyIds.size()));
     }
 
     @Override
