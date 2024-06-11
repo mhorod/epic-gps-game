@@ -34,6 +34,7 @@
             android:layout_marginBottom="65dp"
             android:foregroundGravity="center"
             android:text="Dev Login"
+            android:visibility="invisible"
             app:layout_constraintBottom_toTopOf="@+id/textView"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.555"

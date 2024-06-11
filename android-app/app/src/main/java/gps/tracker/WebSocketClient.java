@@ -44,7 +44,7 @@ public class WebSocketClient extends WebSocketListener {
             throw new RuntimeException("position is not known");
 
         OkHttpClient client = new OkHttpClient.Builder()
-                .readTimeout(250, TimeUnit.MILLISECONDS)
+                .readTimeout(1250, TimeUnit.MILLISECONDS)
                 .build();
 
         System.err.println("dziem dobry");

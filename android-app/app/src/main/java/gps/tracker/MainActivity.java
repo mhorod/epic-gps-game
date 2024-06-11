@@ -37,13 +37,20 @@ import java.util.Scanner;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 import gps.tracker.custom_overlays.EnemyOverlay;
 import gps.tracker.databinding.ActivityMainBinding;
 import gps.tracker.simple_listeners.Notifier;
+import gps.tracker.slow_clusterer.Cluster;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.SneakyThrows;
+import okhttp3.MediaType;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import soturi.common.Jackson;
 import soturi.common.Registry;
 import soturi.model.Config;
 import soturi.model.Enemy;
@@ -83,7 +90,7 @@ public class MainActivity extends AppCompatActivity {
     @Setter
     private Consumer<List<Enemy>> enemyAppearsConsumer = null;
     @Setter
-    private Consumer<EnemyOverlay> enemyDisappearsConsumer = null;
+    private Consumer<List<EnemyOverlay>> enemyDisappearsConsumer = null;
     private FragmentManager fragmentManager;
     private Runnable onDisconnectRunnable = null;
     private Consumer<Player> playerConsumer = null;
@@ -146,7 +153,6 @@ public class MainActivity extends AppCompatActivity {
 
         mapConfig.setOsmdroidBasePath(basePath);
         mapConfig.setOsmdroidTileCache(tileCache);
-
     }
 
     private void requestPermissions() {
@@ -373,6 +379,8 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         public synchronized void enemiesAppear(@NonNull List<Enemy> enemies) {
+            if (enemies.size() >= 1000)
+                webSocketClient.send().pong();
             for (Enemy enemy : enemies) {
                 enemyList.addEnemy(enemy, null);
             }
@@ -381,21 +389,19 @@ public class MainActivity extends AppCompatActivity {
                 return;
             }
 
-            new Thread(() -> enemyAppearsConsumer.accept(enemies)).start();
+            enemyAppearsConsumer.accept(enemies);
         }
 
         @Override
         public synchronized void enemiesDisappear(@NonNull List<EnemyId> enemyIds) {
-            enemyIds.forEach(this::enemyDisappears);
-        }
-
-        private void enemyDisappears(EnemyId enemyId) {
+            if (enemyIds.size() >= 1000)
+                webSocketClient.send().pong();
             if (enemyAppearsConsumer == null || enemyDisappearsConsumer == null) {
                 return;
             }
-            EnemyOverlay overlay = enemyList.getOverlay(enemyId);
-            enemyList.removeEnemy(enemyId);
-            enemyDisappearsConsumer.accept(overlay);
+            List<EnemyOverlay> overlays = enemyIds.stream().map(enemyList::getOverlay).collect(Collectors.toList());
+            enemyDisappearsConsumer.accept(overlays);
+            enemyIds.forEach(enemyList::removeEnemy);
         }
 
         @Override

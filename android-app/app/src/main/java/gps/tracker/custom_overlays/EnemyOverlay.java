@@ -59,7 +59,7 @@ public class EnemyOverlay extends CustomOverlay {
             if (canAttack) {
                 builder.setMessage("Proceed with an attack?");
                 builder.setPositiveButton("OK", (dialog, id) -> {
-                    new Thread(() -> onAttack.accept(enemy)).start();
+                    onAttack.accept(enemy);
                     dialog.dismiss();
                 });
                 builder.setNegativeButton("Nope", (dialog, id) -> dialog.dismiss());

@@ -42,6 +42,7 @@ import java.util.TimerTask;
 
 import gps.tracker.custom_overlays.EnemyOverlay;
 import gps.tracker.databinding.GameMapFragmentBinding;
+import gps.tracker.slow_clusterer.SlowClusterer;
 import soturi.model.Enemy;
 import soturi.model.EnemyType;
 import soturi.model.Player;
@@ -55,7 +56,6 @@ public class GameMap extends Fragment {
     private MapView mapView;
     private MainActivity mainActivity;
     private Timer timer;
-    private MapEventsReceiver mapEventsReceiver;
     private Timer refreshLocationTimer;
     private MyLocationNewOverlay myLocationOverlay;
     private EnemyList enemyList;
@@ -227,11 +227,16 @@ public class GameMap extends Fragment {
 
         System.out.println("GameMap onViewCreated");
 
+        SlowClusterer clusterer = new SlowClusterer(mainActivity);
+        clusterer.setMaxIcons(75);
+
+        mainActivity.runOnUiThread(
+                () -> mapView.getOverlays().add(0, clusterer)
+        );
+
         // We don't allow for any funny business when it comes to the map
         List<Enemy> enemies = mainActivity.getEnemyList().getAllEnemies();
-        new Thread(
-                () -> enemyAppearsConsumer(enemies)
-        ).start();
+        enemyAppearsConsumer(enemies);
 
         IMapController controller = mapView.getController();
         controller.setZoom(19.0);
@@ -260,25 +265,10 @@ public class GameMap extends Fragment {
             }
         });
 
-        Polygon area = mainActivity.gameRegistry.getGameArea();
-        int diameter = getDiameterOfPolygon(area);
-
-        System.out.println("Diameter: " + diameter);
-
-        RadiusMarkerClusterer clusterer = new FastClusterer(mainActivity);
-        clusterer.setMaxClusteringZoomLevel(16);
-        clusterer.setRadius(diameter / 100);
-
-        mainActivity.runOnUiThread(
-                () -> mapView.getOverlays().add(clusterer)
-        );
-
         binding.findMeButton.setOnClickListener(v -> centerMapOncePossible());
 
         mainActivity.setEnemyAppearsConsumer(this::enemyAppearsConsumer);
         mainActivity.setEnemyDisappearsConsumer(this::enemyDisappearsConsumer);
-
-        mapView.setMapListener(new MarkerLoader(0));
 
         mapView.setBuiltInZoomControls(true);
         mapView.setMultiTouchControls(true);
@@ -336,14 +326,11 @@ public class GameMap extends Fragment {
 
         mainActivity.runOnUiThread(() -> {
             try {
-                RadiusMarkerClusterer clusterer = (RadiusMarkerClusterer) mapView.getOverlays().get(0);
+                SlowClusterer clusterer = (SlowClusterer) mapView.getOverlays().get(0);
 
                 for (Marker overlay : toAdd) {
                     clusterer.add(overlay);
                 }
-
-                clusterer.invalidate();
-                mapView.invalidate();
             } catch (Throwable e) {
                 // I know why, don't worry
                 NetworkLogger.reportThrowable(e);
@@ -351,36 +338,16 @@ public class GameMap extends Fragment {
         });
     }
 
-    private synchronized void enemyDisappearsConsumer(EnemyOverlay overlay) {
-        RadiusMarkerClusterer clusterer = (RadiusMarkerClusterer) mapView.getOverlays().get(0);
+    private synchronized void enemyDisappearsConsumer(List<EnemyOverlay> overlays) {
+        SlowClusterer clusterer = (SlowClusterer) mapView.getOverlays().get(0);
 
         mainActivity.runOnUiThread(() -> {
             try {
-                clusterer.getItems().remove(overlay);
-                clusterer.invalidate();
-                mapView.invalidate();
+                overlays.forEach(clusterer::remove);
             } catch (Throwable e) {
                 NetworkLogger.reportThrowable(e);
             }
         });
-    }
-
-    private int getDiameterOfPolygon(@NonNull Polygon polygon) {
-        double maxDistance = 0;
-
-        for (Position x : polygon.points()) {
-            for (Position y : polygon.points()) {
-                double distance = x.distance(y);
-                if (distance > maxDistance) {
-                    maxDistance = distance;
-                }
-            }
-        }
-
-        int rounded = (int) maxDistance;
-
-        return Math.max(rounded, 1);
-
     }
 
     private void attackEnemy(@NonNull Enemy e) {
@@ -391,43 +358,6 @@ public class GameMap extends Fragment {
 
     private record GraphicalStats(String hp, String atk, String def, String level,
                                   int progress) {
-    }
-
-    class MarkerLoader extends DelayedMapListener {
-        public MarkerLoader(long delay) {
-            super(new MarkerMapListener(), delay);
-        }
-    }
-
-    private class MarkerMapListener implements MapListener {
-
-        @Override
-        public boolean onScroll(ScrollEvent event) {
-            MapView source = event.getSource();
-
-            IGeoPoint center = source.getMapCenter();
-            Position centerPosition = new Position(center.getLatitude(), center.getLongitude());
-
-            List<Overlay> overlays = source.getOverlays();
-            RadiusMarkerClusterer clusterer;
-            try {
-                clusterer = (RadiusMarkerClusterer) overlays.get(0);
-            } catch (Exception e) {
-                return false;
-            }
-
-            clusterer.getItems().clear();
-            List<Enemy> enemies = mainActivity.getEnemyList().getEnemiesWithinRange(1000, centerPosition);
-
-            enemyAppearsConsumer(enemies);
-
-            return true;
-        }
-
-        @Override
-        public boolean onZoom(ZoomEvent event) {
-            return false;
-        }
     }
 
     class MyLocationProvider implements IMyLocationProvider {

@@ -13,8 +13,8 @@ import java.time.Instant;
 import java.util.List;
 import java.util.function.Consumer;
 
-public final class MessageToClientFactory implements MessageToClientHandler {
-    private final Consumer<MessageToClient> consumer;
+public class MessageToClientFactory implements MessageToClientHandler {
+    protected final Consumer<MessageToClient> consumer;
 
     public MessageToClientFactory(Consumer<MessageToClient> consumer) {
         this.consumer = consumer;
@@ -50,14 +50,9 @@ public final class MessageToClientFactory implements MessageToClientHandler {
         consumer.accept(new FightInfo(enemyId, fightResult));
     }
 
-    private MeUpdate lastMeUpdate;
     @Override
     public void meUpdate(Player me) {
-        MeUpdate newMeUpdate = new MeUpdate(me);
-        if (newMeUpdate.equals(lastMeUpdate))
-            return;
-        lastMeUpdate = newMeUpdate;
-        consumer.accept(newMeUpdate);
+        consumer.accept(new MeUpdate(me));
     }
 
     @Override
@@ -80,14 +75,9 @@ public final class MessageToClientFactory implements MessageToClientHandler {
         consumer.accept(new Pong());
     }
 
-    private QuestUpdate lastQuestUpdate;
     @Override
     public void questUpdate(Instant deadline, List<QuestStatus> quests) {
-        QuestUpdate newQuestUpdate = new QuestUpdate(deadline, quests);
-        if (newQuestUpdate.equals(lastQuestUpdate))
-            return;
-        lastQuestUpdate = newQuestUpdate;
-        consumer.accept(newQuestUpdate);
+        consumer.accept(new QuestUpdate(deadline, quests));
     }
 
     @Override

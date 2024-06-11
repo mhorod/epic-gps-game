@@ -24,6 +24,7 @@ import soturi.model.Statistics;
 import soturi.model.messages_to_client.MessageToClientHandler;
 import soturi.model.messages_to_server.MessageToServerFactory;
 import soturi.model.messages_to_server.MessageToServerHandler;
+import soturi.server.communication.MessageToClientCacheSplitLayer;
 import soturi.server.database.FightEntity;
 import soturi.server.database.FightRepository;
 import soturi.server.database.PlayerEntity;
@@ -36,11 +37,13 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Random;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
@@ -204,10 +207,11 @@ public class GameService {
 
     private synchronized void spawnEnemies() {
         Instant start = Instant.now();
-        registerEnemies(monsterManager.generateEnemies());
-        long mss = Duration.between(start, Instant.now()).toMillis();
-        if (mss >= 5)
-            log.info("spawnEnemies() took {}ms", mss);
+        List<Enemy> generated = monsterManager.generateEnemies();
+        registerEnemies(generated);
+        long ms = Duration.between(start, Instant.now()).toMillis();
+
+        log.info("spawnEnemies() took {}ms, generated {} enemies", ms, generated.size());
     }
 
     public synchronized void registerEnemy(Enemy enemy) {
@@ -221,7 +225,7 @@ public class GameService {
         enemies.forEach(monsterManager::registerEnemy);
 
         for (var session : sessions.values())
-            session.sender.enemiesAppear(enemies);
+            session.enemiesAppear(enemies);
         for (var sender : observers.values())
             sender.enemiesAppear(enemies);
     }
@@ -237,7 +241,7 @@ public class GameService {
         enemyIds.forEach(monsterManager::unregisterEnemy);
 
         for (var session : sessions.values())
-            session.sender.enemiesDisappear(enemyIds);
+            session.enemiesDisappear(enemyIds);
         for (var sender : observers.values())
             sender.enemiesDisappear(enemyIds);
     }
@@ -294,9 +298,9 @@ public class GameService {
             Collections.shuffle(rewards);
 
             List<QuestStatus> list = new ArrayList<>(List.of(
-                new QuestStatus("Pokonaj %d przeciwników typu %s".formatted(cntEnemyType, enemyType.name()), 0, cntEnemyType, rewards.get(0)),
-                new QuestStatus("Pokonaj %d przeciwników".formatted(cntEnemy), 0, cntEnemy, rewards.get(1)),
-                new QuestStatus("Zdobądź nowy poziom", 0, 1, rewards.get(2))
+                new QuestStatus("Beat %d enemies of type %s".formatted(cntEnemyType, enemyType.name()), 0, cntEnemyType, rewards.get(0)),
+                new QuestStatus("Beat %d enemies".formatted(cntEnemy), 0, cntEnemy, rewards.get(1)),
+                new QuestStatus("Gain new lvl", 0, 1, rewards.get(2))
             ));
 
             Collections.shuffle(list);
@@ -323,6 +327,8 @@ public class GameService {
             }
         }
 
+        private final Set<EnemyId> visibleEnemies = new HashSet<>();
+        private Position lastFullUpdate;
         private void sendUpdates() {
             playerEntity = repository.save(playerEntity);
 
@@ -332,6 +338,24 @@ public class GameService {
             sender.questUpdate(questsDeadline, getQuestsStatuses());
             for (var sender : observers.values())
                 sender.playerUpdate(me, position);
+
+            if (lastFullUpdate == null || lastFullUpdate.distance(position) > registry.getVisibilityRefreshRangeInMeters()) {
+                lastFullUpdate = position;
+                enemiesAppear(getEnemies());
+            }
+        }
+
+        public void enemiesDisappear(List<EnemyId> enemyIds) {
+            enemyIds = enemyIds.stream().filter(visibleEnemies::remove).toList();
+            sender.enemiesDisappear(enemyIds);
+        }
+
+        public void enemiesAppear(List<Enemy> enemies) {
+            enemies = enemies.stream()
+                .filter(e -> e.position().distance(position) < registry.getVisibilityRangeInMeters())
+                .filter(e -> visibleEnemies.add(e.enemyId()))
+                .toList();
+            sender.enemiesAppear(enemies);
         }
 
         public void applySetEquipment(List<ItemId> equipped, List<ItemId> inventory) {
@@ -356,7 +380,7 @@ public class GameService {
             playerEntity.setXp(playerEntity.getXp() + xp);
             long lvlAfter = registry.getLvlFromXp(playerEntity.getXp());
             updateQuests(s -> {
-                if (!s.quest().equals("Zdobądź nowy poziom"))
+                if (!s.quest().equals("Gain new lvl"))
                     return 0L;
                 return lvlAfter - lvlBefore;
             });
@@ -397,7 +421,7 @@ public class GameService {
 
                 EnemyType type = registry.getEnemyType(enemy);
                 updateQuests(s -> {
-                    if (s.quest().endsWith("przeciwników") || s.quest().endsWith(type.name()))
+                    if (s.quest().endsWith("enemies") || s.quest().endsWith(type.name()))
                         return 1L;
                     return 0L;
                 });
@@ -512,12 +536,12 @@ public class GameService {
         sessions.put(name, session);
         sender.setConfig(registry.getConfig());
         session.sendUpdates();
-
-        sender.enemiesAppear(getEnemies());
     }
 
     public synchronized boolean login(String name, String password,
-                                      Position initialPosition, @NonNull MessageToClientHandler sender) {
+                                      Position initialPosition, @NonNull MessageToClientHandler networkSender) {
+        MessageToClientHandler sender = new MessageToClientCacheSplitLayer(m -> m.process(networkSender));
+
         if (name == null || name.isEmpty() || password == null || initialPosition == null) {
             sender.error("null data passed");
             return false;
@@ -550,7 +574,9 @@ public class GameService {
             observer.playerDisappears(playerName);
     }
 
-    public synchronized void addObserver(String id, MessageToClientHandler observer) {
+    public synchronized void addObserver(String id, MessageToClientHandler networkObserver) {
+        MessageToClientHandler observer = new MessageToClientCacheSplitLayer(m -> m.process(networkObserver));
+
         if (observers.put(id, observer) != null)
             throw new RuntimeException();
 

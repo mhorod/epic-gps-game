@@ -7,6 +7,8 @@ public record Polygon(List<Position> points) {
         if (points.size() < 3)
             throw new RuntimeException("attempting to construct invalid polygon");
     }
+
+    // https://wktmap.com/
     public String asWKT() {
         StringBuilder sb = new StringBuilder("POLYGON ((");
         for (Position pos : points)

@@ -76,6 +76,7 @@ public class ServerTests {
         gameService.kickAllObservers();
         gameService.kickAllPlayers();
         gameService.unregisterAllEnemies();
+        gameService.clearQuests();
         repository.deleteAll();
     }
 
@@ -386,7 +387,7 @@ public class ServerTests {
     }
     @Test
     void quests_are_preserved() {
-        QuestStatus quest = new QuestStatus("Pokonaj 2 przeciwników", 0, 2, new Reward(1000000));
+        QuestStatus quest = new QuestStatus("Beat 2 enemies", 0, 2, new Reward(1000000));
         gameService.setQuests("a", List.of(quest));
 
         MessageToClientHandler received = mock();
@@ -395,7 +396,7 @@ public class ServerTests {
     }
     @Test
     void quests_progression() {
-        QuestStatus quest = new QuestStatus("Pokonaj 2 przeciwników", 0, 2, new Reward(1000000));
+        QuestStatus quest = new QuestStatus("Beat 2 enemies", 0, 2, new Reward(1000000));
         gameService.setQuests("a", List.of(quest));
 
         MessageToClientHandler received = mock();
@@ -411,7 +412,7 @@ public class ServerTests {
     }
     @Test
     void quests_finish_and_give_rewards() {
-        QuestStatus quest = new QuestStatus("Pokonaj 2 przeciwników", 0, 2, new Reward(1000000));
+        QuestStatus quest = new QuestStatus("Beat 2 enemies", 0, 2, new Reward(1000000));
         gameService.setQuests("a", List.of(quest));
 
         MessageToClientHandler received = mock();
@@ -432,7 +433,7 @@ public class ServerTests {
     }
     @Test
     void double_quest_completion() {
-        QuestStatus quest = new QuestStatus("Pokonaj 1 przeciwników", 0, 1, new Reward(1000000));
+        QuestStatus quest = new QuestStatus("Beat 1 enemies", 0, 1, new Reward(1000000));
         gameService.setQuests("a", List.of(quest, quest));
 
         MessageToClientHandler received = mock();
@@ -447,5 +448,25 @@ public class ServerTests {
         assertThat(gameService.getPlayers().get(0).player().xp())
             .isGreaterThanOrEqualTo(quest.reward().xp() * 2)
             .isLessThan(quest.reward().xp() * 3);
+    }
+    @Test
+    void killing_30_enemies_finishes_some_quest() {
+        List<MessageToClient> received = new ArrayList<>();
+        gameService.login("a", "", Position.KRAKOW, new MessageToClientFactory(received::add));
+
+        for (int i = 0; i < 30; ++i) {
+            Enemy enemy = newEnemy(1, Position.KRAKOW, new EnemyId(i));
+            gameService.registerEnemy(enemy);
+            healPlayers();
+            gameService.receiveFrom("a").attackEnemy(new EnemyId(i));
+        }
+
+        List<QuestUpdate> questUpdates = received.stream()
+            .filter(QuestUpdate.class::isInstance)
+            .map(QuestUpdate.class::cast)
+            .toList();
+
+        assertThat(questUpdates.getLast().quests()).anyMatch(QuestStatus::isFinished);
+        assertThat(questUpdates).size().isGreaterThanOrEqualTo(2);
     }
 }
