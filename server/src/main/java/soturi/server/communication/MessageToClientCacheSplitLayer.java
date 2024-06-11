@@ -12,6 +12,7 @@ import soturi.model.messages_to_client.MessageToClientFactory;
 import soturi.model.messages_to_client.QuestUpdate;
 
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 
@@ -59,7 +60,7 @@ public class MessageToClientCacheSplitLayer extends MessageToClientFactory {
     private QuestUpdate lastQuestUpdate;
     @Override
     public void questUpdate(Instant deadline, List<QuestStatus> quests) {
-        QuestUpdate newQuestUpdate = new QuestUpdate(deadline, quests);
+        QuestUpdate newQuestUpdate = new QuestUpdate(deadline, new ArrayList<>(quests));
         if (newQuestUpdate.equals(lastQuestUpdate))
             return;
         lastQuestUpdate = newQuestUpdate;

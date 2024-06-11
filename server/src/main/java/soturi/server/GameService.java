@@ -298,9 +298,9 @@ public class GameService {
             Collections.shuffle(rewards);
 
             List<QuestStatus> list = new ArrayList<>(List.of(
-                new QuestStatus("Pokonaj %d przeciwników typu %s".formatted(cntEnemyType, enemyType.name()), 0, cntEnemyType, rewards.get(0)),
-                new QuestStatus("Pokonaj %d przeciwników".formatted(cntEnemy), 0, cntEnemy, rewards.get(1)),
-                new QuestStatus("Zdobądź nowy poziom", 0, 1, rewards.get(2))
+                new QuestStatus("Beat %d enemies of type %s".formatted(cntEnemyType, enemyType.name()), 0, cntEnemyType, rewards.get(0)),
+                new QuestStatus("Beat %d enemies".formatted(cntEnemy), 0, cntEnemy, rewards.get(1)),
+                new QuestStatus("Gain new lvl", 0, 1, rewards.get(2))
             ));
 
             Collections.shuffle(list);
@@ -380,7 +380,7 @@ public class GameService {
             playerEntity.setXp(playerEntity.getXp() + xp);
             long lvlAfter = registry.getLvlFromXp(playerEntity.getXp());
             updateQuests(s -> {
-                if (!s.quest().equals("Zdobądź nowy poziom"))
+                if (!s.quest().equals("Gain new lvl"))
                     return 0L;
                 return lvlAfter - lvlBefore;
             });
@@ -421,7 +421,7 @@ public class GameService {
 
                 EnemyType type = registry.getEnemyType(enemy);
                 updateQuests(s -> {
-                    if (s.quest().endsWith("przeciwników") || s.quest().endsWith(type.name()))
+                    if (s.quest().endsWith("enemies") || s.quest().endsWith(type.name()))
                         return 1L;
                     return 0L;
                 });
