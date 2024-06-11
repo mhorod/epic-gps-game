@@ -6,8 +6,8 @@ import soturi.model.Position;
 
 import java.util.function.Consumer;
 
-public final class MessageToServerFactory implements MessageToServerHandler {
-    private final Consumer<MessageToServer> consumer;
+public class MessageToServerFactory implements MessageToServerHandler {
+    protected final Consumer<MessageToServer> consumer;
 
     public MessageToServerFactory(Consumer<MessageToServer> consumer) {
         this.consumer = consumer;

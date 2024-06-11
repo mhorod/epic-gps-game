@@ -89,7 +89,7 @@ public class Registry {
 
         // validate geoSplit
         if (getGameAreaSplitLvl() < 0) throw new RuntimeException("SplitLvl cannot be negative");
-        if (getGameAreaSplitLvl() > 10) throw new RuntimeException("SplitLvl can be at most 10");
+        if (getGameAreaSplitLvl() > 16) throw new RuntimeException("SplitLvl can be at most 16");
 
         // validate that there is enemy for each lvl
         for (int i = 1; i <= getMaxLvl(); ++i)
@@ -284,7 +284,7 @@ public class Registry {
         return config.spawnEnemyFailChance();
     }
     public int getMaxSingleSpawn() {
-        return 2000;
+        return 20000;
     }
     public int getHealDelayInSeconds() {
         return config.healDelayInSeconds();
@@ -297,6 +297,12 @@ public class Registry {
     }
     public int getQuestDurationInSeconds() {
         return config.questDurationInSeconds();
+    }
+    public int getVisibilityRangeInMeters() {
+        return 20000;
+    }
+    public int getVisibilityRefreshRangeInMeters() {
+        return getVisibilityRangeInMeters() / 4;
     }
     public Config getConfig() {
         return config;

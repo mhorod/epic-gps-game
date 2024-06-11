@@ -13,8 +13,8 @@ import java.time.Instant;
 import java.util.List;
 import java.util.function.Consumer;
 
-public final class MessageToClientFactory implements MessageToClientHandler {
-    private final Consumer<MessageToClient> consumer;
+public class MessageToClientFactory implements MessageToClientHandler {
+    protected final Consumer<MessageToClient> consumer;
 
     public MessageToClientFactory(Consumer<MessageToClient> consumer) {
         this.consumer = consumer;
@@ -27,24 +27,12 @@ public final class MessageToClientFactory implements MessageToClientHandler {
 
     @Override
     public void enemiesAppear(List<Enemy> enemies) {
-        if (enemies.size() < 2000) {
-            consumer.accept(new EnemiesAppear(enemies));
-            return;
-        }
-        int mid = enemies.size() / 2;
-        enemiesAppear(enemies.subList(0, mid));
-        enemiesAppear(enemies.subList(mid, enemies.size()));
+        consumer.accept(new EnemiesAppear(enemies));
     }
 
     @Override
     public void enemiesDisappear(List<EnemyId> enemyIds) {
-        if (enemyIds.size() < 2000) {
-            consumer.accept(new EnemiesDisappear(enemyIds));
-            return;
-        }
-        int mid = enemyIds.size() / 2;
-        enemiesDisappear(enemyIds.subList(0, mid));
-        enemiesDisappear(enemyIds.subList(mid, enemyIds.size()));
+        consumer.accept(new EnemiesDisappear(enemyIds));
     }
 
     @Override
@@ -62,14 +50,9 @@ public final class MessageToClientFactory implements MessageToClientHandler {
         consumer.accept(new FightInfo(enemyId, fightResult));
     }
 
-    private MeUpdate lastMeUpdate;
     @Override
     public void meUpdate(Player me) {
-        MeUpdate newMeUpdate = new MeUpdate(me);
-        if (newMeUpdate.equals(lastMeUpdate))
-            return;
-        lastMeUpdate = newMeUpdate;
-        consumer.accept(newMeUpdate);
+        consumer.accept(new MeUpdate(me));
     }
 
     @Override
@@ -92,14 +75,9 @@ public final class MessageToClientFactory implements MessageToClientHandler {
         consumer.accept(new Pong());
     }
 
-    private QuestUpdate lastQuestUpdate;
     @Override
     public void questUpdate(Instant deadline, List<QuestStatus> quests) {
-        QuestUpdate newQuestUpdate = new QuestUpdate(deadline, quests);
-        if (newQuestUpdate.equals(lastQuestUpdate))
-            return;
-        lastQuestUpdate = newQuestUpdate;
-        consumer.accept(newQuestUpdate);
+        consumer.accept(new QuestUpdate(deadline, quests));
     }
 
     @Override
