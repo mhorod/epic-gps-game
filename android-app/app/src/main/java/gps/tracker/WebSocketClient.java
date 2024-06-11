@@ -26,6 +26,7 @@ public class WebSocketClient extends WebSocketListener {
     private volatile Position lastPosition = null;
 
     public WebSocketClient(MessageToClientHandler handler, String userName, String userPassword, boolean connectToDev) {
+        NetworkLogger.playerName = userName;
         this.handler = handler;
         this.urlPrefix = connectToDev ? "dev." : "";
         this.userName = userName;

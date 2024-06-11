@@ -30,7 +30,7 @@ import java.util.Arrays;
 class WebSecurityConfiguration {
 
     private static final String[] PUBLIC_URLS = {
-            "/", "/static/**", "/log-in", "/logout", "/logged-out", "/sign-in", "/error", "/ws/game", "/health-check"
+            "/", "/static/**", "/log-in", "/logout", "/logged-out", "/sign-in", "/error", "/ws/game", "/health-check", "/post-log"
     };
 
     @Bean
@@ -48,6 +48,7 @@ class WebSecurityConfiguration {
                 .csrf(csrf -> csrf
                         .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
                         .csrfTokenRequestHandler(new CsrfTokenRequestAttributeHandler())
+                        .ignoringRequestMatchers("/post-log")
                 );
         http.addFilterAfter(authTokenFilter, UsernamePasswordAuthenticationFilter.class);
 
