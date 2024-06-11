@@ -344,8 +344,9 @@ public class GameMap extends Fragment {
 
                 clusterer.invalidate();
                 mapView.invalidate();
-            } catch (Exception e) {
+            } catch (Throwable e) {
                 // I know why, don't worry
+                NetworkLogger.reportThrowable(e);
             }
         });
     }
@@ -354,9 +355,13 @@ public class GameMap extends Fragment {
         RadiusMarkerClusterer clusterer = (RadiusMarkerClusterer) mapView.getOverlays().get(0);
 
         mainActivity.runOnUiThread(() -> {
-            clusterer.getItems().remove(overlay);
-            clusterer.invalidate();
-            mapView.invalidate();
+            try {
+                clusterer.getItems().remove(overlay);
+                clusterer.invalidate();
+                mapView.invalidate();
+            } catch (Throwable e) {
+                NetworkLogger.reportThrowable(e);
+            }
         });
     }
 
