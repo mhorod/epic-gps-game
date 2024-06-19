@@ -15,7 +15,7 @@ function FightDetails(props: FightDetailsProps) {
   return (
     <div className={"fight-record-details " + detailsClass}>
       <div>
-        Fight date: {date.toLocaleString("pl-PL", { timeZone: "EST" })}{" "}
+        Fight date: {date.toLocaleString("pl-PL", { timeZone: "CET" })}{" "}
       </div>
       <AttackerDetails attacker={props.record.attacker} />
       <hr />
